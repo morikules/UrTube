@@ -1,0 +1,193 @@
+/*
+ * Colors as tokens. Light by default; dark follows the system unless the user
+ * picked a scheme (data-theme on <html>, set from the settings).
+ */
+:root {
+  --bg: #ffffff;
+  --fg: #1f1f1f;
+  --muted: #666;
+  --border: #ddd;
+  --accent: #c00;
+  --card: #f6f6f6;
+  font: 14px/1.5 system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1b1b1b;
+    --fg: #eee;
+    --muted: #aaa;
+    --border: #3a3a3a;
+    --card: #262626;
+    --accent: #ff4e45;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #1b1b1b;
+  --fg: #eee;
+  --muted: #aaa;
+  --border: #3a3a3a;
+  --card: #262626;
+  --accent: #ff4e45;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+h1 {
+  font-size: 1.3em;
+  margin: 0 0 0.5em;
+}
+
+h2 {
+  font-size: 1.05em;
+  margin: 0 0 0.5em;
+}
+
+section {
+  margin-bottom: 24px;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+label.button,
+a.button {
+  font: inherit;
+  padding: 0.35em 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+button:hover:not(:disabled),
+label.button:hover,
+a.button:hover {
+  border-color: var(--accent);
+}
+
+button.primary,
+a.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.tiny {
+  font-size: 0.85em;
+  padding: 1px 8px;
+  margin-left: 8px;
+}
+
+input,
+select {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  padding: 0;
+}
+
+code {
+  background: var(--bg);
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* A group of settings or content on a card. */
+.box {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 4px 16px;
+}
+
+.box > p {
+  margin: 12px 0;
+}
+
+/* A setting that is no switch (select, number) – lined up like the Toggle rows. */
+.box > .row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.box > .row:last-child {
+  border-bottom: none;
+}
+
+.row > .label {
+  min-width: 140px;
+}
+
+/* Short status text next to a button. */
+.note {
+  margin-left: 10px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.notice {
+  background: var(--card);
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 0.85em;
+}
+
+.error {
+  color: var(--accent);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td,
+th {
+  text-align: left;
+  padding: 0.2em 1em 0.2em 0;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

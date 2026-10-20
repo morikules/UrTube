@@ -1,0 +1,28 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! English or German is fine. Please do not paste personal data (backups, history exports).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where?
+      description: Which page (e.g. subscriptions, a playlist, the add-on page) – a link or screenshot helps.
+  - type: input
+    id: version
+    attributes:
+      label: UrTube version
+      description: Shown on the About tab.
+  - type: input
+    id: firefox
+    attributes:
+      label: Firefox version and operating system

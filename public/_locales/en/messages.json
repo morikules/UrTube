@@ -1,0 +1,7 @@
+{
+  "extName": { "message": "UrTube" },
+  "extDescription": {
+    "message": "Modern tracking for a better watching experience. Remembers every YouTube video you watch, marks and hides watched videos, shows your history and statistics – all stored locally."
+  },
+  "actionTitle": { "message": "Open UrTube" }
+}
