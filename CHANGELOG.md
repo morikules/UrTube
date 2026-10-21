@@ -2,6 +2,10 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.0.1
+
+First release on addons.mozilla.org; no functional changes.
+
 ## 1.0.0
 
 First public release, now called **UrTube**.
