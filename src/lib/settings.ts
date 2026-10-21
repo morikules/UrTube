@@ -74,6 +74,8 @@ export interface Settings {
   filterPremieres: boolean;
   filterLive: boolean;
   filterMembersOnly: boolean;
+  /** The members-only filter also applies on channel pages. */
+  filterMembersOnlyOnChannels: boolean;
   filterMostRelevant: boolean;
   /** Hide playlists whose videos were all watched. */
   hidePlaylistsDone: boolean;
@@ -99,6 +101,8 @@ export interface Settings {
   playerCaptions: 'keep' | 'off' | 'on';
   /** Preferred subtitle language (ISO code, e.g. "de"); falls back to any available. */
   playerCaptionLang: string;
+  /** Pause the trailer that starts by itself on a channel's home page. */
+  pauseChannelTrailer: boolean;
 
   /** Color scheme of the add-on's own pages. */
   uiTheme: 'system' | 'light' | 'dark';
@@ -164,6 +168,7 @@ export const defaultSettings: Settings = {
   filterPremieres: false,
   filterLive: false,
   filterMembersOnly: false,
+  filterMembersOnlyOnChannels: false,
   filterMostRelevant: false,
   hidePlaylistsDone: true,
   scanDelayMs: 100,
@@ -175,6 +180,7 @@ export const defaultSettings: Settings = {
   playerSpeed: 0,
   playerCaptions: 'keep',
   playerCaptionLang: 'en',
+  pauseChannelTrailer: false,
   uiTheme: 'system',
   language: 'auto',
 };

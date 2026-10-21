@@ -128,6 +128,8 @@ export function hideReason(
       if (settings.filterPremieres && isUpcoming(card, texts)) return 'premiere';
       if (settings.filterMembersOnly && isMembersOnly(card, texts)) return 'members';
     }
+  } else if (page === 'channel' && settings.filterMembersOnly && settings.filterMembersOnlyOnChannels) {
+    if (isMembersOnly(card, shortTexts(card))) return 'members';
   }
 
   if (watchedAt === undefined) return null;

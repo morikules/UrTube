@@ -244,6 +244,8 @@ export const de: Messages = {
     filterPremieres: 'Premieren und geplante Videos ausblenden',
     filterLive: 'Livestreams ausblenden',
     filterMembers: 'Videos nur für Kanalmitglieder ausblenden',
+    filterMembersChannels: '… auch auf Kanalseiten',
+    filterMembersChannelsDesc: 'Videos nur für Mitglieder verschwinden auch aus der Videoliste eines Kanals.',
     filterRelevant: 'Bereich „Relevanteste“ ausblenden',
     playlistsTitle: 'Playlists',
     playlistsIntro:
@@ -285,6 +287,10 @@ export const de: Messages = {
     noChange: 'nicht ändern',
     capOff: 'Immer aus',
     capOn: 'Immer an',
+    channelTitle: 'Kanalseiten',
+    channelIntro: 'Viele Kanäle spielen einen Trailer oder ein empfohlenes Video ab, sobald man ihre Seite öffnet.',
+    pauseTrailer: 'Kanal-Trailer nicht automatisch abspielen',
+    pauseTrailerDesc: 'Das Video wird sofort angehalten; mit Play schaust du es trotzdem.',
   },
 
   design: {

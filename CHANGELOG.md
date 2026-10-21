@@ -11,6 +11,10 @@ All notable changes. Versions before 1.0 were private test builds.
 - Existing views are repaired once after the update: openings without
   playback and continuations of an unfinished view are merged into it.
 - The “Live” badge in the history is now “Livestream”, with an explanation.
+- New: channel trailers can be kept from playing by themselves
+  (Settings → Playback → Channel pages).
+- New: hiding members-only videos can also apply on channel pages
+  (Settings → Hiding → Content filters).
 
 ## 1.0.1
 

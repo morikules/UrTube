@@ -2,6 +2,7 @@
   import { t } from '@/lib/i18n';
   import type { PlayerQuality, Settings } from '@/lib/settings';
   import { prefs, setPref } from './prefs.svelte';
+  import Toggle from './Toggle.svelte';
 
   const P = t.playback;
   const qualities: { id: PlayerQuality; label: string }[] = [
@@ -61,6 +62,19 @@
           </label>
         {/if}
       </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>{P.channelTitle}</h2>
+    <p class="muted">{P.channelIntro}</p>
+    <div class="box">
+      <Toggle
+        label={P.pauseTrailer}
+        description={P.pauseTrailerDesc}
+        checked={s.pauseChannelTrailer}
+        onchange={(v) => setPref('pauseChannelTrailer', v)}
+      />
     </div>
   </section>
 {/if}

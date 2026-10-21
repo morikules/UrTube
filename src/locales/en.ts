@@ -246,6 +246,8 @@ export const en = {
     filterPremieres: 'Hide premieres and scheduled videos',
     filterLive: 'Hide live streams',
     filterMembers: 'Hide members-only videos',
+    filterMembersChannels: '… also on channel pages',
+    filterMembersChannelsDesc: 'Members-only videos disappear from a channel’s video list too.',
     filterRelevant: 'Hide the “Most relevant” section',
     playlistsTitle: 'Playlists',
     playlistsIntro:
@@ -287,6 +289,10 @@ export const en = {
     noChange: 'do not change',
     capOff: 'Always off',
     capOn: 'Always on',
+    channelTitle: 'Channel pages',
+    channelIntro: 'Many channels play a trailer or featured video as soon as you open their page.',
+    pauseTrailer: 'Do not play channel trailers automatically',
+    pauseTrailerDesc: 'The video is paused right away; press play to watch it.',
   },
 
   design: {

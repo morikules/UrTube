@@ -66,6 +66,8 @@ const RESUME_CHECK_SEC = 3;
 const RESUME_TOLERANCE_SEC = 60;
 /** Retries for reading video details from the player. */
 const META_RETRY_MS = [0, 1500, 4000, 10000];
+/** The trailer or featured video on a channel's home page. */
+const CHANNEL_TRAILER_SELECTOR = 'ytd-channel-video-player-renderer, #c4-player';
 /** Save playback progress at most this often while playing. */
 const FLUSH_INTERVAL_MS = 15000;
 
@@ -866,6 +868,24 @@ export default defineContentScript({
           flush(s);
           if (settings.cleanWatchLater === 'finished') watchLater.onWatched(s.videoId);
         }
+      },
+      true,
+    );
+
+    // Channel trailers: paused when they start by themselves, not when the user starts them.
+    let trailerTouchedAt = 0;
+    const onTrailerInput = (e: Event) => {
+      if (e.target instanceof Element && e.target.closest(CHANNEL_TRAILER_SELECTOR)) trailerTouchedAt = Date.now();
+    };
+    document.addEventListener('pointerdown', onTrailerInput, true);
+    document.addEventListener('keydown', onTrailerInput, true);
+    document.addEventListener(
+      'play',
+      (e) => {
+        const video = e.target;
+        if (!settings.pauseChannelTrailer || !(video instanceof HTMLVideoElement)) return;
+        if (!video.closest(CHANNEL_TRAILER_SELECTOR) || Date.now() - trailerTouchedAt < 3000) return;
+        video.pause();
       },
       true,
     );

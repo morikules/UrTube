@@ -107,6 +107,13 @@
       <Toggle label={H.filterPremieres} checked={s.filterPremieres} onchange={(v) => setPref('filterPremieres', v)} />
       <Toggle label={H.filterLive} checked={s.filterLive} onchange={(v) => setPref('filterLive', v)} />
       <Toggle label={H.filterMembers} checked={s.filterMembersOnly} onchange={(v) => setPref('filterMembersOnly', v)} />
+      <Toggle
+        label={H.filterMembersChannels}
+        description={H.filterMembersChannelsDesc}
+        checked={s.filterMembersOnlyOnChannels}
+        disabled={!s.filterMembersOnly}
+        onchange={(v) => setPref('filterMembersOnlyOnChannels', v)}
+      />
       <Toggle label={H.filterRelevant} checked={s.filterMostRelevant} onchange={(v) => setPref('filterMostRelevant', v)} />
     </div>
   </section>

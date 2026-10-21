@@ -12,6 +12,12 @@ describe('normalizeSettings', () => {
     expect(s).toMatchObject({ bigPlayer: true, filterShorts: true, removeFromYoutubeHistory: true, hideOnHome: false });
   });
 
+  it('new options of 1.0.2 start off, also for existing installs', () => {
+    for (const s of [normalizeSettings(undefined), normalizeSettings({ hideOnHome: false })]) {
+      expect(s).toMatchObject({ pauseChannelTrailer: false, filterMembersOnlyOnChannels: false });
+    }
+  });
+
   it('stored values always win', () => {
     expect(normalizeSettings({ bigPlayer: false }).bigPlayer).toBe(false);
   });
