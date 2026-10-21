@@ -80,6 +80,8 @@ export interface View {
   finishedAt?: number;
   /** Furthest playback position reached, in seconds. */
   maxPosition?: number;
+  /** Position when the view was last saved: where YouTube resumes (since 1.0.2). */
+  lastPosition?: number;
   /** Seconds of video actually played (without skipped parts and ads). */
   watchedSeconds?: number;
   durationSec?: number;
@@ -95,7 +97,10 @@ export interface View {
   createdAt?: number;
 }
 
-export type ViewProgress = Pick<View, 'maxPosition' | 'watchedSeconds' | 'durationSec' | 'finishedAt'>;
+export type ViewProgress = Pick<
+  View,
+  'maxPosition' | 'lastPosition' | 'watchedSeconds' | 'durationSec' | 'finishedAt'
+>;
 
 /** A deleted video; automatic sources must not bring back what was deleted. */
 export interface Tombstone {
@@ -448,10 +453,86 @@ export async function recordMusicPlay(db: TrackerDB, p: MusicPlay): Promise<Vide
 
 export async function updateView(db: TrackerDB, viewId: number, p: ViewProgress): Promise<void> {
   const patch: ViewProgress = {};
-  for (const k of ['maxPosition', 'watchedSeconds', 'durationSec', 'finishedAt'] as const) {
+  for (const k of ['maxPosition', 'lastPosition', 'watchedSeconds', 'durationSec', 'finishedAt'] as const) {
     if (p[k] !== undefined) patch[k] = k === 'finishedAt' ? p[k] : Math.round(p[k]!);
   }
   await db.views.update(viewId, patch);
+}
+
+/**
+ * The view a new playback of the video may continue: the latest one recorded
+ * here, if it was not watched to the end and the video was not reset since.
+ * Whether it really continues depends on where playback starts (see the
+ * content script); no time limit, videos often stay open for days.
+ */
+export async function resumableView(db: TrackerDB, videoId: string): Promise<View | null> {
+  const views = await db.views.where('videoId').equals(videoId).toArray();
+  let latest: View | undefined;
+  for (const v of views) {
+    if (v.source === 'extension' && v.kind === 'watch' && (!latest || v.at > latest.at)) latest = v;
+  }
+  if (!latest || latest.finishedAt || latest.isShort) return null;
+  const video = await db.videos.get(videoId);
+  if (!video || video.status !== 'watched' || (video.resetAt ?? 0) > latest.at) return null;
+  return latest;
+}
+
+/**
+ * One-time repair for views recorded before 1.0.2, when every opening counted
+ * as a new view: a view without playback, or one that got further than the
+ * unfinished view before it, is merged into that one. Returns the IDs of the
+ * changed videos.
+ */
+export async function mergeResumedViews(db: TrackerDB): Promise<string[]> {
+  return db.transaction('rw', db.videos, db.views, async () => {
+    const byVideo = new Map<string, View[]>();
+    await db.views
+      .where('source')
+      .equals('extension')
+      .each((v) => {
+        if (v.kind !== 'watch' || v.isShort) return;
+        const list = byVideo.get(v.videoId);
+        if (list) list.push(v);
+        else byVideo.set(v.videoId, [v]);
+      });
+
+    const changed = new Set<string>();
+    const updates: View[] = [];
+    const remove: number[] = [];
+    const videos = new Map(
+      (await db.videos.bulkGet([...byVideo.keys()])).filter((v) => v !== undefined).map((v) => [v!.id, v!]),
+    );
+    for (const [videoId, views] of byVideo) {
+      if (views.length < 2) continue;
+      const resetAt = videos.get(videoId)?.resetAt ?? 0;
+      views.sort((a, b) => a.at - b.at);
+      let open: View | null = null;
+      for (const v of views) {
+        const continues =
+          open !== null &&
+          !(open.at < resetAt && resetAt <= v.at) &&
+          ((v.watchedSeconds ?? 0) < 1 || (v.maxPosition ?? 0) >= (open.maxPosition ?? 0));
+        if (open && continues) {
+          open.watchedSeconds = (open.watchedSeconds ?? 0) + (v.watchedSeconds ?? 0);
+          open.maxPosition = Math.max(open.maxPosition ?? 0, v.maxPosition ?? 0);
+          open.durationSec ??= v.durationSec;
+          if (v.finishedAt) open.finishedAt = v.finishedAt;
+          remove.push(v.id!);
+          if (!updates.includes(open)) updates.push(open);
+          changed.add(videoId);
+        } else {
+          open = v;
+        }
+        if (open?.finishedAt) open = null;
+      }
+    }
+    if (!remove.length) return [];
+    await db.views.bulkPut(updates);
+    await db.views.bulkDelete(remove);
+    const ids = new Set(changed);
+    await rebuildVideos(db, ids, new Map((await db.videos.bulkGet([...ids])).map((v) => [v!.id, v!])));
+    return [...ids];
+  });
 }
 
 export async function updateVideoMeta(

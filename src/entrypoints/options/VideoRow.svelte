@@ -89,7 +89,7 @@
       <span class="badges">
         {#if video.status === 'unwatched'}<span class="badge reset">{V.badgeReset}</span>{/if}
         {#if video.isShort}<span class="badge">{V.badgeShort}</span>{/if}
-        {#if video.isLive}<span class="badge">{V.badgeLive}</span>{/if}
+        {#if video.isLive}<span class="badge" title={V.badgeLiveHint}>{V.badgeLive}</span>{/if}
         {#if video.isMusic}<span class="badge">{V.badgeMusic}</span>{/if}
       </span>
     </button>

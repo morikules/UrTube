@@ -7,6 +7,8 @@ import {
   getStats,
   importWatchmarker,
   markUnwatched,
+  mergeResumedViews,
+  resumableView,
   startView,
   updateVideoMeta,
   updateView,
@@ -68,6 +70,65 @@ describe('importWatchmarker', () => {
     await markUnwatched(db, [A]);
     await importWatchmarker(db, merged);
     expect((await db.videos.get(A))?.status).toBe('unwatched');
+  });
+});
+
+describe('continued views', () => {
+  const HOUR = 3_600_000;
+  async function view(at: number, p: { max?: number; watched?: number; finished?: boolean } = {}) {
+    const { viewId } = await startView(db, { videoId: A, title: 'A', at });
+    await updateView(db, viewId, {
+      maxPosition: p.max,
+      watchedSeconds: p.watched,
+      durationSec: 7726,
+      finishedAt: p.finished ? at + 1000 : undefined,
+    });
+    return viewId;
+  }
+
+  it('resumableView returns the latest unfinished view, without time limit', async () => {
+    await view(1 * HOUR, { max: 600, watched: 600, finished: true });
+    const id = await view(2 * HOUR, { max: 1800, watched: 1700 });
+    expect((await resumableView(db, A))?.id).toBe(id);
+  });
+
+  it('a finished, reset or short video has nothing to continue', async () => {
+    await view(1 * HOUR, { max: 7700, watched: 7700, finished: true });
+    expect(await resumableView(db, A)).toBeNull();
+
+    await view(2 * HOUR, { max: 600, watched: 600 });
+    await markUnwatched(db, [A]);
+    expect(await resumableView(db, A)).toBeNull();
+
+    await startView(db, { videoId: 'bbbbbbbbbbb', title: 'S', isShort: true, at: HOUR });
+    expect(await resumableView(db, 'bbbbbbbbbbb')).toBeNull();
+  });
+
+  it('merges a watch spread over several openings into one view', async () => {
+    // The real case: watched in parts with pauses, some openings without playback.
+    await view(0, { max: 1846, watched: 1770 });
+    await view(0.5 * HOUR, { max: 4144, watched: 2284 });
+    await view(1.3 * HOUR, { max: 5340, watched: 1185 });
+    await view(1.6 * HOUR, { max: 6501, watched: 1148 });
+    await view(2.3 * HOUR, { max: 6501, watched: 0 });
+    await view(2.6 * HOUR, {});
+    await view(3.2 * HOUR, {});
+    await view(15 * HOUR, { max: 7632, watched: 1628, finished: true });
+
+    expect(await mergeResumedViews(db)).toEqual([A]);
+    const views = await db.views.toArray();
+    expect(views).toHaveLength(1);
+    expect(views[0]).toMatchObject({ at: 0, maxPosition: 7632, watchedSeconds: 8015 });
+    expect(views[0]!.finishedAt).toBeTypeOf('number');
+    expect(await db.videos.get(A)).toMatchObject({ viewCount: 1, lastViewAt: 0 });
+  });
+
+  it('keeps rewatches after a finished view and restarts that got less far', async () => {
+    await view(0, { max: 7700, watched: 7600, finished: true });
+    await view(1 * HOUR, { max: 3000, watched: 3000 });
+    await view(2 * HOUR, { max: 600, watched: 600 }); // started over, less far
+    expect(await mergeResumedViews(db)).toEqual([]);
+    expect(await db.views.count()).toBe(3);
   });
 });
 

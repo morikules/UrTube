@@ -10,9 +10,11 @@ import {
   getStats,
   markUnwatched,
   markWatchedAgain,
+  mergeResumedViews,
   queueAllDeletedForRemoval,
   recordMusicPlay,
   requeueRemovals,
+  resumableView,
   saveYtTokens,
   setDismissed,
   startView,
@@ -172,6 +174,8 @@ export default defineBackground(() => {
         await refresh([req.videoId]);
         return res;
       }
+      case 'resumableView':
+        return resumableView(db, req.videoId);
       case 'updateView':
         // No page notification: progress arrives every few seconds while playing.
         await updateView(db, req.viewId, req.progress);
@@ -312,6 +316,17 @@ export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') browser.tabs.create({ url: browser.runtime.getURL('/options.html#welcome') });
   });
+
+  // Once after updating to 1.0.2: views that only continued an unfinished one are merged into it.
+  browser.storage.local.get('mergedResumedViews').then(async ({ mergedResumedViews }) => {
+    if (mergedResumedViews) return;
+    const ids = await mergeResumedViews(db);
+    await browser.storage.local.set({ mergedResumedViews: true });
+    if (ids.length) {
+      console.info('[UrTube] merged continued views of', ids.length, 'videos');
+      await refresh(ids);
+    }
+  }).catch((err) => console.error('[UrTube] merging views', err));
 
   // Periodic incremental sync of the browser history, if enabled; interval from the settings.
   loadSettings().then((s) => {

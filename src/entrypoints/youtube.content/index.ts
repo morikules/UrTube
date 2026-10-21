@@ -1,5 +1,5 @@
 import './style.css';
-import type { EntryPoint, Mark } from '@/lib/db';
+import type { EntryPoint, Mark, View } from '@/lib/db';
 import { n, setLanguage, t } from '@/lib/i18n';
 import { send, type Broadcast } from '@/lib/messages';
 import { loadSettings, onSettingsChanged, saveSettings, type Settings } from '@/lib/settings';
@@ -60,6 +60,10 @@ const PROGRESS_SELECTOR =
 
 /** Seconds of playback before "actually playing" counts. */
 const PLAYING_MIN_SEC = 1;
+/** Seconds of playback before deciding whether an unfinished view is continued. */
+const RESUME_CHECK_SEC = 3;
+/** Playback starting at most this far before where it stopped continues the old view. */
+const RESUME_TOLERANCE_SEC = 60;
 /** Retries for reading video details from the player. */
 const META_RETRY_MS = [0, 1500, 4000, 10000];
 /** Save playback progress at most this often while playing. */
@@ -102,9 +106,14 @@ interface Session {
   durationSec?: number;
   finishedAt?: number;
   lastTime: number | null;
+  /** Where the current stretch of steady playback began (reset by seeks and ads). */
+  playFrom: number | null;
   dirty: boolean;
   entry: EntryPoint;
   playlist: { playlistId?: string; playlistIndex?: number };
+  /** Unfinished earlier view; whether this continues it is decided once it plays. */
+  resume: Promise<View | null>;
+  prev: View | null;
 }
 
 export default defineContentScript({
@@ -711,6 +720,7 @@ export default defineContentScript({
         viewId: s.viewId,
         progress: {
           maxPosition: s.maxPosition,
+          lastPosition: s.lastTime ?? undefined,
           watchedSeconds: s.watchedSeconds,
           durationSec: s.durationSec,
           finishedAt: s.finishedAt,
@@ -734,6 +744,9 @@ export default defineContentScript({
     async function start(s: Session): Promise<void> {
       if (s.started || session !== s) return;
       if (s.isShort && !settings.recordShorts) return;
+      await s.resume;
+      // An unfinished view exists: decided by resumeOrStart once it plays.
+      if (s.started || session !== s || s.prev) return;
       s.started = true;
       const res = await send({
         type: 'startView',
@@ -747,6 +760,28 @@ export default defineContentScript({
       flush(s); // progress collected before the view existed
       loadMeta(s);
       if (settings.cleanWatchLater === 'opened') watchLater.onWatched(s.videoId);
+    }
+
+    /**
+     * Playback of a video with an unfinished view: starting about where it
+     * stopped (YouTube resumes there) continues that view, however long ago;
+     * starting over from further back is a new view.
+     */
+    function resumeOrStart(s: Session): void {
+      const prev = s.prev!;
+      s.prev = null;
+      const stoppedAt = prev.lastPosition ?? prev.maxPosition ?? 0;
+      if (stoppedAt >= RESUME_TOLERANCE_SEC && (s.playFrom ?? 0) < stoppedAt - RESUME_TOLERANCE_SEC) {
+        start(s);
+        return;
+      }
+      s.started = true;
+      s.viewId = prev.id!;
+      s.watchedSeconds += prev.watchedSeconds ?? 0;
+      s.maxPosition = Math.max(s.maxPosition, prev.maxPosition ?? 0);
+      s.dirty = true;
+      flush(s);
+      loadMeta(s);
     }
 
     function onNavigate(): void {
@@ -773,18 +808,24 @@ export default defineContentScript({
       session = null;
       if (!id) return;
 
+      const isShort = location.pathname.startsWith('/shorts/');
       const s: Session = {
         videoId: id,
-        isShort: location.pathname.startsWith('/shorts/'),
+        isShort,
         started: false,
         viewId: null,
         maxPosition: 0,
         watchedSeconds: 0,
         lastTime: null,
+        playFrom: null,
         dirty: false,
         entry,
         playlist: playlistFromUrl(location.href),
+        // Shorts loop; every opening is a new view.
+        resume: isShort ? Promise.resolve(null) : send({ type: 'resumableView', videoId: id }).catch(() => null),
+        prev: null,
       };
+      s.resume.then((v) => void (s.prev = v));
       session = s;
       if (settings.markOnOpen) setTimeout(() => start(s), settings.openDelayMs);
       if (!s.isShort) applyPlayerPrefs(id, () => settings);
@@ -805,16 +846,16 @@ export default defineContentScript({
           return;
         }
         const t = video.currentTime;
-        if (s.lastTime !== null) {
-          const delta = t - s.lastTime;
-          // Normal playback advances in small steps; larger jumps are seeks.
-          if (delta > 0 && delta < 3) s.watchedSeconds += delta;
-        }
+        const delta = s.lastTime === null ? null : t - s.lastTime;
+        // Normal playback advances in small steps; larger jumps are seeks.
+        if (delta !== null && delta > 0 && delta < 3) s.watchedSeconds += delta;
+        else if (delta !== 0) s.playFrom = t;
         s.lastTime = t;
         s.maxPosition = Math.max(s.maxPosition, t);
         if (Number.isFinite(video.duration) && video.duration > 0) s.durationSec = video.duration;
         s.dirty = true;
 
+        if (s.prev && !s.started && s.watchedSeconds >= RESUME_CHECK_SEC) resumeOrStart(s);
         if (!s.started && settings.markOnPlay && s.watchedSeconds >= PLAYING_MIN_SEC) start(s);
         if (
           !s.finishedAt &&

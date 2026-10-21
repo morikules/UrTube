@@ -2,6 +2,16 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.0.2
+
+- Watching a video in several sittings no longer counts as several views:
+  playing an unfinished video from about where you stopped (YouTube resumes
+  there) continues its view, however long ago that was; starting over counts
+  as a new view. Opening a video without playing it adds nothing.
+- Existing views are repaired once after the update: openings without
+  playback and continuations of an unfinished view are merged into it.
+- The “Live” badge in the history is now “Livestream”, with an explanation.
+
 ## 1.0.1
 
 First release on addons.mozilla.org; no functional changes.

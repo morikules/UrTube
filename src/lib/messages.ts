@@ -8,6 +8,7 @@ import type {
   Stats,
   Video,
   VideoMeta,
+  View,
   ViewProgress,
   ViewSource,
   PendingRemoval,
@@ -21,6 +22,8 @@ export type Request =
   | ({ type: 'recordMusicPlay' } & MusicPlay)
   | { type: 'getVideo'; videoId: string }
   | ({ type: 'startView' } & StartView)
+  /** The unfinished view a new playback of the video may continue. */
+  | { type: 'resumableView'; videoId: string }
   | { type: 'updateView'; viewId: number; progress: ViewProgress }
   | { type: 'updateVideoMeta'; videoId: string; meta: VideoMeta & { title?: string } }
   | { type: 'addMarks'; marks: Mark[] }
@@ -74,6 +77,7 @@ export interface ResponseMap {
   recordMusicPlay: null;
   getVideo: Video | null;
   startView: { viewId: number; video: Video };
+  resumableView: View | null;
   updateView: null;
   updateVideoMeta: null;
   addMarks: null;
