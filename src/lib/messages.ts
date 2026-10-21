@@ -25,7 +25,12 @@ export type Request =
   /** The unfinished view a new playback of the video may continue. */
   | { type: 'resumableView'; videoId: string }
   | { type: 'updateView'; viewId: number; progress: ViewProgress }
-  | { type: 'updateVideoMeta'; videoId: string; meta: VideoMeta & { title?: string } }
+  /** `quiet`: filled in the background, open pages need not reload for it. */
+  | { type: 'updateVideoMeta'; videoId: string; meta: VideoMeta & { title?: string }; quiet?: boolean }
+  /** Videos still without details from YouTube (see videosMissingMeta). */
+  | { type: 'missingMeta'; recentOnly: boolean; limit: number }
+  /** YouTube had no details for these videos (deleted, private). */
+  | { type: 'metaNotFound'; ids: string[] }
   | { type: 'addMarks'; marks: Mark[] }
   | { type: 'markUnwatched'; ids: string[] }
   | { type: 'markWatched'; ids: string[] }
@@ -80,6 +85,8 @@ export interface ResponseMap {
   resumableView: View | null;
   updateView: null;
   updateVideoMeta: null;
+  missingMeta: { ids: string[]; total: number };
+  metaNotFound: null;
   addMarks: null;
   markUnwatched: null;
   markWatched: null;

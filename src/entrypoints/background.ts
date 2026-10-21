@@ -9,6 +9,7 @@ import {
   deleteView,
   getStats,
   markUnwatched,
+  markMetaTried,
   markWatchedAgain,
   mergeResumedViews,
   queueAllDeletedForRemoval,
@@ -21,6 +22,7 @@ import {
   takePendingRemovals,
   updateVideoMeta,
   updateView,
+  videosMissingMeta,
 } from '@/lib/db';
 import type { Broadcast, PageEvent, Request, ResponseMap, SyncResult } from '@/lib/messages';
 import type { PlaylistInfo } from '@/lib/playlists';
@@ -182,8 +184,13 @@ export default defineBackground(() => {
         return null;
       case 'updateVideoMeta':
         await updateVideoMeta(db, req.videoId, req.meta);
-        notifyPages();
+        if (!req.quiet) notifyPages();
         await checkMusic(req.videoId);
+        return null;
+      case 'missingMeta':
+        return videosMissingMeta(db, req);
+      case 'metaNotFound':
+        await markMetaTried(db, req.ids);
         return null;
       case 'addMarks': {
         // Manual marks always count; the progress bar respects "record Shorts".

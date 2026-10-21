@@ -6,8 +6,10 @@ import {
   deleteView,
   getStats,
   importWatchmarker,
+  markMetaTried,
   markUnwatched,
   mergeResumedViews,
+  videosMissingMeta,
   resumableView,
   startView,
   updateVideoMeta,
@@ -129,6 +131,27 @@ describe('continued views', () => {
     await view(2 * HOUR, { max: 600, watched: 600 }); // started over, less far
     expect(await mergeResumedViews(db)).toEqual([]);
     expect(await db.views.count()).toBe(3);
+  });
+});
+
+describe('missing video details', () => {
+  it('lists videos without details, newest first, recent ones or all', async () => {
+    const DAY = 86_400_000;
+    await startView(db, { videoId: 'aaaaaaaaaaa', title: 'old', at: Date.now() - 400 * DAY });
+    await startView(db, { videoId: 'bbbbbbbbbbb', title: 'recent', at: Date.now() - 2 * DAY });
+    await startView(db, { videoId: 'ccccccccccc', title: 'newest', at: Date.now() - DAY });
+    await startView(db, { videoId: 'ddddddddddd', title: 'has details', at: Date.now() - DAY });
+    await updateVideoMeta(db, 'ddddddddddd', { channelName: 'C' });
+
+    expect(await videosMissingMeta(db, { recentOnly: true, limit: 10 })).toEqual({
+      ids: ['ccccccccccc', 'bbbbbbbbbbb'],
+      total: 2,
+    });
+    expect(await videosMissingMeta(db, { recentOnly: false, limit: 1 })).toEqual({ ids: ['ccccccccccc'], total: 3 });
+
+    // YouTube had nothing (deleted video): not asked again.
+    await markMetaTried(db, ['ccccccccccc']);
+    expect((await videosMissingMeta(db, { recentOnly: false, limit: 10 })).ids).toEqual(['bbbbbbbbbbb', 'aaaaaaaaaaa']);
   });
 });
 

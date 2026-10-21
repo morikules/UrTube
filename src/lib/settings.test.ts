@@ -14,7 +14,12 @@ describe('normalizeSettings', () => {
 
   it('new options of 1.0.2 start off, also for existing installs', () => {
     for (const s of [normalizeSettings(undefined), normalizeSettings({ hideOnHome: false })]) {
-      expect(s).toMatchObject({ pauseChannelTrailer: false, filterMembersOnlyOnChannels: false });
+      expect(s).toMatchObject({
+        pauseChannelTrailer: false,
+        filterMembersOnlyOnChannels: false,
+        fetchMissingMeta: true,
+        fetchMissingMetaAll: false,
+      });
     }
   });
 

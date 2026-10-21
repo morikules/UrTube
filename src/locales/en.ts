@@ -176,6 +176,9 @@ export const en = {
     youtubeHistory: 'Sync the YouTube history automatically',
     youtubeHistoryDesc:
       'Adds missing videos from your YouTube history while a YouTube tab is open. Manually: Data → Sync.',
+    fetchMeta: 'Fill in channel and date of videos watched elsewhere',
+    fetchMetaDesc:
+      'Videos taken from the progress bar or the YouTube history only come with a title. The details are fetched from YouTube in the background, a few per minute, for videos of the last 30 days. This does not count as watching.',
     autoSync: 'Automatic sync',
     shorts: 'Record Shorts',
     shortsDesc:
@@ -438,6 +441,11 @@ export const en = {
     removeYtQuestion: 'Remove all deleted videos from your YouTube history?',
     removeYtQueued: (n: string) =>
       `${n} deleted videos are looked up in the YouTube history and removed. The result is shown under Settings → Recording (needs an open YouTube tab).`,
+    metaTitle: 'Missing video details',
+    metaIntro:
+      'Videos from imports (e.g. Watchmarker) often have no channel, length or date. They can be fetched from YouTube for all older videos too – very slowly, about 2,000 per hour while a YouTube tab is open, so it can take a day for large imports. It continues by itself and can be switched off any time.',
+    metaAll: 'Fill in details for all older videos too',
+    metaMissing: (count: string) => `${count} videos still without details`,
     clearTitle: 'Delete everything',
     clearIntro:
       'Empties the whole database of this extension: all videos, views and deleted entries. This can only be undone with a backup – download one under Data → Backup first.',

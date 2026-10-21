@@ -73,7 +73,7 @@ Kein offizielles Produkt von YouTube oder Google.
 | License | MIT |
 | Privacy policy | not required (no data collected) |
 | Source code | uploaded automatically by `npm run sign` |
-| Notes for reviewers | Built with WXT (Vite + Svelte). Build: `npm ci && npm run build` → `.output/firefox-mv2`. Requests to youtube.com's internal API (youtubei/v1) run from the YouTube tab with the page's own config, only to read playlists/the watch history and, when the user asks, edit “Watch later” or remove history entries. No remote code, no analytics. The validator warning “Unsafe assignment to innerHTML” in `chunks/options-*.js` is Svelte's runtime (`elem.innerHTML = …` in `svelte/src/internal/client/dom/reconciler.js`), which builds templates from static, compile-time strings; the extension's own code uses no `{@html}` and never inserts page or user content as HTML. |
+| Notes for reviewers | Built with WXT (Vite + Svelte). Build: `npm ci && npm run build` → `.output/firefox-mv2`. Requests to youtube.com's internal API (youtubei/v1) run from the YouTube tab with the page's own config, only to read playlists/the watch history, to read a video's details (channel, length, date; "player" endpoint, a few per minute) and, when the user asks, edit “Watch later” or remove history entries. No remote code, no analytics. The validator warning “Unsafe assignment to innerHTML” in `chunks/options-*.js` is Svelte's runtime (`elem.innerHTML = …` in `svelte/src/internal/client/dom/reconciler.js`), which builds templates from static, compile-time strings; the extension's own code uses no `{@html}` and never inserts page or user content as HTML. |
 
 ## Screenshots (1280×800)
 

@@ -174,6 +174,9 @@ export const de: Messages = {
     youtubeHistory: 'YouTube-Verlauf automatisch abgleichen',
     youtubeHistoryDesc:
       'Ergänzt fehlende Videos aus deinem YouTube-Verlauf, solange ein YouTube-Tab offen ist. Manuell: Daten → Abgleich.',
+    fetchMeta: 'Kanal und Datum woanders gesehener Videos nachladen',
+    fetchMetaDesc:
+      'Videos aus dem Fortschrittsbalken oder dem YouTube-Verlauf kommen nur mit Titel. Die Angaben werden im Hintergrund bei YouTube nachgefragt, ein paar pro Minute, für Videos der letzten 30 Tage. Das zählt nicht als Anschauen.',
     autoSync: 'Automatischer Abgleich',
     shorts: 'Shorts erfassen',
     shortsDesc:
@@ -436,6 +439,11 @@ export const de: Messages = {
     removeYtQuestion: 'Alle gelöschten Videos aus deinem YouTube-Verlauf entfernen?',
     removeYtQueued: (n) =>
       `${n} gelöschte Videos werden im YouTube-Verlauf gesucht und entfernt. Das Ergebnis steht unter Einstellungen → Erfassung (braucht einen offenen YouTube-Tab).`,
+    metaTitle: 'Fehlende Video-Angaben',
+    metaIntro:
+      'Videos aus Importen (z. B. Watchmarker) haben oft keinen Kanal, keine Länge und kein Datum. Die lassen sich auch für alle älteren Videos bei YouTube nachladen – sehr langsam, etwa 2.000 pro Stunde, solange ein YouTube-Tab offen ist; bei großen Importen kann das einen Tag dauern. Es läuft von selbst weiter und lässt sich jederzeit ausschalten.',
+    metaAll: 'Angaben auch für alle älteren Videos nachladen',
+    metaMissing: (count: string) => `noch ${count} Videos ohne Angaben`,
     clearTitle: 'Alles löschen',
     clearIntro:
       'Leert die komplette Datenbank dieser Erweiterung: alle Videos, Ansichten und gelöschten Einträge. Das lässt sich nur mit einer Sicherung rückgängig machen – vorher unter Daten → Sicherung eine herunterladen.',

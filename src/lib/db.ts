@@ -65,6 +65,8 @@ export interface Video extends VideoMeta {
   isMusic?: boolean;
   resetAt?: number;
   metaUpdatedAt?: number;
+  /** YouTube had no details when asked (deleted or private video). */
+  metaTriedAt?: number;
 }
 
 export interface View {
@@ -545,6 +547,39 @@ export async function updateVideoMeta(
     if (v !== undefined && v !== '') (patch as Record<string, unknown>)[k] = v;
   }
   await db.videos.update(videoId, patch);
+}
+
+/** Videos seen within this time count as recent for filling in missing details. */
+export const RECENT_META_MS = 30 * 86_400_000;
+
+/**
+ * Videos without details from YouTube (channel, length, date), newest first:
+ * those known only from the progress bar, a history sync or an import. With
+ * `recentOnly`, only videos watched within RECENT_META_MS. Videos YouTube had
+ * no details for (deleted, private) are skipped.
+ */
+export async function videosMissingMeta(
+  db: TrackerDB,
+  { recentOnly, limit }: { recentOnly: boolean; limit: number },
+): Promise<{ ids: string[]; total: number }> {
+  const since = recentOnly ? Date.now() - RECENT_META_MS : 0;
+  const ids: string[] = [];
+  let total = 0;
+  await db.videos
+    .where('lastViewAt')
+    .aboveOrEqual(since)
+    .reverse()
+    .each((v) => {
+      if (v.metaUpdatedAt || v.metaTriedAt) return;
+      total++;
+      if (ids.length < limit) ids.push(v.id);
+    });
+  return { ids, total };
+}
+
+/** Remembers that YouTube had no details for these videos, so they are not asked again. */
+export async function markMetaTried(db: TrackerDB, ids: string[]): Promise<void> {
+  await db.videos.where('id').anyOf(ids).modify({ metaTriedAt: Date.now() });
 }
 
 export async function markUnwatched(db: TrackerDB, ids: string[]): Promise<void> {

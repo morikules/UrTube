@@ -7,7 +7,8 @@
   import ConfirmButton from './ConfirmButton.svelte';
   import DismissedPanel from './DismissedPanel.svelte';
   import Notice from './Notice.svelte';
-  import { createRunner } from './prefs.svelte';
+  import { createRunner, prefs, setPref } from './prefs.svelte';
+  import Toggle from './Toggle.svelte';
 
   let { ondatachange }: { ondatachange: () => void } = $props();
 
@@ -66,6 +67,17 @@
   }
 
   loadSourceCounts();
+
+  // Videos still without details; filled in by a YouTube tab, so the number is re-read now and then.
+  let missingMeta = $state<number | null>(null);
+  async function loadMissingMeta() {
+    missingMeta = (await send({ type: 'missingMeta', recentOnly: false, limit: 0 })).total;
+  }
+  $effect(() => {
+    loadMissingMeta();
+    const timer = setInterval(loadMissingMeta, 30_000);
+    return () => clearInterval(timer);
+  });
 </script>
 
 <Notice message={runner.state.message} error={runner.state.error} />
@@ -147,6 +159,22 @@
     </p>
   </div>
 </section>
+
+{#if prefs.s}
+  <section>
+    <h2>{C.metaTitle}</h2>
+    <p class="muted">{C.metaIntro}</p>
+    <div class="box">
+      <Toggle
+        label={C.metaAll}
+        description={missingMeta === null ? undefined : C.metaMissing(n(missingMeta))}
+        checked={prefs.s.fetchMissingMetaAll}
+        disabled={!prefs.s.fetchMissingMeta}
+        onchange={(v) => setPref('fetchMissingMetaAll', v)}
+      />
+    </div>
+  </section>
+{/if}
 
 <section>
   <h2>{C.clearTitle}</h2>

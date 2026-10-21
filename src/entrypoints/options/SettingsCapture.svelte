@@ -90,6 +90,12 @@
           {#each syncIntervals as i}<option value={i.min}>{i.label}</option>{/each}
         </select>
       </div>
+      <Toggle
+        label={C.fetchMeta}
+        description={C.fetchMetaDesc}
+        checked={s.fetchMissingMeta}
+        onchange={(v) => setPref('fetchMissingMeta', v)}
+      />
       <Toggle label={C.shorts} description={C.shortsDesc} checked={s.recordShorts} onchange={(v) => setPref('recordShorts', v)} />
       <Toggle
         label={C.recordMusic}

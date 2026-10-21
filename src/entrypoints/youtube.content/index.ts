@@ -21,6 +21,7 @@ import { incrementalSyncDue, processRemovals, runHistorySync } from './history';
 import { createPlaylists } from './playlists';
 import { createWatchLater } from './watchLater';
 import { readDomMeta, readPlayerMeta } from './player';
+import { fillMissingMeta } from './metaFill';
 
 const LINK_SELECTOR = 'a[href*="watch?v="], a[href*="/shorts/"], a[href*="/playlist?list="]';
 /** Classes of elements the extension inserts itself (ignored by the observer). */
@@ -686,12 +687,27 @@ export default defineContentScript({
         await runHistorySync(false);
       }
     }
+    // --- Channel, length and date for videos known without them --------------
+
+    function fillMeta(): void {
+      if (!settings.fetchMissingMeta) return;
+      const all = settings.fetchMissingMetaAll;
+      fillMissingMeta(all, () => settings.fetchMissingMeta && (!all || settings.fetchMissingMetaAll));
+    }
+    onSettingsChanged((s) => {
+      if (s.fetchMissingMeta && s.fetchMissingMetaAll) fillMeta(); // started from the options page
+    });
+
     // Give the page time to finish loading before the first check.
     setTimeout(() => {
       processRemovals().catch(() => {}); // removals queued while no YouTube tab was open
       maybeSyncHistory();
+      fillMeta();
     }, 15_000);
-    setInterval(maybeSyncHistory, 5 * 60 * 1000); // checks only; the interval is a setting
+    setInterval(() => {
+      maybeSyncHistory(); // checks only; the interval is a setting
+      fillMeta();
+    }, 5 * 60 * 1000);
 
     // --- Recording views ----------------------------------------------------
 

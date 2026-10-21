@@ -15,25 +15,29 @@ export function readPlayerMeta(videoId: string, isShort: boolean): (VideoMeta & 
   try {
     const el = document.querySelector(isShort ? '#shorts-player' : '#movie_player');
     const player = (el as any)?.wrappedJSObject;
-    const resp = player?.getPlayerResponse?.();
-    const d = resp?.videoDetails;
-    if (!d || d.videoId !== videoId) return null;
-    const mf = resp.microformat?.playerMicroformatRenderer;
-    const profile = str(mf?.ownerProfileUrl);
-    return {
-      title: str(d.title),
-      channelId: str(d.channelId),
-      channelName: str(d.author),
-      channelHandle: profile?.match(/\/(@[^/?#]+)/)?.[1],
-      durationSec: num(d.lengthSeconds),
-      publishedAt: str(mf?.publishDate) ?? str(mf?.uploadDate),
-      isLive: d.isLiveContent === true,
-      category: str(mf?.category),
-      isShort,
-    };
+    const meta = metaFromPlayerResponse(player?.getPlayerResponse?.(), videoId);
+    return meta && { ...meta, isShort };
   } catch {
     return null;
   }
+}
+
+/** Video details from a player response (player API or the "player" endpoint). */
+export function metaFromPlayerResponse(resp: any, videoId: string): (VideoMeta & { title?: string }) | null {
+  const d = resp?.videoDetails;
+  if (!d || d.videoId !== videoId) return null;
+  const mf = resp.microformat?.playerMicroformatRenderer;
+  const profile = str(mf?.ownerProfileUrl);
+  return {
+    title: str(d.title),
+    channelId: str(d.channelId),
+    channelName: str(d.author),
+    channelHandle: profile?.match(/\/(@[^/?#]+)/)?.[1],
+    durationSec: num(d.lengthSeconds),
+    publishedAt: str(mf?.publishDate) ?? str(mf?.uploadDate),
+    isLive: d.isLiveContent === true,
+    category: str(mf?.category),
+  };
 }
 
 /** Fallback when the player API is not available: channel from the page. */

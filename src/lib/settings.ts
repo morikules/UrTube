@@ -26,6 +26,10 @@ export interface Settings {
   openDelayMs: number;
   /** Interval of the automatic browser/YouTube history sync. */
   syncIntervalMin: number;
+  /** Ask YouTube for channel, length and date of recent videos known without them. */
+  fetchMissingMeta: boolean;
+  /** … also for all older videos (Watchmarker import), slowly in the background. */
+  fetchMissingMetaAll: boolean;
   /** Remove watched videos from "Watch later": never, once opened, or once finished. */
   cleanWatchLater: 'off' | 'opened' | 'finished';
 
@@ -139,6 +143,8 @@ export const defaultSettings: Settings = {
   markOnYoutubeMusic: true,
   openDelayMs: 2000,
   syncIntervalMin: 60,
+  fetchMissingMeta: true,
+  fetchMissingMetaAll: false,
   cleanWatchLater: 'off',
   fadeWatched: true,
   grayscaleWatched: true,
