@@ -14,6 +14,11 @@ tidying up subscriptions, a bigger player) in one, with a single database.
 
 English and German.
 
+<p align="center">
+  <img src="docs/screenshots/1-history.png" width="49%" alt="History with a video expanded">
+  <img src="docs/screenshots/2-statistics.png" width="49%" alt="Statistics">
+</p>
+
 ## Features
 
 - **Recording** – every video you open, with date, progress, where you came from

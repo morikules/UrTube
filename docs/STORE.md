@@ -75,10 +75,17 @@ Kein offizielles Produkt von YouTube oder Google.
 | Source code | uploaded automatically by `npm run sign` |
 | Notes for reviewers | Built with WXT (Vite + Svelte). Build: `npm ci && npm run build` → `.output/firefox-mv2`. Requests to youtube.com's internal API (youtubei/v1) run from the YouTube tab with the page's own config, only to read playlists/the watch history and, when the user asks, edit “Watch later” or remove history entries. No remote code, no analytics. The validator warning “Unsafe assignment to innerHTML” in `chunks/options-*.js` is Svelte's runtime (`elem.innerHTML = …` in `svelte/src/internal/client/dom/reconciler.js`), which builds templates from static, compile-time strings; the extension's own code uses no `{@html}` and never inserts page or user content as HTML. |
 
-## Screenshots (1280×800 recommended, 3–5)
+## Screenshots (1280×800)
 
-1. Subscriptions page with watched videos faded and the switch in the header.
-2. A playlist with “12 / 23 watched” badges.
-3. The History tab with a video expanded (views listed).
-4. The Statistics tab.
-5. The Import page (Google Takeout steps) or the About tab.
+Ready in `docs/screenshots/`, made from demo data (openly licensed Blender
+Studio and NASA videos, made-up viewing history), not from a real profile:
+
+1. `1-history.png` – History with a video expanded (views listed).
+2. `2-statistics.png` – Statistics, last 30 days.
+3. `3-hide.png` – Settings → Hiding.
+4. `4-import.png` – Import from Google Takeout and Watchmarker.
+5. `5-about.png` – About.
+
+Still to take on YouTube itself (with an account without personal details):
+the subscriptions page with watched videos faded and the switch in the header,
+and a playlist with “12 / 23 watched” badges.
