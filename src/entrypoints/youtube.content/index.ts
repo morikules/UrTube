@@ -24,6 +24,8 @@ import { readDomMeta, readPlayerMeta } from './player';
 import { fillMissingMeta } from './metaFill';
 
 const LINK_SELECTOR = 'a[href*="watch?v="], a[href*="/shorts/"], a[href*="/playlist?list="]';
+/** Suggested videos at the end of a video, inside the player (also in full screen). */
+const ENDSCREEN_SELECTOR = 'a.ytp-modern-videowall-still, a.ytp-videowall-still';
 /** Classes of elements the extension inserts itself (ignored by the observer). */
 const OWN_ELEMENTS = ['ytt-eye', 'ytt-ban', 'ytt-watch-btn', 'ytt-chan-btn', 'ytt-toggle', 'ytt-pl-progress'];
 /** Channel link inside a card or on the video page. */
@@ -373,7 +375,25 @@ export default defineContentScript({
       }, 1000);
     }
 
+    /**
+     * Suggestions at the end of a video (in the player): marked like other
+     * thumbnails, but nothing is hidden and no buttons are added there.
+     */
+    function applyEndscreen(a: HTMLAnchorElement): void {
+      // Playlists and mixes start with some video; they are not marked as that one.
+      const isList = a.dataset.isList === 'true' || a.dataset.isMix === 'true';
+      const id = isList ? null : videoIdFromUrl(a.href);
+      const at = id ? watched.get(id) : undefined;
+      a.classList.add('ytt-endscreen');
+      a.classList.toggle('ytt-watched', at !== undefined);
+      if (at !== undefined) a.dataset.yttDate = formatDate(at);
+    }
+
     function apply(a: HTMLAnchorElement): void {
+      if (a.matches(ENDSCREEN_SELECTOR)) {
+        applyEndscreen(a);
+        return;
+      }
       const href = a.getAttribute('href') ?? '';
       if (
         !href ||

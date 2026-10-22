@@ -15,6 +15,8 @@ All notable changes. Versions before 1.0 were private test builds.
   (Settings → Playback → Channel pages).
 - New: hiding members-only videos can also apply on channel pages
   (Settings → Hiding → Content filters).
+- Watched videos are also marked among the suggestions at the end of a
+  video (grayed out, faded, badge – as set under Appearance).
 - New: videos taken from the progress bar or the YouTube history (e.g.
   watched on another device) get their channel, length and date from YouTube
   in the background (Settings → Recording, on by default). Optionally for all

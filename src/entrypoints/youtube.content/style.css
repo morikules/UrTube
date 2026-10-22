@@ -44,6 +44,21 @@ html.ytt-hide-progress a.ytt-watched :is(
   display: none !important;
 }
 
+/* Suggestions at the end of a video: the picture is a background image. */
+html.ytt-fade a.ytt-endscreen.ytt-watched :is(.ytp-modern-videowall-still-image, .ytp-videowall-still-image) {
+  opacity: 0.35;
+}
+
+html.ytt-gray a.ytt-endscreen.ytt-watched :is(.ytp-modern-videowall-still-image, .ytp-videowall-still-image) {
+  filter: grayscale(1);
+}
+
+html.ytt-badge a.ytt-endscreen.ytt-watched::after {
+  top: 8px;
+  bottom: auto;
+  left: 8px;
+}
+
 /* --- Playlists: progress on the thumbnail and on the playlist page --- */
 
 html.ytt-pl-progress-on a.ytt-pl-thumb[data-ytt-pl]::after {
