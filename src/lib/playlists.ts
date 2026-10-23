@@ -19,9 +19,10 @@ export interface PlaylistInfo {
 
 /**
  * Raise when the way playlists are read changes, so cached entries read the
- * old way are refreshed (v2: YouTube's lockupViewModel layout).
+ * old way are refreshed (v2: YouTube's lockupViewModel layout, v3: Shorts in
+ * playlists).
  */
-export const PLAYLIST_FORMAT = 2;
+export const PLAYLIST_FORMAT = 3;
 
 /** True if the playlist must be read (again): unknown, read the old way, or older than `maxAgeMs`. */
 export function isPlaylistStale(p: PlaylistInfo | undefined, maxAgeMs: number, now = Date.now()): boolean {
@@ -98,6 +99,15 @@ export function isTrackablePlaylist(id: string): boolean {
   return !/^(RD|TL)/.test(id);
 }
 
+/** Video ID of a shortsLockupViewModel: from its tap command, else its link. */
+function shortsId(v: Json): string | undefined {
+  const cmd = (v.onTap as Json | undefined)?.innertubeCommand as Json | undefined;
+  const id = (cmd?.reelWatchEndpoint as Json | undefined)?.videoId;
+  if (typeof id === 'string') return id;
+  const url = ((cmd?.commandMetadata as Json | undefined)?.webCommandMetadata as Json | undefined)?.url;
+  return typeof url === 'string' ? url.match(/\/shorts\/([\w-]{11})/)?.[1] : undefined;
+}
+
 /**
  * Videos, playlist title and continuation token from one page of a playlist.
  * Videos come as lockupViewModel (layout since 2026) or playlistVideoRenderer
@@ -119,6 +129,8 @@ export function extractPlaylistPage(response: unknown): {
     if (!isObj(v)) return;
     if (key === 'lockupViewModel' && v.contentType !== 'LOCKUP_CONTENT_TYPE_PLAYLIST') add(v.contentId);
     if (key === 'playlistVideoRenderer' || key === 'playlistPanelVideoRenderer') add(v.videoId);
+    // Shorts (e.g. a channel's Shorts list) come as their own lockup.
+    if (key === 'shortsLockupViewModel') add(shortsId(v));
   });
   let title: string | undefined;
   walkKey(response, 'playlistHeaderRenderer', (v) => {

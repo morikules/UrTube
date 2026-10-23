@@ -9,6 +9,13 @@ All notable changes. Versions before 1.0 were private test builds.
   each as watched / total (a playlist counts once all its videos are watched).
   Counted once a day and remembered in between; ↻ counts again right away.
   Can be switched off under Appearance → Thumbnails.
+- Backups include the settings; restoring can take them over (on by default).
+- Restoring a backup also repairs views from before 1.0.2 (continued watching
+  counted as several views), and missing video details are fetched right away.
+- Data → Clean up shows when video details were last filled in.
+- Shorts in playlists and a channel's Shorts are counted.
+- Playlist progress labels stay on one line, like YouTube's own labels.
+- Channel trailers are paused after their first frame, so they stay visible.
 
 ## 1.0.2
 

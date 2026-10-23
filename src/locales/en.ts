@@ -351,7 +351,10 @@ export const en = {
       'Your data is only stored in this Firefox. If the extension is removed, it is gone – so download a backup regularly. The file (JSON) is large and on a single line; open it with a code editor or Firefox itself rather than a plain text editor.',
     download: 'Download backup',
     restore: 'Restore backup …',
-    restoreNote: 'Restoring replaces the current data completely.',
+    restoreNote:
+      'Restoring replaces the current data completely. Backups include your settings (since version 1.1); untick the box to keep the current ones.',
+    withSettings: 'Also restore the settings from the backup',
+    settingsRestored: 'Settings restored.',
     created: (n: string) => `Backup with ${n} videos created.`,
     restored: (v: string, w: string) => `Backup restored: ${v} videos, ${w} views.`,
   },
@@ -449,6 +452,8 @@ export const en = {
       'Videos from imports (e.g. Watchmarker) often have no channel, length or date. They can be fetched from YouTube for all older videos too – very slowly, about 2,000 per hour while a YouTube tab is open, so it can take a day for large imports. It continues by itself and can be switched off any time.',
     metaAll: 'Fill in details for all older videos too',
     metaMissing: (count: string) => `${count} videos still without details`,
+    metaFilled: (count: string) => `${count} filled in`,
+    metaNotFound: (count: string) => `${count} no longer on YouTube`,
     clearTitle: 'Delete everything',
     clearIntro:
       'Empties the whole database of this extension: all videos, views and deleted entries. This can only be undone with a backup – download one under Data → Backup first.',

@@ -681,6 +681,7 @@ export default defineContentScript({
           music = musicSets(musicIds);
           sentMarks.clear();
           scan(document);
+          fillMeta(); // e.g. a restored backup with videos still lacking details
         });
       } else if (msg.type === 'musicChanged') {
         music[msg.kind].add(msg.videoId);
@@ -912,6 +913,8 @@ export default defineContentScript({
     );
 
     // Channel trailers: paused when they start by themselves, not when the user starts them.
+    // Paused on "playing" (first frame shown), not "play": stopped before its first
+    // frame, the trailer stays black or YouTube does not show it at all.
     let trailerTouchedAt = 0;
     const onTrailerInput = (e: Event) => {
       if (e.target instanceof Element && e.target.closest(CHANNEL_TRAILER_SELECTOR)) trailerTouchedAt = Date.now();
@@ -919,7 +922,7 @@ export default defineContentScript({
     document.addEventListener('pointerdown', onTrailerInput, true);
     document.addEventListener('keydown', onTrailerInput, true);
     document.addEventListener(
-      'play',
+      'playing',
       (e) => {
         const video = e.target;
         if (!settings.pauseChannelTrailer || !(video instanceof HTMLVideoElement)) return;

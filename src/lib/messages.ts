@@ -67,6 +67,15 @@ export type Request =
   | { type: 'countBySource' }
   | { type: 'deleteBySource'; source: ViewSource };
 
+/** Last run of filling in video details, in storage.local under META_FILL_STATUS_KEY. */
+export interface MetaFillStatus {
+  at: number;
+  filled: number;
+  notFound: number;
+  error?: string;
+}
+export const META_FILL_STATUS_KEY = 'metaFillStatus';
+
 export interface SyncResult {
   scanned: number;
   added: number;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { TrackerDB, clearAll, type ViewSource } from '@/lib/db';
   import { n, t } from '@/lib/i18n';
-  import { send } from '@/lib/messages';
+  import { META_FILL_STATUS_KEY, send, type MetaFillStatus } from '@/lib/messages';
   import { WATCH_LATER_RESULT_KEY, type WatchLaterResult } from '@/lib/playlists';
   import { formatDateTime } from '@/lib/youtube';
   import ConfirmButton from './ConfirmButton.svelte';
@@ -70,8 +70,10 @@
 
   // Videos still without details; filled in by a YouTube tab, so the number is re-read now and then.
   let missingMeta = $state<number | null>(null);
+  let metaStatus = $state<MetaFillStatus | null>(null);
   async function loadMissingMeta() {
     missingMeta = (await send({ type: 'missingMeta', recentOnly: false, limit: 0 })).total;
+    metaStatus = ((await browser.storage.local.get(META_FILL_STATUS_KEY))[META_FILL_STATUS_KEY] as MetaFillStatus) ?? null;
   }
   $effect(() => {
     loadMissingMeta();
@@ -172,6 +174,13 @@
         disabled={!prefs.s.fetchMissingMeta}
         onchange={(v) => setPref('fetchMissingMetaAll', v)}
       />
+      {#if metaStatus}
+        <p class="muted small note">
+          {t.capture.lastRun(formatDateTime(metaStatus.at))}
+          {C.metaFilled(n(metaStatus.filled))}{#if metaStatus.notFound}, {C.metaNotFound(n(metaStatus.notFound))}{/if}
+          {#if metaStatus.error}<span class="error"> – {metaStatus.error}</span>{/if}
+        </p>
+      {/if}
     </div>
   </section>
 {/if}

@@ -480,10 +480,10 @@ export async function resumableView(db: TrackerDB, videoId: string): Promise<Vie
 }
 
 /**
- * One-time repair for views recorded before 1.0.2, when every opening counted
- * as a new view: a view without playback, or one that got further than the
- * unfinished view before it, is merged into that one. Returns the IDs of the
- * changed videos.
+ * Repair for views recorded before 1.0.2, when every opening counted as a new
+ * view: a view without playback, or one that got further than the unfinished
+ * view before it, is merged into that one. Runs once after the update and
+ * after restoring a backup. Returns the IDs of the changed videos.
  */
 export async function mergeResumedViews(db: TrackerDB): Promise<string[]> {
   return db.transaction('rw', db.videos, db.views, async () => {
@@ -510,8 +510,12 @@ export async function mergeResumedViews(db: TrackerDB): Promise<string[]> {
       views.sort((a, b) => a.at - b.at);
       let open: View | null = null;
       for (const v of views) {
+        // Views since 1.0.2 store `lastPosition` and were recorded with the
+        // continue rule already: they are left alone (e.g. after restoring a backup).
         const continues =
           open !== null &&
+          open.lastPosition === undefined &&
+          v.lastPosition === undefined &&
           !(open.at < resetAt && resetAt <= v.at) &&
           ((v.watchedSeconds ?? 0) < 1 || (v.maxPosition ?? 0) >= (open.maxPosition ?? 0));
         if (open && continues) {
@@ -980,20 +984,29 @@ export interface Backup {
   deleted?: Tombstone[];
   /** Hidden videos and playlists (missing in backups from before v0.5). */
   dismissed?: Dismissed[];
+  /** The add-on's settings (missing in backups from before v1.1). */
+  settings?: unknown;
 }
 
-export async function exportBackup(db: TrackerDB): Promise<Backup> {
+export async function exportBackup(db: TrackerDB, settings?: unknown): Promise<Backup> {
   const [videos, views, deleted, dismissed] = await Promise.all([
     db.videos.toArray(),
     db.views.toArray(),
     db.deleted.toArray(),
     db.dismissed.toArray(),
   ]);
-  return { format: BACKUP_FORMAT, version: 1, exportedAt: Date.now(), videos, views, deleted, dismissed };
+  return { format: BACKUP_FORMAT, version: 1, exportedAt: Date.now(), videos, views, deleted, dismissed, settings };
 }
 
-/** Replaces the whole database with a backup. */
-export async function restoreBackup(db: TrackerDB, data: unknown): Promise<{ videos: number; views: number }> {
+/**
+ * Replaces the whole database with a backup; views from before 1.0.2 are
+ * repaired (see mergeResumedViews). The backup's settings are returned, not
+ * applied: the page decides.
+ */
+export async function restoreBackup(
+  db: TrackerDB,
+  data: unknown,
+): Promise<{ videos: number; views: number; settings?: unknown }> {
   const b = data as Partial<Backup>;
   if (b?.format !== BACKUP_FORMAT || !Array.isArray(b.videos) || !Array.isArray(b.views)) {
     throw new Error(t.errors.backupInvalid);
@@ -1008,7 +1021,8 @@ export async function restoreBackup(db: TrackerDB, data: unknown): Promise<{ vid
     await db.deleted.bulkAdd(b.deleted ?? []);
     await db.dismissed.bulkAdd(b.dismissed ?? []);
   });
-  return { videos: b.videos.length, views: b.views.length };
+  await mergeResumedViews(db);
+  return { videos: await db.videos.count(), views: await db.views.count(), settings: b.settings };
 }
 
 export async function clearAll(db: TrackerDB): Promise<void> {

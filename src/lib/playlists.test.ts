@@ -26,6 +26,24 @@ describe('channel lists', () => {
     expect(channelOfPlaylistsId('PLabc')).toBeNull();
   });
 
+  it('reads Shorts from a Shorts list', () => {
+    const response = {
+      contents: [
+        {
+          shortsLockupViewModel: {
+            onTap: { innertubeCommand: { reelWatchEndpoint: { videoId: 'TXb8Pix1Tbs' } } },
+          },
+        },
+        {
+          shortsLockupViewModel: {
+            onTap: { innertubeCommand: { commandMetadata: { webCommandMetadata: { url: '/shorts/aaaaaaaaaaa' } } } },
+          },
+        },
+      ],
+    };
+    expect(extractPlaylistPage(response).videoIds).toEqual(['TXb8Pix1Tbs', 'aaaaaaaaaaa']);
+  });
+
   it('reads playlist IDs from the Playlists tab, not videos', () => {
     const response = {
       contents: [

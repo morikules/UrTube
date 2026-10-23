@@ -350,7 +350,10 @@ export const de: Messages = {
       'Die Daten liegen nur in diesem Firefox. Wird die Erweiterung entfernt, sind sie weg – deshalb regelmäßig eine Sicherung herunterladen. Die Datei (JSON) ist groß und steht in einer Zeile; zum Ansehen eignen sich ein Code-Editor oder Firefox selbst, nicht der Windows-Editor.',
     download: 'Sicherung herunterladen',
     restore: 'Sicherung wiederherstellen …',
-    restoreNote: 'Wiederherstellen ersetzt den aktuellen Stand vollständig.',
+    restoreNote:
+      'Wiederherstellen ersetzt den aktuellen Stand vollständig. Sicherungen enthalten auch deine Einstellungen (seit Version 1.1); ohne Häkchen bleiben die aktuellen.',
+    withSettings: 'Einstellungen aus der Sicherung übernehmen',
+    settingsRestored: 'Einstellungen übernommen.',
     created: (n) => `Sicherung mit ${n} Videos erstellt.`,
     restored: (v, w) => `Sicherung wiederhergestellt: ${v} Videos, ${w} Ansichten.`,
   },
@@ -447,6 +450,8 @@ export const de: Messages = {
       'Videos aus Importen (z. B. Watchmarker) haben oft keinen Kanal, keine Länge und kein Datum. Die lassen sich auch für alle älteren Videos bei YouTube nachladen – sehr langsam, etwa 2.000 pro Stunde, solange ein YouTube-Tab offen ist; bei großen Importen kann das einen Tag dauern. Es läuft von selbst weiter und lässt sich jederzeit ausschalten.',
     metaAll: 'Angaben auch für alle älteren Videos nachladen',
     metaMissing: (count: string) => `noch ${count} Videos ohne Angaben`,
+    metaFilled: (count: string) => `${count} nachgeladen`,
+    metaNotFound: (count: string) => `${count} nicht mehr auf YouTube`,
     clearTitle: 'Alles löschen',
     clearIntro:
       'Leert die komplette Datenbank dieser Erweiterung: alle Videos, Ansichten und gelöschten Einträge. Das lässt sich nur mit einer Sicherung rückgängig machen – vorher unter Daten → Sicherung eine herunterladen.',

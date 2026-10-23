@@ -85,6 +85,15 @@ export default defineBackground(() => {
     }, 500);
   }
 
+  /** For changes in the background (details filled in): pages reload at most every 30 s. */
+  let slowNotifyTimer: ReturnType<typeof setTimeout> | undefined;
+  function notifyPagesSlowly(): void {
+    slowNotifyTimer ??= setTimeout(() => {
+      slowNotifyTimer = undefined;
+      notifyPages();
+    }, 30_000);
+  }
+
   /** Re-reads the given videos, updates the cache and tells YouTube tabs. */
   async function refresh(ids: string[]): Promise<void> {
     notifyPages();
@@ -184,7 +193,8 @@ export default defineBackground(() => {
         return null;
       case 'updateVideoMeta':
         await updateVideoMeta(db, req.videoId, req.meta);
-        if (!req.quiet) notifyPages();
+        if (req.quiet) notifyPagesSlowly();
+        else notifyPages();
         await checkMusic(req.videoId);
         return null;
       case 'missingMeta':

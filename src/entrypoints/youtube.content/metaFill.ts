@@ -4,7 +4,7 @@
  * page does when a video opens. It does not count as watching and does not
  * appear in the YouTube history. Runs gently in one YouTube tab at a time.
  */
-import { send } from '@/lib/messages';
+import { META_FILL_STATUS_KEY, send, type MetaFillStatus } from '@/lib/messages';
 import { innertube, readConfig, sleep } from './innertube';
 import { metaFromPlayerResponse } from './player';
 
@@ -35,6 +35,7 @@ let running = false;
 export async function fillMissingMeta(all: boolean, keepGoing: () => boolean): Promise<void> {
   if (running || !(await takeLock())) return;
   running = true;
+  const status: MetaFillStatus = { at: Date.now(), filled: 0, notFound: 0 };
   try {
     const cfg = readConfig();
     do {
@@ -46,17 +47,23 @@ export async function fillMissingMeta(all: boolean, keepGoing: () => boolean): P
         // Network errors and refusals (e.g. too many requests) end the run; next run retries.
         const resp = await innertube(cfg, 'player', { videoId: id, contentCheckOk: true, racyCheckOk: true }, `/watch?v=${id}`);
         const meta = metaFromPlayerResponse(resp, id);
-        if (meta) await send({ type: 'updateVideoMeta', videoId: id, meta, quiet: true });
-        else notFound.push(id);
+        if (meta) {
+          await send({ type: 'updateVideoMeta', videoId: id, meta, quiet: true });
+          status.filled++;
+        } else notFound.push(id);
         await browser.storage.local.set({ [LOCK_KEY]: Date.now() });
         await sleep(REQUEST_DELAY_MS);
       }
       if (notFound.length) await send({ type: 'metaNotFound', ids: notFound });
+      status.notFound += notFound.length;
     } while (all && keepGoing());
   } catch (e) {
-    console.debug('[UrTube] filling in video details stopped', e);
+    status.error = String(e instanceof Error ? e.message : e);
   } finally {
     running = false;
-    await browser.storage.local.set({ [LOCK_KEY]: 0 });
+    status.at = Date.now();
+    // Runs that had nothing to do keep the last real result visible.
+    const worked = status.filled || status.notFound || status.error;
+    await browser.storage.local.set({ [LOCK_KEY]: 0, ...(worked ? { [META_FILL_STATUS_KEY]: status } : {}) });
   }
 }

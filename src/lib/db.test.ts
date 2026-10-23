@@ -5,7 +5,9 @@ import {
   deleteVideos,
   deleteView,
   getStats,
+  exportBackup,
   importWatchmarker,
+  restoreBackup,
   markMetaTried,
   markUnwatched,
   mergeResumedViews,
@@ -123,6 +125,25 @@ describe('continued views', () => {
     expect(views[0]).toMatchObject({ at: 0, maxPosition: 7632, watchedSeconds: 8015 });
     expect(views[0]!.finishedAt).toBeTypeOf('number');
     expect(await db.videos.get(A)).toMatchObject({ viewCount: 1, lastViewAt: 0 });
+  });
+
+  it('leaves views recorded since 1.0.2 alone (they have lastPosition)', async () => {
+    const first = await view(0, { max: 1800, watched: 1800 });
+    await updateView(db, first, { lastPosition: 1800 });
+    const second = await view(HOUR, { max: 3000, watched: 3000 }); // started over and got further
+    await updateView(db, second, { lastPosition: 3000 });
+    expect(await mergeResumedViews(db)).toEqual([]);
+    expect(await db.views.count()).toBe(2);
+  });
+
+  it('restoring a backup repairs old views and returns its settings', async () => {
+    await view(0, { max: 1800, watched: 1700 });
+    await view(HOUR, {});
+    await view(2 * HOUR, { max: 3600, watched: 1800 });
+    const backup = await exportBackup(db, { language: 'de' });
+    const other = new TrackerDB(`test-restore-${n++}`);
+    const r = await restoreBackup(other, JSON.parse(JSON.stringify(backup)));
+    expect(r).toMatchObject({ videos: 1, views: 1, settings: { language: 'de' } });
   });
 
   it('keeps rewatches after a finished view and restarts that got less far', async () => {
