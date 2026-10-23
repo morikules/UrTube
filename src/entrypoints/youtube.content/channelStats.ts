@@ -6,16 +6,9 @@
  * videos in the channel header, found by its text so layout changes do not
  * break it; otherwise next to the switch in the YouTube header.
  */
-import { n, t } from '@/lib/i18n';
-import {
-  CHANNEL_KINDS,
-  PLAYLIST_FORMAT,
-  channelListId,
-  channelPlaylistsId,
-  playlistProgress,
-  type ChannelKind,
-  type PlaylistInfo,
-} from '@/lib/playlists';
+import { channelListIds, summarizeChannel } from '@/lib/channelStats';
+import { t } from '@/lib/i18n';
+import { channelListId, channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
 
 type Playlists = {
   get(id: string): PlaylistInfo | undefined;
@@ -63,42 +56,13 @@ export function createChannelStats(
 ) {
   let shownFor: string | null = null;
 
-  function listIds(channelId: string): string[] {
-    return [...(Object.keys(CHANNEL_KINDS) as ChannelKind[]).map((k) => channelListId(channelId, k)), channelPlaylistsId(channelId)];
-  }
+  const listIds = channelListIds;
 
   function text(channelId: string): string {
-    const T = t.content.channelStats;
-    const parts: string[] = [];
-    let reading = false;
-    for (const kind of Object.keys(CHANNEL_KINDS) as ChannelKind[]) {
-      if (kind === 'members' && hideMembers()) continue;
-      const p = playlists.get(channelListId(channelId, kind));
-      if (!p || p.format !== PLAYLIST_FORMAT) {
-        reading = true;
-        continue;
-      }
-      const pr = playlistProgress(p, isWatched);
-      if (pr.total) parts.push(`${T[kind]} ${n(pr.seen)} / ${n(pr.total)}${pr.partial ? '+' : ''}`);
-    }
+    const s = summarizeChannel(channelId, (id) => playlists.get(id), isWatched, { hideMembers: hideMembers() });
     // Playlists count as watched when all their videos are; each one is read in turn.
-    const own = playlists.get(channelPlaylistsId(channelId));
-    if (!own) reading = true;
-    else if (own.videoIds.length) {
-      let done = 0;
-      let known = 0;
-      for (const id of own.videoIds) {
-        playlists.want(id);
-        const p = playlists.get(id);
-        if (!p) continue;
-        known++;
-        if (playlistProgress(p, isWatched).done) done++;
-      }
-      if (known < own.videoIds.length) reading = true;
-      parts.push(`${T.playlists} ${n(done)} / ${n(own.videoIds.length)}${own.partial ? '+' : ''}`);
-    }
-    if (!parts.length) return reading ? T.reading : T.none;
-    return `${T.watched} ${parts.join(' · ')}${reading ? ' …' : ''}`;
+    for (const id of s.playlistIds) playlists.want(id);
+    return s.text;
   }
 
   function render(host: Element, channelId: string, inline: boolean): void {

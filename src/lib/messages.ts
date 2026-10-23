@@ -53,6 +53,10 @@ export type Request =
   | { type: 'startYoutubeHistorySync'; full: boolean }
   /** Asks an open YouTube tab to remove all watched videos from "Watch later". */
   | { type: 'startWatchLaterCleanup' }
+  /** Asks an open YouTube tab to read the subscribed channels. */
+  | { type: 'syncSubscriptions' }
+  /** Asks an open YouTube tab to count (again) how much of a channel was watched. */
+  | { type: 'countChannel'; channelId: string }
   /**
    * One page of the YouTube watch history, sent by the content script, with
    * the tokens to remove entries from it. Re-sending adds no duplicates.
@@ -114,6 +118,8 @@ export interface ResponseMap {
   savePlaylist: null;
   startYoutubeHistorySync: null;
   startWatchLaterCleanup: null;
+  syncSubscriptions: null;
+  countChannel: null;
   addYoutubeHistory: { added: number };
   takeRemovals: PendingRemoval[];
   requeueRemovals: null;
@@ -132,6 +138,8 @@ export type Broadcast =
   | { type: 'musicChanged'; videoId: string; kind: 'sure' | 'category' }
   | { type: 'runYoutubeHistorySync'; full: boolean }
   | { type: 'runWatchLaterCleanup' }
+  | { type: 'runSubscriptionsSync' }
+  | { type: 'runChannelCount'; channelId: string }
   /** Removals from the YouTube history are waiting. */
   | { type: 'processRemovals' }
   | { type: 'dismissedChanged'; id: string; dismissed: boolean }

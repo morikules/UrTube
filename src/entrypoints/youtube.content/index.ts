@@ -11,7 +11,15 @@ import {
   toggleHiding,
   type Settings,
 } from '@/lib/settings';
-import { PLAYLIST_FORMAT, playlistIdFromUrl, playlistProgress, progressLabel } from '@/lib/playlists';
+import {
+  PLAYLIST_FORMAT,
+  channelOfPlaylistsId,
+  playlistIdFromUrl,
+  playlistProgress,
+  progressLabel,
+} from '@/lib/playlists';
+import { channelListIds } from '@/lib/channelStats';
+import { subscriptionsDue, syncSubscriptions } from './subscriptions';
 import {
   channelKeyFromPath,
   entryFromPath,
@@ -142,9 +150,18 @@ export default defineContentScript({
     let dismissed = new Set(await send({ type: 'getDismissed' }));
     let page: PageKind = pageKind(location.pathname);
     const watchLater = createWatchLater();
+    /** Channels counted on request (statistics ↻): their playlists are read again too. */
+    const countingChannels = new Set<string>();
     const playlists = createPlaylists(
       () => schedule(document),
       () => settings.playlistCacheHours * 3_600_000,
+      (p) => {
+        // A channel's playlists list was read: read the playlists themselves for their progress.
+        const channelId = channelOfPlaylistsId(p.id);
+        if (!channelId) return;
+        if (countingChannels.delete(channelId)) playlists.refresh(p.videoIds);
+        else for (const id of p.videoIds) playlists.want(id);
+      },
     );
     const channelStats = createChannelStats(
       playlists,
@@ -747,6 +764,11 @@ export default defineContentScript({
         });
       } else if (msg.type === 'runYoutubeHistorySync') {
         runHistorySync(msg.full);
+      } else if (msg.type === 'runSubscriptionsSync') {
+        syncSubscriptions();
+      } else if (msg.type === 'runChannelCount') {
+        countingChannels.add(msg.channelId);
+        playlists.refresh(channelListIds(msg.channelId));
       } else if (msg.type === 'runWatchLaterCleanup') {
         watchLater.cleanup((id) => watched.has(id));
       } else if (msg.type === 'processRemovals') {
@@ -776,14 +798,20 @@ export default defineContentScript({
     });
 
     // Give the page time to finish loading before the first check.
+    // Subscribed channels for the statistics: read once a day.
+    const maybeSyncSubscriptions = async () => {
+      if (await subscriptionsDue()) await syncSubscriptions();
+    };
     setTimeout(() => {
       processRemovals().catch(() => {}); // removals queued while no YouTube tab was open
       maybeSyncHistory();
       fillMeta();
+      maybeSyncSubscriptions();
     }, 15_000);
     setInterval(() => {
       maybeSyncHistory(); // checks only; the interval is a setting
       fillMeta();
+      maybeSyncSubscriptions();
     }, 5 * 60 * 1000);
 
     // --- Recording views ----------------------------------------------------

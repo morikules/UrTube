@@ -278,6 +278,12 @@ export default defineBackground(() => {
       case 'startWatchLaterCleanup':
         await sendToYoutubeTab({ type: 'runWatchLaterCleanup' });
         return null;
+      case 'syncSubscriptions':
+        await sendToYoutubeTab({ type: 'runSubscriptionsSync' });
+        return null;
+      case 'countChannel':
+        await sendToYoutubeTab({ type: 'runChannelCount', channelId: req.channelId });
+        return null;
       case 'addYoutubeHistory': {
         await saveYtTokens(db, req.tokens);
         const { recordShorts } = await loadSettings();

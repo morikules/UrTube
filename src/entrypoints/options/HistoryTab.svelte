@@ -17,7 +17,15 @@
   const H = t.history;
 
   type Filter = keyof typeof H.filters;
-  const filters = (Object.keys(H.filters) as Filter[]).map((id) => ({ id, label: H.filters[id] }));
+  /** Videos without channel details yet (filled in from YouTube in the background). */
+  const noChannel = (v: Video) => !v.channelName && !v.channelId;
+  // The "without channel" entry shows how many are left, so progress is visible.
+  const filters = $derived(
+    (Object.keys(H.filters) as Filter[]).map((id) => ({
+      id,
+      label: id === 'nochannel' ? `${H.filters[id]} (${n(all.filter(noChannel).length)})` : H.filters[id],
+    })),
+  );
 
   // raw: ~50k videos, replaced as a whole on reload
   let all = $state.raw<Video[]>([]);
@@ -42,6 +50,7 @@
       if (filter === 'watched' && v.status !== 'watched') return false;
       if (filter === 'unwatched' && v.status !== 'unwatched') return false;
       if (filter === 'shorts' && !v.isShort) return false;
+      if (filter === 'nochannel' && !noChannel(v)) return false;
       if (filter === 'music' || filter === 'nomusic') {
         if (isMusicVideo(v, withCategory) !== (filter === 'music')) return false;
       }

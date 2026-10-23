@@ -66,8 +66,15 @@ export async function fetchPlaylist(id: string): Promise<PlaylistInfo> {
   return { id, title, videoIds, partial: Boolean(continuation), fetchedAt: Date.now(), format: PLAYLIST_FORMAT };
 }
 
-/** `maxAgeMs` gives the current cache duration from the settings. */
-export function createPlaylists(onUpdate: () => void, maxAgeMs: () => number) {
+/**
+ * `maxAgeMs` gives the current cache duration from the settings; `onSaved` is
+ * called with each playlist read from YouTube.
+ */
+export function createPlaylists(
+  onUpdate: () => void,
+  maxAgeMs: () => number,
+  onSaved: (playlist: PlaylistInfo) => void = () => {},
+) {
   const cache = new Map<string, PlaylistInfo>();
   /** Playlists already looked at in this tab (cache checked, fetched if needed). */
   const seen = new Set<string>();
@@ -88,6 +95,7 @@ export function createPlaylists(onUpdate: () => void, maxAgeMs: () => number) {
         const playlist = await fetchPlaylist(id);
         cache.set(id, playlist);
         await send({ type: 'savePlaylist', playlist });
+        onSaved(playlist);
         onUpdate();
       } catch {
         // Private/deleted playlist or YouTube not ready: ignore, try again on next page load.

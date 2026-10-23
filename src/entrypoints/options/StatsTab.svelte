@@ -3,6 +3,7 @@
   import { n as fmt, t } from '@/lib/i18n';
   import { RANGE_IDS, computeStats, formatWatchTime, rangeFor, type RangeId } from '@/lib/stats';
   import BarList from './BarList.svelte';
+  import ChannelList from './ChannelList.svelte';
   import ColumnChart from './ColumnChart.svelte';
   import Dropdown from './Dropdown.svelte';
 
@@ -12,6 +13,7 @@
   const T = t.stats;
   const ranges = RANGE_IDS.map((id) => ({ id, label: T.ranges[id] }));
   let rangeId = $state<RangeId>('30d');
+  let showAllChannels = $state(false);
 
   // raw: tens of thousands of rows, replaced as a whole on reload
   let videos = $state.raw<Video[]>([]);
@@ -84,6 +86,9 @@
           {#if stats.unknownChannel}
             <p class="muted small">{T.unknownChannel(fmt(stats.unknownChannel))}</p>
           {/if}
+          <button class="all-channels" onclick={() => (showAllChannels = !showAllChannels)} aria-expanded={showAllChannels}>
+            {showAllChannels ? T.channels.hideAll : T.channels.showAll}
+          </button>
         </div>
       </div>
       <div>
@@ -100,6 +105,14 @@
         </div>
       </div>
     </div>
+
+    {#if showAllChannels}
+      <h2>{T.channels.title}</h2>
+      <p class="muted">{T.channels.intro}</p>
+      <div class="box list-box">
+        <ChannelList {videos} />
+      </div>
+    {/if}
   {/if}
 </section>
 
@@ -154,6 +167,9 @@
   }
   .list-box {
     padding: 10px 16px;
+  }
+  .all-channels {
+    margin-top: 8px;
   }
   .cols {
     display: grid;

@@ -31,6 +31,11 @@ All notable changes. Versions before 1.0 were private test builds.
 - New: Settings → Hiding → Channel memberships, with the members-only filters
   and an option to leave members-only videos out of the channel statistics.
 - Channel names in the history and statistics open the channel page.
+- New: Statistics → "Show all channels": every channel you watched something
+  of plus your subscriptions (read from YouTube once a day), searchable and
+  filterable to subscriptions only, with watched / total per channel and ↻ to
+  count a channel right away.
+- New history filter "Without channel details", with the number left.
 - Video details for older videos are fetched faster (about 7,000 per hour),
   slowing down when YouTube asks for a break, and only checked once a day
   once all videos have them.

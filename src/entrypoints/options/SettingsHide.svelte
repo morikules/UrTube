@@ -225,12 +225,26 @@
     color: var(--muted);
     font-size: 0.88em;
   }
+  /* Own radio: same height as the switches below and centered under them (38 px wide). */
   .choice input {
+    appearance: none;
     flex: none;
-    width: 16px;
-    height: 16px;
-    margin: 0 10px 0 0;
-    accent-color: var(--accent);
+    box-sizing: border-box;
+    width: 22px;
+    height: 22px;
+    margin: 0 11px 0 0;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+  }
+  .choice input:checked {
+    border-color: var(--accent);
+    background: radial-gradient(var(--accent) 0 5px, transparent 6px);
+  }
+  .choice input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   /* The areas belong to "a switch per area": indented below it. */
   .areas {
