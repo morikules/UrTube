@@ -38,8 +38,9 @@ All notable changes. Versions before 1.0 were private test builds.
 - New history filters "Without channel details" (still to be filled in) and
   "No longer on YouTube" (deleted, private or a broken ID), with their numbers;
   such videos carry a badge.
-- The channel list is always shown, with channel pictures, and can be sorted by
-  most watched, largest share watched, most videos or name.
+- The channel list is always shown, as a table with channel pictures; click a
+  column header to sort (channel, watched, videos watched, share, playlists,
+  counted).
 - Filling in video details shows live what it does (running, waiting for
   YouTube, stopped, done) and skips single broken videos instead of stopping.
 - Switches: the knob sits centered in Firefox.

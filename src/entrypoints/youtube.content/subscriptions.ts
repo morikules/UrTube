@@ -1,5 +1,6 @@
 /** Reads the user's subscribed channels from YouTube (see lib/subscriptions.ts). */
 import {
+  SUBSCRIPTIONS_FORMAT,
   SUBSCRIPTIONS_KEY,
   SUBSCRIPTIONS_MAX_AGE_MS,
   extractSubscriptionsPage,
@@ -17,7 +18,8 @@ async function stored(): Promise<Subscriptions | undefined> {
 
 export async function subscriptionsDue(): Promise<boolean> {
   const s = await stored();
-  return !s || Date.now() - s.at > SUBSCRIPTIONS_MAX_AGE_MS;
+  // Lists read the old way (e.g. without channel pictures) are read again right away.
+  return !s || (s.format ?? 1) < SUBSCRIPTIONS_FORMAT || Date.now() - s.at > SUBSCRIPTIONS_MAX_AGE_MS;
 }
 
 let running = false;
@@ -44,11 +46,16 @@ export async function syncSubscriptions(): Promise<void> {
       pages++;
       if (continuation) await sleep(PAGE_DELAY_MS);
     } while (continuation && pages < MAX_PAGES);
-    const result: Subscriptions = { at: Date.now(), channels: [...channels.values()] };
+    const result: Subscriptions = { at: Date.now(), format: SUBSCRIPTIONS_FORMAT, channels: [...channels.values()] };
     await browser.storage.local.set({ [SUBSCRIPTIONS_KEY]: result });
   } catch (e) {
     // Keep the last list; the error is shown in the statistics.
-    const failed: Subscriptions = { at: prev?.at ?? 0, channels: prev?.channels ?? [], error: String(e instanceof Error ? e.message : e) };
+    const failed: Subscriptions = {
+      ...prev,
+      at: prev?.at ?? 0,
+      channels: prev?.channels ?? [],
+      error: String(e instanceof Error ? e.message : e),
+    };
     await browser.storage.local.set({ [SUBSCRIPTIONS_KEY]: failed });
   } finally {
     running = false;

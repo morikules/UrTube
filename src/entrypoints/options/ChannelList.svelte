@@ -34,14 +34,17 @@
   let lists = $state.raw(new Map<string, PlaylistInfo>());
   let query = $state('');
   let filter = $state<'all' | 'subs'>('all');
-  type Sort = 'watched' | 'share' | 'total' | 'name';
-  let sort = $state<Sort>('watched');
-  const sorts: { id: Sort; label: string }[] = [
-    { id: 'watched', label: C.sortWatched },
-    { id: 'share', label: C.sortShare },
-    { id: 'total', label: C.sortTotal },
-    { id: 'name', label: C.sortName },
-  ];
+  /** Sorted by a column header; a second click turns the order around. */
+  type SortKey = 'name' | 'watched' | 'uploads' | 'share' | 'playlists' | 'counted';
+  let sortKey = $state<SortKey>('watched');
+  let sortDesc = $state(true);
+  function sortBy(key: SortKey) {
+    if (sortKey === key) sortDesc = !sortDesc;
+    else {
+      sortKey = key;
+      sortDesc = key !== 'name'; // names A–Z, numbers largest first
+    }
+  }
   let limit = $state(PAGE);
   let error = $state('');
   /** Channels being counted on request, with the time the request was sent. */
@@ -111,21 +114,32 @@
   const filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
     const list = rows.filter((r) => (filter === 'all' || r.subscribed) && (!q || r.name.toLowerCase().includes(q)));
-    const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
-    const order: Record<Sort, (a: Row, b: Row) => number> = {
-      watched: (a, b) => b.watched - a.watched || byName(a, b),
-      share: (a, b) => share(b) - share(a) || b.watched - a.watched,
-      total: (a, b) => (summaries.get(b.key)?.total ?? -1) - (summaries.get(a.key)?.total ?? -1) || byName(a, b),
-      name: byName,
+    // Values per column; channels not counted yet (-1) end up last when sorting by numbers.
+    const s = (r: Row) => summaries.get(r.key);
+    const value: Record<Exclude<SortKey, 'name'>, (r: Row) => number> = {
+      watched: (r) => r.watched,
+      uploads: (r) => (s(r)?.unknown ? -1 : (s(r)?.total ?? -1)),
+      share,
+      playlists: (r) => (s(r)?.unknown ? -1 : (s(r)?.playlistsTotal ?? -1)),
+      counted: (r) => s(r)?.countedAt ?? -1,
     };
-    return list.sort(order[sort]);
+    const dir = sortDesc ? -1 : 1;
+    const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
+    return list.sort((a, b) => {
+      if (sortKey === 'name') return dir * byName(a, b);
+      const va = value[sortKey](a);
+      const vb = value[sortKey](b);
+      if (va === -1 || vb === -1) return (va === -1 ? 1 : 0) - (vb === -1 ? 1 : 0) || byName(a, b);
+      return dir * (va - vb) || byName(a, b);
+    });
   });
   const visible = $derived(filtered.slice(0, limit));
 
   $effect(() => {
     void query;
     void filter;
-    void sort;
+    void sortKey;
+    void sortDesc;
     limit = PAGE;
   });
 
@@ -201,7 +215,6 @@
 <div class="toolbar">
   <input type="search" placeholder={C.search} bind:value={query} />
   <Dropdown label={C.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
-  <Dropdown label={C.sort} options={sorts} value={sort} onchange={(s) => (sort = s)} />
 </div>
 <p class="muted small subs">
   {#if subs?.at}{C.subsInfo(n(subs.channels.length), formatDateTime(subs.at))}{:else}{C.subsNone}{/if}
@@ -213,56 +226,86 @@
 {#if !filtered.length}
   <p class="muted">{C.empty}</p>
 {:else}
-  <ul>
-    {#each visible as row (row.key)}
-      {@const s = summaries.get(row.key) ?? null}
-      {@const avatar = avatarOf(row)}
-      <li>
-        {#if avatar && !brokenAvatars.has(row.key)}
-          <img
-            class="avatar"
-            src={avatar}
-            alt=""
-            loading="lazy"
-            referrerpolicy="no-referrer"
-            onerror={() => brokenAvatars.add(row.key)}
-          />
-        {:else}
-          <span class="avatar initial" aria-hidden="true">{row.name.slice(0, 1).toUpperCase()}</span>
-        {/if}
-        <div class="body">
-        <div class="head">
-          {#if row.url}
-            <a class="plain name" href={row.url} target="_blank" rel="noreferrer">{row.name}</a>
-          {:else}
-            <span class="name">{row.name}</span>
-          {/if}
-          {#if row.subscribed}<span class="badge">{C.subscribed}</span>{/if}
-          <span class="watched">{C.watched(n(row.watched))}</span>
-        </div>
-        <div class="detail muted small">
-          {#if row.channelId}
-            {#if counting.has(row.channelId)}
-              {s && !s.unknown ? `${s.text} – ` : ''}{C.counting}
-            {:else if !s || s.unknown}
-              {C.notCounted}
+  {#snippet header(key: SortKey, label: string, cls = '')}
+    <th class={cls} aria-sort={sortKey === key ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
+      <button class="sort" class:active={sortKey === key} onclick={() => sortBy(key)}>
+        {label}<span class="arrow">{sortKey === key ? (sortDesc ? '▼' : '▲') : ''}</span>
+      </button>
+    </th>
+  {/snippet}
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          {@render header('name', C.colChannel)}
+          {@render header('watched', C.colWatched, 'num')}
+          {@render header('uploads', C.colUploads, 'num')}
+          {@render header('share', C.colShare, 'num')}
+          {@render header('playlists', C.colPlaylists, 'num')}
+          {@render header('counted', C.colCounted, 'num')}
+          <th class="action"><span class="visually-hidden">{C.count}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each visible as row (row.key)}
+          {@const s = summaries.get(row.key) ?? null}
+          {@const counted = s && !s.unknown}
+          {@const avatar = avatarOf(row)}
+          <tr>
+            <td class="channel"><div class="channel-inner">
+              {#if avatar && !brokenAvatars.has(row.key)}
+                <img
+                  class="avatar"
+                  src={avatar}
+                  alt=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  onerror={() => brokenAvatars.add(row.key)}
+                />
+              {:else}
+                <span class="avatar initial" aria-hidden="true">{row.name.slice(0, 1).toUpperCase()}</span>
+              {/if}
+              <span class="name-cell">
+                {#if row.url}
+                  <a class="plain name" href={row.url} target="_blank" rel="noreferrer">{row.name}</a>
+                {:else}
+                  <span class="name">{row.name}</span>
+                {/if}
+                {#if row.subscribed}<span class="badge">{C.subscribed}</span>{/if}
+              </span>
+            </div></td>
+            <td class="num">{n(row.watched)}</td>
+            {#if counted}
+              <!-- The breakdown (videos, Shorts, live …) as tooltip. -->
+              <td class="num" title={s!.text}>{n(s!.seen)} / {n(s!.total)}</td>
+              <td class="num share">
+                {#if s!.total}
+                  <span class="bar"><span style:width={`${(s!.seen / s!.total) * 100}%`}></span></span>
+                  {Math.round((s!.seen / s!.total) * 100)} %
+                {:else}–{/if}
+              </td>
+              <td class="num">{s!.playlistsTotal ? `${n(s!.playlistsDone)} / ${n(s!.playlistsTotal)}` : '–'}</td>
+              <td class="num muted">{s!.countedAt ? formatDate(s!.countedAt) : '–'}</td>
             {:else}
-              {s.text}{#if s.total}{` · ${C.share(Math.round((s.seen / s.total) * 100))}`}{/if}{#if s.countedAt}{` · ${C.countedAt(formatDate(s.countedAt))}`}{/if}
+              <td class="num muted" colspan="4">
+                {row.channelId ? (counting.has(row.channelId) ? C.counting : C.notCounted) : C.noChannelId}
+              </td>
             {/if}
-            <button
-              class="link"
-              title={C.count}
-              disabled={counting.has(row.channelId)}
-              onclick={() => count(row.channelId!)}>↻</button
-            >
-          {:else}
-            {C.noChannelId}
-          {/if}
-        </div>
-        </div>
-      </li>
-    {/each}
-  </ul>
+            <td class="action">
+              {#if row.channelId}
+                <button
+                  class="link"
+                  title={C.count}
+                  disabled={counting.has(row.channelId)}
+                  onclick={() => count(row.channelId!)}>{counting.has(row.channelId) ? '…' : '↻'}</button
+                >
+              {/if}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
   {#if visible.length < filtered.length}
     <button class="more" onclick={() => (limit += PAGE)}>{C.more(n(filtered.length - visible.length))}</button>
   {/if}
@@ -287,26 +330,74 @@
   .subs {
     margin: 8px 0;
   }
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  /* Wide table: scrolls sideways on narrow windows instead of squeezing. */
+  .scroll {
+    overflow-x: auto;
   }
-  li {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 8px 0;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    padding: 8px 10px;
     border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
   }
-  .body {
-    flex: 1;
-    min-width: 0;
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+  th {
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+  .num {
+    text-align: right;
+  }
+  th.num .sort {
+    justify-content: flex-end;
+  }
+  .sort {
+    display: inline-flex;
+    width: 100%;
+    gap: 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sort:hover,
+  .sort.active {
+    color: var(--fg);
+  }
+  .arrow {
+    min-width: 0.8em;
+    color: var(--accent);
+    font-size: 0.8em;
+  }
+  td.channel {
+    white-space: normal;
+  }
+  .channel-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .name-cell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
   }
   .avatar {
     flex: none;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -317,22 +408,8 @@
     color: var(--muted);
     font-weight: 600;
   }
-  li:last-child {
-    border-bottom: none;
-  }
-  .head {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
   .name {
     font-weight: 500;
-  }
-  .watched {
-    margin-left: auto;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
   .badge {
     padding: 0 6px;
@@ -340,8 +417,32 @@
     background: var(--border);
     font-size: 0.8em;
   }
-  .detail {
-    margin-top: 2px;
+  /* Share as a small bar in the accent color, the number next to it. */
+  .share .bar {
+    display: inline-block;
+    width: 48px;
+    height: 6px;
+    margin-right: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    vertical-align: middle;
+    overflow: hidden;
+  }
+  .share .bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+  }
+  .action {
+    width: 1%;
+    text-align: right;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
   }
   button.link {
     padding: 0 4px;

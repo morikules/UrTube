@@ -27,11 +27,15 @@ export function avatarIn(node: unknown): string | undefined {
 export interface Subscriptions {
   /** When the list was read completely. */
   at: number;
+  /** SUBSCRIPTIONS_FORMAT when read; older lists are read again. */
+  format?: number;
   channels: SubscribedChannel[];
   error?: string;
 }
 
 export const SUBSCRIPTIONS_KEY = 'subscriptions';
+/** Raise when the way the list is read changes (v2: channel pictures). */
+export const SUBSCRIPTIONS_FORMAT = 2;
 /** Read again after this long (while a YouTube tab is open), or with ↻. */
 export const SUBSCRIPTIONS_MAX_AGE_MS = 24 * 3_600_000;
 

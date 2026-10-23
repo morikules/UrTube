@@ -32,6 +32,9 @@ export interface ChannelSummary {
   /** Watched and total uploads (videos, Shorts, live streams; members-only unless hidden). */
   seen: number;
   total: number;
+  /** Playlists completely watched, and all playlists of the channel (known so far). */
+  playlistsDone: number;
+  playlistsTotal: number;
   /** The channel's playlists (to be read for their progress). */
   playlistIds: string[];
 }
@@ -64,9 +67,9 @@ export function summarizeChannel(
     if (pr.total) parts.push(`${T[kind]} ${n(pr.seen)} / ${n(pr.total)}${pr.partial ? '+' : ''}`);
   }
   const own = get(channelPlaylistsId(channelId));
+  let done = 0;
   if (!own) reading = true;
   else if (own.videoIds.length) {
-    let done = 0;
     let known = 0;
     for (const id of own.videoIds) {
       const p = get(id);
@@ -79,5 +82,15 @@ export function summarizeChannel(
   }
   const body = parts.join(' · ');
   const text = !parts.length ? (reading ? T.reading : T.none) : `${withPrefix ? `${T.watched} ` : ''}${body}${reading ? ' …' : ''}`;
-  return { text, reading, unknown, countedAt, seen, total, playlistIds: own?.videoIds ?? [] };
+  return {
+    text,
+    reading,
+    unknown,
+    countedAt,
+    seen,
+    total,
+    playlistsDone: done,
+    playlistsTotal: own?.videoIds.length ?? 0,
+    playlistIds: own?.videoIds ?? [],
+  };
 }
