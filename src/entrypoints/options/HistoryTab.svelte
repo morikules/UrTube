@@ -7,6 +7,15 @@
   import VideoRow from './VideoRow.svelte';
   import { n, t } from '@/lib/i18n';
   import { isGone, isMusicVideo } from '@/lib/youtube';
+  import {
+    LENGTH_FILTERS,
+    download,
+    inDateRange,
+    lengthMatches,
+    resumePoints,
+    videosCsv,
+    type LengthFilter,
+  } from '@/lib/history';
   import { prefs } from './prefs.svelte';
 
   /** `dataVersion` changes whenever the background reports new data. */
@@ -20,7 +29,11 @@
   /** Videos still waiting for channel details (filled in from YouTube in the background). */
   const noChannel = (v: Video) => !v.channelName && !v.channelId && !isGone(v);
   // These entries show how many there are, so progress of filling in details is visible.
-  const counted: Partial<Record<Filter, (v: Video) => boolean>> = { nochannel: noChannel, gone: isGone };
+  const counted: Partial<Record<Filter, (v: Video) => boolean>> = {
+    nochannel: noChannel,
+    gone: isGone,
+    continue: (v) => resume.has(v.id),
+  };
   const filters = $derived(
     (Object.keys(H.filters) as Filter[]).map((id) => {
       const test = counted[id];
@@ -30,17 +43,33 @@
 
   // raw: ~50k videos, replaced as a whole on reload
   let all = $state.raw<Video[]>([]);
+  /** Where unfinished videos can be continued (seconds), from the views recorded here. */
+  let resume = $state.raw(new Map<string, number>());
   let loading = $state(true);
   let query = $state('');
   let filter = $state<Filter>('all');
+  let length = $state<LengthFilter>('all');
+  let dateFrom = $state('');
+  let dateTo = $state('');
   let limit = $state(PAGE);
   let expanded = $state<string | null>(null);
   let error = $state('');
   const selected = new SvelteSet<string>();
 
+  const lengths = LENGTH_FILTERS.map((id) => ({ id, label: H.lengths[id] }));
+
   async function load() {
-    all = await db.videos.orderBy('lastViewAt').reverse().toArray();
+    const [videos, recorded] = await Promise.all([
+      db.videos.orderBy('lastViewAt').reverse().toArray(),
+      db.views.where('source').equals('extension').toArray(),
+    ]);
+    all = videos;
+    resume = resumePoints(recorded, prefs.s?.finishedThreshold ?? 0.9);
     loading = false;
+  }
+
+  function exportCsv() {
+    download(videosCsv(filtered), `urtube-history-${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
   const withCategory = $derived(prefs.s?.musicFromCategory ?? true);
@@ -53,6 +82,8 @@
       if (filter === 'shorts' && !v.isShort) return false;
       if (filter === 'nochannel' && !noChannel(v)) return false;
       if (filter === 'gone' && !isGone(v)) return false;
+      if (filter === 'continue' && !resume.has(v.id)) return false;
+      if (!lengthMatches(v, length) || !inDateRange(v, dateFrom, dateTo)) return false;
       if (filter === 'music' || filter === 'nomusic') {
         if (isMusicVideo(v, withCategory) !== (filter === 'music')) return false;
       }
@@ -70,6 +101,9 @@
   $effect(() => {
     void query;
     void filter;
+    void length;
+    void dateFrom;
+    void dateTo;
     limit = PAGE;
   });
 
@@ -124,6 +158,23 @@
   <div class="toolbar">
     <input type="search" placeholder={H.search} bind:value={query} />
     <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
+    <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} />
+  </div>
+  <div class="toolbar second">
+    <label class="date">
+      {H.from}
+      <input type="date" bind:value={dateFrom} max={dateTo || undefined} />
+    </label>
+    <label class="date">
+      {H.to}
+      <input type="date" bind:value={dateTo} min={dateFrom || undefined} />
+    </label>
+    {#if dateFrom || dateTo}
+      <button class="link" onclick={() => ((dateFrom = ''), (dateTo = ''))}>{H.clearDates}</button>
+    {/if}
+    <button class="export" onclick={exportCsv} disabled={!filtered.length} title={H.exportHint}>
+      {H.exportCsv(n(filtered.length))}
+    </button>
   </div>
 
   <!-- The total is in the header; only show a count when it differs. -->
@@ -131,7 +182,7 @@
     <p class="status muted">{t.common.loading}</p>
   {:else if !all.length}
     <p class="status muted">{H.empty}</p>
-  {:else if query.trim() || filter !== 'all'}
+  {:else if query.trim() || filter !== 'all' || length !== 'all' || dateFrom || dateTo}
     <p class="status muted">{H.hits(n(filtered.length))}</p>
   {/if}
 
@@ -159,6 +210,7 @@
     {#each visible as video (video.id)}
       <VideoRow
         {video}
+        resumeAt={resume.get(video.id)}
         selected={selected.has(video.id)}
         expanded={expanded === video.id}
         ontoggleselect={() => toggleSelect(video.id)}
@@ -193,6 +245,36 @@
   }
   .toolbar {
     margin-bottom: 10px;
+  }
+  .toolbar.second {
+    font-size: 0.9em;
+  }
+  .date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+  }
+  .date input {
+    font: inherit;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg);
+    color-scheme: light dark;
+  }
+  .export {
+    margin-left: auto;
+  }
+  button.link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
   .status {
     margin: 0 0 6px;

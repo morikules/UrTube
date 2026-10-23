@@ -14,9 +14,12 @@
     onaction: (action: 'markUnwatched' | 'markWatched' | 'deleteVideos') => void;
     onviewdeleted: () => void;
     onerror: (message: string) => void;
+    /** Unfinished: where to continue (seconds); the thumbnail opens the video there. */
+    resumeAt?: number;
   }
   let {
     video,
+    resumeAt,
     selected,
     expanded,
     ontoggleselect,
@@ -71,9 +74,19 @@
   <div class="row">
     <input type="checkbox" checked={selected} onchange={ontoggleselect} aria-label={V.select} />
 
-    <a class="thumb" href={videoUrl(video.id, video.isShort)} target="_blank" rel="noreferrer">
+    <a
+      class="thumb"
+      href={videoUrl(video.id, video.isShort) + (resumeAt && !video.isShort ? `&t=${Math.floor(resumeAt)}s` : '')}
+      target="_blank"
+      rel="noreferrer"
+      title={resumeAt ? V.continueAt(formatDuration(resumeAt)) : V.open}
+    >
       <img src={thumbnailUrl(video.id)} alt="" loading="lazy" width="128" height="72" />
       {#if video.durationSec}<span class="duration">{formatDuration(video.durationSec)}</span>{/if}
+      {#if resumeAt && video.durationSec}
+        <!-- Like YouTube's own red bar: how far you got. -->
+        <span class="resume" style:width={`${Math.min(100, (resumeAt / video.durationSec) * 100)}%`}></span>
+      {/if}
     </a>
 
     <button class="info" onclick={ontoggleexpand} aria-expanded={expanded}>
@@ -107,6 +120,7 @@
         {#if video.isLive}<span class="badge" title={V.badgeLiveHint}>{V.badgeLive}</span>{/if}
         {#if video.isMusic}<span class="badge">{V.badgeMusic}</span>{/if}
         {#if isGone(video)}<span class="badge" title={V.badgeGoneHint}>{V.badgeGone}</span>{/if}
+        {#if resumeAt}<span class="badge">{V.continueAt(formatDuration(resumeAt))}</span>{/if}
       </span>
     </button>
 
@@ -205,6 +219,13 @@
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+  .resume {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent);
   }
   li.reset .thumb img {
     opacity: 0.5;

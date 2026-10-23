@@ -3,6 +3,7 @@
   import { n, t } from '@/lib/i18n';
   import { send } from '@/lib/messages';
   import Notice from './Notice.svelte';
+  import { download as saveFile, videosCsv, viewsCsv } from '@/lib/history';
   import { loadSettings, normalizeSettings, saveSettings } from '@/lib/settings';
   import { createRunner } from './prefs.svelte';
 
@@ -22,6 +23,25 @@
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
       return B.created(n(backup.videos.length));
+    });
+  }
+
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function exportVideos() {
+    return runner.run(async () => {
+      const videos = await new TrackerDB().videos.orderBy('lastViewAt').reverse().toArray();
+      saveFile(videosCsv(videos), `urtube-videos-${today()}.csv`);
+      return B.exported(n(videos.length));
+    });
+  }
+
+  function exportViews() {
+    return runner.run(async () => {
+      const db = new TrackerDB();
+      const [videos, views] = await Promise.all([db.videos.toArray(), db.views.toArray()]);
+      saveFile(viewsCsv(views, videos), `urtube-views-${today()}.csv`);
+      return B.exported(n(views.length));
     });
   }
 
@@ -80,6 +100,17 @@
     <p class="muted small">{B.restoreNote}</p>
   </div>
   <Notice message={runner.state.message} error={runner.state.error} />
+</section>
+
+<section>
+  <h2>{B.exportTitle}</h2>
+  <p class="muted">{B.exportIntro}</p>
+  <div class="box">
+    <div class="buttons">
+      <button onclick={exportVideos} disabled={runner.state.busy}>{B.exportVideos}</button>
+      <button onclick={exportViews} disabled={runner.state.busy}>{B.exportViews}</button>
+    </div>
+  </div>
 </section>
 
 <style>
