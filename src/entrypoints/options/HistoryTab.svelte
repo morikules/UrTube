@@ -11,12 +11,16 @@
   import { isGone, isMusicVideo } from '@/lib/youtube';
   import {
     LENGTH_FILTERS,
+    ORIGINS,
+    abandonedVideos,
     download,
     inDateRange,
     lengthMatches,
+    originsByVideo,
     resumePoints,
     videosCsv,
     type LengthFilter,
+    type Origin,
   } from '@/lib/history';
   import { prefs } from './prefs.svelte';
 
@@ -35,6 +39,10 @@
     nochannel: noChannel,
     gone: isGone,
     continue: (v) => resume.has(v.id),
+    abandoned: (v) => abandoned.has(v.id),
+    members: (v) => membersOnly.has(v.id),
+    premiere: (v) => !!v.isPremiere,
+    dismissed: (v) => isHidden(v),
   };
   const filters = $derived(
     (Object.keys(H.filters) as Filter[]).map((id) => {
@@ -47,10 +55,23 @@
   let all = $state.raw<Video[]>([]);
   /** Where unfinished videos can be continued (seconds), from the views recorded here. */
   let resume = $state.raw(new Map<string, number>());
+  /** Videos given up early, members-only videos (from counted channels), where views came from. */
+  let abandoned = $state.raw(new Set<string>());
+  let membersOnly = $state.raw(new Set<string>());
+  let origins = $state.raw(new Map<string, Set<Origin>>());
+  /** Hidden with ⊘: videos, and channels by handle or ID. */
+  let hiddenVideos = $state.raw(new Set<string>());
+  let hiddenChannels = $state.raw(new Set<string>());
+  const isHidden = (v: Video) =>
+    hiddenVideos.has(v.id) ||
+    (!!v.channelHandle && hiddenChannels.has(v.channelHandle)) ||
+    (!!v.channelId && hiddenChannels.has(v.channelId));
   let loading = $state(true);
   let query = $state('');
   let filter = $state<Filter>('all');
   let length = $state<LengthFilter>('all');
+  let origin = $state<Origin>('all');
+  const originOptions = ORIGINS.map((id) => ({ id, label: H.origins[id] }));
   let dateFrom = $state('');
   let dateTo = $state('');
   let limit = $state(PAGE);
@@ -61,12 +82,19 @@
   const lengths = LENGTH_FILTERS.map((id) => ({ id, label: H.lengths[id] }));
 
   async function load() {
-    const [videos, recorded] = await Promise.all([
+    const [videos, views, membersLists, dismissed] = await Promise.all([
       db.videos.orderBy('lastViewAt').reverse().toArray(),
-      db.views.where('source').equals('extension').toArray(),
+      db.views.toArray(),
+      db.playlists.where('id').startsWith('UUMO').toArray(),
+      db.dismissed.toArray(),
     ]);
     all = videos;
-    resume = resumePoints(recorded, prefs.s?.finishedThreshold ?? 0.9);
+    resume = resumePoints(views, prefs.s?.finishedThreshold ?? 0.9);
+    abandoned = abandonedVideos(views);
+    origins = originsByVideo(views);
+    membersOnly = new Set(membersLists.flatMap((p) => p.videoIds));
+    hiddenVideos = new Set(dismissed.filter((d) => d.kind === 'video').map((d) => d.id));
+    hiddenChannels = new Set(dismissed.filter((d) => d.kind === 'channel').map((d) => d.id));
     const first = loading;
     loading = false;
     if (first) restoreScroll();
@@ -142,6 +170,11 @@
       if (filter === 'nochannel' && !noChannel(v)) return false;
       if (filter === 'gone' && !isGone(v)) return false;
       if (filter === 'continue' && !resume.has(v.id)) return false;
+      if (filter === 'abandoned' && !abandoned.has(v.id)) return false;
+      if (filter === 'members' && !membersOnly.has(v.id)) return false;
+      if (filter === 'premiere' && !v.isPremiere) return false;
+      if (filter === 'dismissed' && !isHidden(v)) return false;
+      if (origin !== 'all' && !origins.get(v.id)?.has(origin)) return false;
       if (!lengthMatches(v, length) || !inDateRange(v, dateFrom, dateTo)) return false;
       if (filter === 'music' || filter === 'nomusic') {
         if (isMusicVideo(v, withCategory) !== (filter === 'music')) return false;
@@ -169,6 +202,7 @@
     void query;
     void filter;
     void length;
+    void origin;
     void dateFrom;
     void dateTo;
     limit = PAGE;
@@ -226,6 +260,7 @@
     <SearchInput placeholder={H.search} bind:value={query} />
     <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
     <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} />
+    <Dropdown label={H.origin} options={originOptions} value={origin} onchange={(o) => (origin = o)} />
   </div>
   <div class="toolbar second">
     <label class="all" title={H.selectAllHint}>
@@ -296,6 +331,11 @@
       <VideoRow
         {video}
         resumeAt={resume.get(video.id)}
+        tags={{
+          abandoned: abandoned.has(video.id),
+          membersOnly: membersOnly.has(video.id),
+          hidden: isHidden(video),
+        }}
         selected={selected.has(video.id)}
         expanded={expanded === video.id}
         ontoggleselect={() => toggleSelect(video.id)}

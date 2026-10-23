@@ -51,6 +51,13 @@ All notable changes. Versions before 1.0 were private test builds.
   when the page is reloaded.
 - History: new filter "Watched more than once"; deleting a single view no
   longer makes the rows jump.
+- History: new labels and filters "Given up" (stopped before a quarter),
+  "Premiere", "Members only" (from counted channels) and "Hidden with ⊘", plus
+  a filter by origin (recorded here, YouTube/Firefox history, progress bar,
+  Watchmarker, Takeout).
+- Statistics: a finished video counts with its full length as time watched,
+  even if parts were skipped; "Most rewatched" sits next to the categories
+  (instead of "Where you open videos").
 - New: Settings → Playback → Live streams: hide the chat automatically.
 - Views remember which YouTube account they were recorded with (a short hash,
   no e-mail address) – not shown or used for filtering yet.

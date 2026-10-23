@@ -188,9 +188,10 @@
   .brand img {
     border-radius: 5px;
   }
+  /* Just right of the page column (980 px wide, centered); at the edge on narrow windows. */
   .to-top {
     position: fixed;
-    right: 24px;
+    right: max(16px, calc((100vw - 980px) / 2 - 52px));
     bottom: 24px;
     z-index: 10;
     width: 40px;

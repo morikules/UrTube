@@ -58,6 +58,15 @@ describe('computeStats', () => {
     });
   });
 
+  it('a finished view counts with the full length of the video, even if skipped through', () => {
+    const s = computeStats(
+      [video('aaaaaaaaaaa', { durationSec: 4931 })],
+      [view('aaaaaaaaaaa', '2026-10-01T10:00:00Z', { watchedSeconds: 5, finishedAt: 1 })],
+      { from: null, to: t('2026-10-20T00:00:00Z') },
+    );
+    expect(s.watchedSeconds).toBe(4931);
+  });
+
   it('a bounded range ignores undated views', () => {
     const s = computeStats(videos, views, { from: t('2024-01-01T00:00:00Z'), to: t('2026-10-20T00:00:00Z') });
     expect(s.videos).toBe(3);

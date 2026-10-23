@@ -48,6 +48,8 @@ export interface VideoMeta {
   publishedAt?: string;
   isShort?: boolean;
   isLive?: boolean;
+  /** Published as a premiere (since 1.1; known once details were read again). */
+  isPremiere?: boolean;
   category?: string;
 }
 

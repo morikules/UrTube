@@ -95,7 +95,8 @@
       />
     </div>
 
-    <div class="cols">
+    <!-- Both boxes as tall as the taller one. -->
+    <div class="cols even">
       <div>
         <h2>{T.categoriesTitle}</h2>
         <div class="box list-box">
@@ -107,44 +108,29 @@
           {:else}
             <p class="muted">{T.noCategories}</p>
           {/if}
-          {#if highlights.unknownCategory}
-            <p class="muted small">{T.unknownCategory(fmt(highlights.unknownCategory))}</p>
-          {/if}
         </div>
       </div>
       <div>
-        <h2>{T.entriesTitle}</h2>
+        <h2>{T.rewatchedTitle}</h2>
         <div class="box list-box">
-          {#if stats.entries.length}
-            <BarList
-              rows={stats.entries.map((e) => ({ label: t.entries[e.entry], count: e.count }))}
-              unit={(c) => t.common.sessions(fmt(c))}
-            />
+          {#if highlights.rewatched.length}
+            <ol class="rewatched">
+              {#each highlights.rewatched as r, i (r.id)}
+                <li>
+                  <span class="rank muted">{i + 1}.</span>
+                  <span class="what">
+                    <a class="plain" href={videoUrl(r.id)} target="_blank" rel="noreferrer">{r.title}</a>
+                    {#if r.channelName}<span class="muted small"> · {r.channelName}</span>{/if}
+                  </span>
+                  <span class="count">{T.viewsCount(fmt(r.count))}</span>
+                </li>
+              {/each}
+            </ol>
           {:else}
-            <p class="muted">{T.noSessions}</p>
+            <p class="muted">{T.noRewatched}</p>
           {/if}
         </div>
       </div>
-    </div>
-
-    <h2>{T.rewatchedTitle}</h2>
-    <div class="box list-box">
-      {#if highlights.rewatched.length}
-        <ol class="rewatched">
-          {#each highlights.rewatched as r, i (r.id)}
-            <li>
-              <span class="rank muted">{i + 1}.</span>
-              <span class="what">
-                <a class="plain" href={videoUrl(r.id)} target="_blank" rel="noreferrer">{r.title}</a>
-                {#if r.channelName}<span class="muted small"> · {r.channelName}</span>{/if}
-              </span>
-              <span class="count">{T.viewsCount(fmt(r.count))}</span>
-            </li>
-          {/each}
-        </ol>
-      {:else}
-        <p class="muted">{T.noRewatched}</p>
-      {/if}
     </div>
   {:else if view === 'channels'}
     <div class="tiles">
@@ -275,6 +261,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 0 14px;
+  }
+  .cols.even > div {
+    display: flex;
+    flex-direction: column;
+  }
+  .cols.even .box {
+    flex: 1;
   }
   /* Rank, title (may wrap), count on the right – each in its own column. */
   .rewatched {

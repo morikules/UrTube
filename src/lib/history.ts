@@ -29,6 +29,42 @@ export function resumePoints(views: View[], finishedThreshold: number): Map<stri
   return points;
 }
 
+/** Below this share watched, an unfinished last view counts as given up. */
+const ABANDONED_BELOW = 0.25;
+
+/** Videos whose latest view recorded here was given up early (under a quarter). */
+export function abandonedVideos(views: View[]): Set<string> {
+  const latest = new Map<string, View>();
+  for (const v of views) {
+    if (v.source !== 'extension' || v.kind !== 'watch') continue;
+    const known = latest.get(v.videoId);
+    if (!known || v.at > known.at) latest.set(v.videoId, v);
+  }
+  const out = new Set<string>();
+  for (const [id, v] of latest) {
+    if (v.finishedAt || !v.durationSec) continue;
+    if ((v.maxPosition ?? 0) / v.durationSec < ABANDONED_BELOW) out.add(id);
+  }
+  return out;
+}
+
+/** Where a video's views came from: "here" (recorded by the add-on) or an import/sync. */
+export const ORIGINS = ['all', 'here', 'youtube-history', 'browser-history', 'youtube-progress', 'watchmarker', 'takeout'] as const;
+export type Origin = (typeof ORIGINS)[number];
+
+/** The sources of each video's views, as origins. */
+export function originsByVideo(views: View[]): Map<string, Set<Origin>> {
+  const map = new Map<string, Set<Origin>>();
+  for (const v of views) {
+    const origin: Origin =
+      v.source === 'extension' || v.source === 'manual' || v.source === 'youtube-music' ? 'here' : v.source;
+    let set = map.get(v.videoId);
+    if (!set) map.set(v.videoId, (set = new Set()));
+    set.add(origin);
+  }
+  return map;
+}
+
 export const LENGTH_FILTERS = ['all', 'under1', 'to10', 'to30', 'to60', 'over60'] as const;
 export type LengthFilter = (typeof LENGTH_FILTERS)[number];
 

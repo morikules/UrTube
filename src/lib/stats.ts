@@ -138,7 +138,9 @@ export function computeStats(videos: Video[], views: View[], range: StatsRange, 
     if (v.kind === 'watch') {
       sessions++;
       if (v.finishedAt) finished++;
-      watchedSeconds += v.watchedSeconds ?? 0;
+      // A finished video counts with its full length, even if parts were skipped.
+      const length = v.durationSec ?? byId.get(v.videoId)?.durationSec ?? 0;
+      watchedSeconds += v.finishedAt ? Math.max(v.watchedSeconds ?? 0, length) : (v.watchedSeconds ?? 0);
       if (v.entry) entries.set(v.entry, (entries.get(v.entry) ?? 0) + 1);
     }
   }

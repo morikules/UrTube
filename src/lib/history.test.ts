@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Video, View } from './db';
-import { inDateRange, lengthMatches, resumePoints, toCsv, videosCsv } from './history';
+import {
+  abandonedVideos,
+  inDateRange,
+  lengthMatches,
+  originsByVideo,
+  resumePoints,
+  toCsv,
+  videosCsv,
+} from './history';
 
 const video = (id: string, extra: Partial<Video> = {}): Video => ({
   id,
@@ -33,6 +41,28 @@ describe('resumePoints', () => {
       0.9,
     );
     expect([...points]).toEqual([['aaaaaaaaaaa', 290]]);
+  });
+});
+
+describe('tags', () => {
+  it('given up: the latest view recorded here stopped under a quarter', () => {
+    const set = abandonedVideos([
+      view('aaaaaaaaaaa', 1, { maxPosition: 60, durationSec: 600 }),
+      view('bbbbbbbbbbb', 1, { maxPosition: 60, durationSec: 600 }),
+      view('bbbbbbbbbbb', 2, { maxPosition: 590, durationSec: 600, finishedAt: 3 }), // watched later
+      view('ccccccccccc', 1, { maxPosition: 300, durationSec: 600 }), // half: continue, not given up
+    ]);
+    expect([...set]).toEqual(['aaaaaaaaaaa']);
+  });
+
+  it('origins of the views', () => {
+    const map = originsByVideo([
+      view('aaaaaaaaaaa', 1),
+      view('aaaaaaaaaaa', 2, { kind: 'imported', source: 'watchmarker' }),
+      view('bbbbbbbbbbb', 1, { kind: 'marked', source: 'youtube-progress' }),
+    ]);
+    expect([...map.get('aaaaaaaaaaa')!]).toEqual(['here', 'watchmarker']);
+    expect([...map.get('bbbbbbbbbbb')!]).toEqual(['youtube-progress']);
   });
 });
 

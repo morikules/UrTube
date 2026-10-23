@@ -16,10 +16,13 @@
     onerror: (message: string) => void;
     /** Unfinished: where to continue (seconds); the thumbnail opens the video there. */
     resumeAt?: number;
+    /** Labels worked out from other data (views, channel lists, hidden items). */
+    tags?: { abandoned?: boolean; membersOnly?: boolean; hidden?: boolean };
   }
   let {
     video,
     resumeAt,
+    tags = {},
     selected,
     expanded,
     ontoggleselect,
@@ -120,7 +123,14 @@
         {#if video.isLive}<span class="badge" title={V.badgeLiveHint}>{V.badgeLive}</span>{/if}
         {#if video.isMusic}<span class="badge">{V.badgeMusic}</span>{/if}
         {#if isGone(video)}<span class="badge" title={V.badgeGoneHint}>{V.badgeGone}</span>{/if}
-        {#if resumeAt}<span class="badge">{V.continueAt(formatDuration(resumeAt))}</span>{/if}
+        {#if tags.abandoned}
+          <span class="badge" title={V.badgeAbandonedHint}>{V.badgeAbandoned}</span>
+        {:else if resumeAt}
+          <span class="badge">{V.continueAt(formatDuration(resumeAt))}</span>
+        {/if}
+        {#if video.isPremiere}<span class="badge">{V.badgePremiere}</span>{/if}
+        {#if tags.membersOnly}<span class="badge">{V.badgeMembers}</span>{/if}
+        {#if tags.hidden}<span class="badge" title={V.badgeHiddenHint}>{V.badgeHidden}</span>{/if}
       </span>
     </button>
 

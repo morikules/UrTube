@@ -36,6 +36,8 @@ export function metaFromPlayerResponse(resp: any, videoId: string): (VideoMeta &
     durationSec: num(d.lengthSeconds),
     publishedAt: str(mf?.publishDate) ?? str(mf?.uploadDate),
     isLive: d.isLiveContent === true,
+    // A premiere is announced like a stream (broadcast details) but is no live content.
+    isPremiere: d.isLiveContent !== true && !!mf?.liveBroadcastDetails ? true : undefined,
     category: str(mf?.category),
   };
 }
