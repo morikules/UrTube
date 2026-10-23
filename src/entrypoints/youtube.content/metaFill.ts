@@ -4,9 +4,10 @@
  * page does when a video opens. It does not count as watching and does not
  * appear in the YouTube history. Runs in one YouTube tab at a time: gently for
  * recent videos, faster for all older ones, slowing down when YouTube refuses.
+ * What it does is written to storage (MetaFillStatus) for the options page.
  */
 import { META_FILL_STATUS_KEY, send, type MetaFillStatus } from '@/lib/messages';
-import { innertube, readConfig, sleep } from './innertube';
+import { YtHttpError, innertube, readConfig, sleep } from './innertube';
 import { metaFromPlayerResponse } from './player';
 
 /** Videos per run of the regular check (every few minutes). */
@@ -26,6 +27,8 @@ const ALL_RECHECK_MS = 24 * 3_600_000;
 /** Only one tab fills in; a lock older than this is considered dead. */
 const LOCK_KEY = 'metaFillLock';
 const LOCK_STALE_MS = 2 * 60 * 1000;
+/** The status (and the lock) are written at most this often while running. */
+const STATUS_EVERY_MS = 3000;
 
 async function takeLock(): Promise<boolean> {
   const stored = await browser.storage.local.get(LOCK_KEY);
@@ -33,16 +36,6 @@ async function takeLock(): Promise<boolean> {
   if (Date.now() - at < LOCK_STALE_MS) return false;
   await browser.storage.local.set({ [LOCK_KEY]: Date.now() });
   return true;
-}
-
-const renewLock = () => browser.storage.local.set({ [LOCK_KEY]: Date.now() });
-
-/** Waits, keeping the lock alive meanwhile; stops early if `keepGoing` turns false. */
-async function wait(ms: number, keepGoing: () => boolean): Promise<void> {
-  for (let left = ms; left > 0 && keepGoing(); left -= 30_000) {
-    await sleep(Math.min(left, 30_000));
-    await renewLock();
-  }
 }
 
 async function allDoneRecently(): Promise<boolean> {
@@ -55,6 +48,12 @@ export async function recheckAll(): Promise<void> {
   await browser.storage.local.remove(ALL_DONE_KEY);
 }
 
+/**
+ * Bad requests for one video (e.g. a broken ID from an old import) are not
+ * YouTube refusing: such a video is skipped instead of stopping the run.
+ */
+const isRefusal = (e: unknown) => !(e instanceof YtHttpError) || e.status === 429 || e.status >= 500;
+
 let running = false;
 
 /**
@@ -65,21 +64,50 @@ export async function fillMissingMeta(allWanted: boolean, keepGoing: () => boole
   if (running || !(await takeLock())) return;
   running = true;
   const all = allWanted && !(await allDoneRecently());
-  const status: MetaFillStatus = { at: Date.now(), filled: 0, notFound: 0 };
-  let errors = 0;
+  const status: MetaFillStatus = {
+    at: Date.now(),
+    state: 'running',
+    mode: all ? 'all' : 'recent',
+    startedAt: Date.now(),
+    filled: 0,
+    notFound: 0,
+    errors: 0,
+  };
+  let written = 0;
+  /** Saves the status (and keeps the lock); while running at most every few seconds. */
+  const save = async (force = false) => {
+    if (!force && Date.now() - written < STATUS_EVERY_MS) return;
+    written = status.at = Date.now();
+    await browser.storage.local.set({ [META_FILL_STATUS_KEY]: { ...status }, [LOCK_KEY]: Date.now() });
+  };
+  /** Waits, keeping the status (and lock) up to date; stops early if `keepGoing` turns false. */
+  const wait = async (ms: number) => {
+    status.state = 'waiting';
+    status.waitUntil = Date.now() + ms;
+    await save(true);
+    for (let left = ms; left > 0 && keepGoing(); left -= 15_000) {
+      await sleep(Math.min(left, 15_000));
+      await save(true);
+    }
+    status.state = 'running';
+    delete status.waitUntil;
+  };
+
   let backoff = BACKOFF_START_MS;
-  let lockAt = Date.now();
   try {
+    await save(true);
     const cfg = readConfig();
     while (keepGoing()) {
       const { ids } = await send({ type: 'missingMeta', recentOnly: !all, limit: all ? ALL_BATCH : RECENT_BATCH });
       if (!ids.length) {
         if (all) await browser.storage.local.set({ [ALL_DONE_KEY]: Date.now() });
+        status.state = allWanted ? 'done' : 'finished';
         break;
       }
       const notFound: string[] = [];
       for (const id of ids) {
-        if (!keepGoing() || errors >= MAX_ERRORS_IN_A_ROW) break;
+        if (!keepGoing() || status.errors >= MAX_ERRORS_IN_A_ROW) break;
+        status.current = id;
         try {
           const resp = await innertube(cfg, 'player', { videoId: id, contentCheckOk: true, racyCheckOk: true }, `/watch?v=${id}`);
           const meta = metaFromPlayerResponse(resp, id);
@@ -87,34 +115,42 @@ export async function fillMissingMeta(allWanted: boolean, keepGoing: () => boole
             await send({ type: 'updateVideoMeta', videoId: id, meta, quiet: true });
             status.filled++;
           } else notFound.push(id);
-          errors = 0;
+          status.errors = 0;
           backoff = BACKOFF_START_MS;
-          delete status.error;
         } catch (e) {
-          // Probably "too many requests": wait longer each time, then go on with this run.
-          errors++;
           status.error = String(e instanceof Error ? e.message : e);
-          if (errors < MAX_ERRORS_IN_A_ROW) await wait(backoff, keepGoing);
-          backoff = Math.min(backoff * 2, BACKOFF_MAX_MS);
-          continue;
+          if (!isRefusal(e)) {
+            notFound.push(id); // this one video is broken: skip it for good
+          } else {
+            // YouTube refuses ("too many requests"): wait longer each time, then go on.
+            status.errors++;
+            if (status.errors < MAX_ERRORS_IN_A_ROW) await wait(backoff);
+            backoff = Math.min(backoff * 2, BACKOFF_MAX_MS);
+            continue;
+          }
         }
-        if (Date.now() - lockAt > 30_000) {
-          lockAt = Date.now();
-          await renewLock();
-        }
+        await save();
         await sleep(all ? ALL_DELAY_MS : RECENT_DELAY_MS);
       }
       if (notFound.length) await send({ type: 'metaNotFound', ids: notFound });
       status.notFound += notFound.length;
-      if (!all || errors >= MAX_ERRORS_IN_A_ROW) break;
+      if (status.errors >= MAX_ERRORS_IN_A_ROW || !keepGoing()) {
+        status.state = 'stopped';
+        break;
+      }
+      if (!all) {
+        status.state = 'finished';
+        break;
+      }
     }
+    if (status.state === 'running') status.state = 'stopped'; // switched off meanwhile
   } catch (e) {
+    status.state = 'stopped';
     status.error = String(e instanceof Error ? e.message : e);
   } finally {
     running = false;
-    status.at = Date.now();
-    // Runs that had nothing to do keep the last real result visible.
-    const worked = status.filled || status.notFound || status.error;
-    await browser.storage.local.set({ [LOCK_KEY]: 0, ...(worked ? { [META_FILL_STATUS_KEY]: status } : {}) });
+    delete status.current;
+    await save(true);
+    await browser.storage.local.set({ [LOCK_KEY]: 0 });
   }
 }

@@ -22,6 +22,13 @@ async function authHeader(): Promise<string | undefined> {
   return `SAPISIDHASH ${ts}_${hex}`;
 }
 
+/** YouTube answered with an HTTP error; `status` tells refusals (429) from bad requests (4xx). */
+export class YtHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`YouTube antwortet mit Status ${status}`);
+  }
+}
+
 export interface YtConfig {
   context: unknown;
   apiKey?: string;
@@ -76,6 +83,6 @@ export async function innertube(
     referrer: `${location.origin}${referrerPath}`,
     body: JSON.stringify({ context: cfg.context, ...body }),
   });
-  if (!res.ok) throw new Error(`YouTube antwortet mit Status ${res.status}`);
+  if (!res.ok) throw new YtHttpError(res.status);
   return res.json();
 }

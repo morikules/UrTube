@@ -71,11 +71,26 @@ export type Request =
   | { type: 'countBySource' }
   | { type: 'deleteBySource'; source: ViewSource };
 
-/** Last run of filling in video details, in storage.local under META_FILL_STATUS_KEY. */
+/**
+ * Filling in video details, in storage.local under META_FILL_STATUS_KEY:
+ * updated while it runs (so the options page can show what happens) and kept
+ * after the last run.
+ */
 export interface MetaFillStatus {
+  /** Last update; a "running" status without update for minutes means the tab was closed. */
   at: number;
+  state: 'running' | 'waiting' | 'finished' | 'stopped' | 'done';
+  /** Only recent videos, or all older ones too. */
+  mode: 'recent' | 'all';
+  startedAt: number;
   filled: number;
   notFound: number;
+  /** Errors in a row (YouTube refusing). */
+  errors: number;
+  /** While waiting after a refusal: when it goes on. */
+  waitUntil?: number;
+  /** Video asked last. */
+  current?: string;
   error?: string;
 }
 export const META_FILL_STATUS_KEY = 'metaFillStatus';

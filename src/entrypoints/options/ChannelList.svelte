@@ -3,13 +3,13 @@
    * All channels ever watched (and subscribed ones), with how much of each was
    * watched where the channel was counted (on its page or with ↻ here).
    */
-  import { SvelteMap } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import { channelListIds, summarizeChannel } from '@/lib/channelStats';
   import { TrackerDB, type Video } from '@/lib/db';
   import { n, t } from '@/lib/i18n';
   import { send } from '@/lib/messages';
   import { channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
-  import { SUBSCRIPTIONS_KEY, type Subscriptions } from '@/lib/subscriptions';
+  import { CHANNEL_AVATARS_KEY, SUBSCRIPTIONS_KEY, type Subscriptions } from '@/lib/subscriptions';
   import { channelUrl, formatDate, formatDateTime, videoChannelUrl } from '@/lib/youtube';
   import Dropdown from './Dropdown.svelte';
   import { prefs } from './prefs.svelte';
@@ -30,13 +30,24 @@
   }
 
   let subs = $state<Subscriptions | null>(null);
+  let avatars = $state<Record<string, string>>({});
   let lists = $state.raw(new Map<string, PlaylistInfo>());
   let query = $state('');
   let filter = $state<'all' | 'subs'>('all');
+  type Sort = 'watched' | 'share' | 'total' | 'name';
+  let sort = $state<Sort>('watched');
+  const sorts: { id: Sort; label: string }[] = [
+    { id: 'watched', label: C.sortWatched },
+    { id: 'share', label: C.sortShare },
+    { id: 'total', label: C.sortTotal },
+    { id: 'name', label: C.sortName },
+  ];
   let limit = $state(PAGE);
   let error = $state('');
   /** Channels being counted on request, with the time the request was sent. */
   const counting = new SvelteMap<string, number>();
+  /** Pictures that did not load (outdated URL): the initial is shown instead. */
+  const brokenAvatars = new SvelteSet<string>();
 
   const filters = [
     { id: 'all' as const, label: C.filterAll },
@@ -44,12 +55,19 @@
   ];
 
   function loadSubs() {
-    browser.storage.local.get(SUBSCRIPTIONS_KEY).then((s) => (subs = (s[SUBSCRIPTIONS_KEY] as Subscriptions) ?? null));
+    browser.storage.local.get([SUBSCRIPTIONS_KEY, CHANNEL_AVATARS_KEY]).then((s) => {
+      subs = (s[SUBSCRIPTIONS_KEY] as Subscriptions) ?? null;
+      avatars = (s[CHANNEL_AVATARS_KEY] as Record<string, string>) ?? {};
+    });
   }
   loadSubs();
   browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes[SUBSCRIPTIONS_KEY]) loadSubs();
+    if (area === 'local' && (changes[SUBSCRIPTIONS_KEY] || changes[CHANNEL_AVATARS_KEY])) loadSubs();
   });
+
+  /** Channel picture: from the subscriptions or a visit to the channel page. */
+  const avatarOf = (row: Row) =>
+    row.channelId ? (avatars[row.channelId] ?? subs?.channels.find((c) => c.id === row.channelId)?.avatar) : undefined;
 
   const watched = $derived(new Set(videos.filter((v) => v.status === 'watched').map((v) => v.id)));
 
@@ -77,36 +95,69 @@
       if (byKey.has(c.id)) continue;
       byKey.set(c.id, { key: c.id, channelId: c.id, name: c.name, url: channelUrl(c.handle ?? c.id), watched: 0, subscribed: true });
     }
-    return [...byKey.values()].sort((a, b) => b.watched - a.watched || a.name.localeCompare(b.name));
+    return [...byKey.values()];
   });
+
+  const summaries = $derived(
+    new Map(rows.filter((r) => r.channelId).map((r) => [r.key, summary(r)!])),
+  );
+
+  /** Share of the channel's uploads watched; channels not counted yet come last. */
+  const share = (r: Row) => {
+    const s = summaries.get(r.key);
+    return s && s.total ? s.seen / s.total : -1;
+  };
 
   const filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((r) => (filter === 'all' || r.subscribed) && (!q || r.name.toLowerCase().includes(q)));
+    const list = rows.filter((r) => (filter === 'all' || r.subscribed) && (!q || r.name.toLowerCase().includes(q)));
+    const byName = (a: Row, b: Row) => a.name.localeCompare(b.name);
+    const order: Record<Sort, (a: Row, b: Row) => number> = {
+      watched: (a, b) => b.watched - a.watched || byName(a, b),
+      share: (a, b) => share(b) - share(a) || b.watched - a.watched,
+      total: (a, b) => (summaries.get(b.key)?.total ?? -1) - (summaries.get(a.key)?.total ?? -1) || byName(a, b),
+      name: byName,
+    };
+    return list.sort(order[sort]);
   });
   const visible = $derived(filtered.slice(0, limit));
 
   $effect(() => {
     void query;
     void filter;
+    void sort;
     limit = PAGE;
   });
 
-  /** Reads the cached channel lists (and their playlists) of the visible channels. */
-  async function loadLists(ids: string[]) {
-    const main = ids.flatMap(channelListIds);
-    const first = (await db.playlists.bulkGet(main)).filter((p) => p !== undefined) as PlaylistInfo[];
-    const children = ids.flatMap((id) => first.find((p) => p.id === channelPlaylistsId(id))?.videoIds ?? []);
+  /**
+   * Reads the cached channel lists: the upload lists of all channels (for
+   * sorting), the playlists only of the visible ones (for their progress).
+   */
+  async function loadLists(allIds: string[], visibleIds: string[]) {
+    const first = (await db.playlists.bulkGet(allIds.flatMap(channelListIds))).filter(
+      (p) => p !== undefined,
+    ) as PlaylistInfo[];
+    const byId = new Map(first.map((p) => [p.id, p]));
+    const children = visibleIds.flatMap((id) => byId.get(channelPlaylistsId(id))?.videoIds ?? []);
     const second = (await db.playlists.bulkGet(children)).filter((p) => p !== undefined) as PlaylistInfo[];
     lists = new Map([...first, ...second].map((p) => [p.id, p]));
   }
 
+  // As strings: loading new lists re-sorts the rows, which must not load again unless the set changed.
+  const allKey = $derived(rows.flatMap((r) => (r.channelId ? [r.channelId] : [])).join(','));
+  const shownKey = $derived(
+    visible
+      .flatMap((r) => (r.channelId ? [r.channelId] : []))
+      .sort()
+      .join(','),
+  );
   $effect(() => {
-    const ids = visible.flatMap((r) => (r.channelId ? [r.channelId] : []));
-    loadLists(ids);
+    const ids = allKey ? allKey.split(',') : [];
+    const shown = shownKey ? shownKey.split(',') : [];
+    loadLists(ids, shown);
     // While channels are being counted, look for new numbers now and then.
     if (!counting.size) return;
-    const timer = setInterval(() => loadLists(ids), 4000);
+    const timer = setInterval(() => loadLists(ids, shown), 4000);
     return () => clearInterval(timer);
   });
 
@@ -150,6 +201,7 @@
 <div class="toolbar">
   <input type="search" placeholder={C.search} bind:value={query} />
   <Dropdown label={C.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
+  <Dropdown label={C.sort} options={sorts} value={sort} onchange={(s) => (sort = s)} />
 </div>
 <p class="muted small subs">
   {#if subs?.at}{C.subsInfo(n(subs.channels.length), formatDateTime(subs.at))}{:else}{C.subsNone}{/if}
@@ -163,8 +215,22 @@
 {:else}
   <ul>
     {#each visible as row (row.key)}
-      {@const s = summary(row)}
+      {@const s = summaries.get(row.key) ?? null}
+      {@const avatar = avatarOf(row)}
       <li>
+        {#if avatar && !brokenAvatars.has(row.key)}
+          <img
+            class="avatar"
+            src={avatar}
+            alt=""
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            onerror={() => brokenAvatars.add(row.key)}
+          />
+        {:else}
+          <span class="avatar initial" aria-hidden="true">{row.name.slice(0, 1).toUpperCase()}</span>
+        {/if}
+        <div class="body">
         <div class="head">
           {#if row.url}
             <a class="plain name" href={row.url} target="_blank" rel="noreferrer">{row.name}</a>
@@ -181,7 +247,7 @@
             {:else if !s || s.unknown}
               {C.notCounted}
             {:else}
-              {s.text}{#if s.countedAt}{` · ${C.countedAt(formatDate(s.countedAt))}`}{/if}
+              {s.text}{#if s.total}{` · ${C.share(Math.round((s.seen / s.total) * 100))}`}{/if}{#if s.countedAt}{` · ${C.countedAt(formatDate(s.countedAt))}`}{/if}
             {/if}
             <button
               class="link"
@@ -192,6 +258,7 @@
           {:else}
             {C.noChannelId}
           {/if}
+        </div>
         </div>
       </li>
     {/each}
@@ -226,8 +293,29 @@
     padding: 0;
   }
   li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
     padding: 8px 0;
     border-bottom: 1px solid var(--border);
+  }
+  .body {
+    flex: 1;
+    min-width: 0;
+  }
+  .avatar {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .initial {
+    display: grid;
+    place-items: center;
+    background: var(--border);
+    color: var(--muted);
+    font-weight: 600;
   }
   li:last-child {
     border-bottom: none;

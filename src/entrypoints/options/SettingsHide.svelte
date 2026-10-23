@@ -232,7 +232,7 @@
     box-sizing: border-box;
     width: 22px;
     height: 22px;
-    margin: 0 11px 0 0;
+    margin: 0 8px 0 0;
     border: 2px solid var(--border);
     border-radius: 50%;
     background: transparent;

@@ -75,10 +75,36 @@
     missingMeta = (await send({ type: 'missingMeta', recentOnly: false, limit: 0 })).total;
     metaStatus = ((await browser.storage.local.get(META_FILL_STATUS_KEY))[META_FILL_STATUS_KEY] as MetaFillStatus) ?? null;
   }
+  // The YouTube tab writes its status every few seconds: show it live.
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes[META_FILL_STATUS_KEY]) {
+      metaStatus = (changes[META_FILL_STATUS_KEY].newValue as MetaFillStatus) ?? null;
+    }
+  });
+  let now = $state(Date.now());
   $effect(() => {
     loadMissingMeta();
     const timer = setInterval(loadMissingMeta, 30_000);
-    return () => clearInterval(timer);
+    const clock = setInterval(() => (now = Date.now()), 1000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(clock);
+    };
+  });
+
+  /** A run without news for this long: the YouTube tab was probably closed. */
+  const SILENT_MS = 60_000;
+  const metaState = $derived.by(() => {
+    const s = metaStatus;
+    if (!s) return C.metaNever;
+    const silent = (s.state === 'running' || s.state === 'waiting') && now - s.at > SILENT_MS;
+    if (silent) return C.metaSilent(formatDateTime(s.at));
+    const mode = s.mode === 'all' ? C.metaModeAll : C.metaModeRecent;
+    if (s.state === 'running') return C.metaRunning(mode);
+    if (s.state === 'waiting') return C.metaWaiting(Math.max(0, Math.round(((s.waitUntil ?? now) - now) / 1000)));
+    if (s.state === 'done') return C.metaDone(formatDateTime(s.at));
+    if (s.state === 'stopped') return C.metaStopped(formatDateTime(s.at));
+    return C.metaFinished(formatDateTime(s.at));
   });
 </script>
 
@@ -174,13 +200,17 @@
         disabled={!prefs.s.fetchMissingMeta}
         onchange={(v) => setPref('fetchMissingMetaAll', v)}
       />
-      {#if metaStatus}
-        <p class="muted small note">
-          {t.capture.lastRun(formatDateTime(metaStatus.at))}
-          {C.metaFilled(n(metaStatus.filled))}{#if metaStatus.notFound}, {C.metaNotFound(n(metaStatus.notFound))}{/if}
-          {#if metaStatus.error}<span class="error"> – {metaStatus.error}</span>{/if}
-        </p>
-      {/if}
+      <div class="meta-status small">
+        <b>{metaState}</b>
+        {#if metaStatus}
+          <span class="muted">
+            {C.metaCounts(n(metaStatus.filled), n(metaStatus.notFound), formatDateTime(metaStatus.startedAt))}
+            {#if metaStatus.current} · {C.metaCurrent(metaStatus.current)}{/if}
+            {#if metaStatus.errors} · {C.metaErrors(n(metaStatus.errors))}{/if}
+          </span>
+          {#if metaStatus.error}<span class="error">{C.metaLastError(metaStatus.error)}</span>{/if}
+        {/if}
+      </div>
     </div>
   </section>
 {/if}
@@ -205,5 +235,12 @@
 <style>
   .sources {
     margin: 8px 0;
+  }
+  .meta-status {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 0 4px;
+    border-top: 1px solid var(--border);
   }
 </style>

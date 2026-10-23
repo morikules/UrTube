@@ -11,6 +11,17 @@ export interface SubscribedChannel {
   name: string;
   /** "@handle", if known. */
   handle?: string;
+  /** Channel picture (yt3.ggpht.com). */
+  avatar?: string;
+}
+
+/** Channel pictures seen on channel pages and in the subscriptions: {channelId: url}. */
+export const CHANNEL_AVATARS_KEY = 'channelAvatars';
+
+/** The first channel picture URL below `node` (absolute). */
+export function avatarIn(node: unknown): string | undefined {
+  const url = JSON.stringify(node ?? null).match(/"url":"((?:https:)?\/\/yt\d\.(?:ggpht|googleusercontent)\.com\/[^"]+)"/)?.[1];
+  return url ? (url.startsWith('//') ? `https:${url}` : url) : undefined;
 }
 
 export interface Subscriptions {
@@ -38,12 +49,14 @@ export function extractSubscriptionsPage(response: unknown): { channels: Subscri
     if (!isObj(v)) return;
     if ((key === 'channelRenderer' || key === 'gridChannelRenderer') && typeof v.channelId === 'string') {
       const name = text(v.title);
-      if (CHANNEL_ID_RE.test(v.channelId) && name) found.set(v.channelId, { id: v.channelId, name, handle: handleFrom(v) });
+      if (CHANNEL_ID_RE.test(v.channelId) && name) {
+        found.set(v.channelId, { id: v.channelId, name, handle: handleFrom(v), avatar: avatarIn(v.thumbnail) });
+      }
     }
     if (key === 'lockupViewModel' && typeof v.contentId === 'string' && CHANNEL_ID_RE.test(v.contentId)) {
       const meta = (v.metadata as Json | undefined)?.lockupMetadataViewModel as Json | undefined;
       const name = text(meta?.title);
-      if (name && !found.has(v.contentId)) found.set(v.contentId, { id: v.contentId, name });
+      if (name && !found.has(v.contentId)) found.set(v.contentId, { id: v.contentId, name, avatar: avatarIn(v.contentImage) });
     }
   });
   return { channels: [...found.values()], continuation: findContinuation(response) };

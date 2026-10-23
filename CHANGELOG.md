@@ -36,6 +36,11 @@ All notable changes. Versions before 1.0 were private test builds.
   filterable to subscriptions only, with watched / total per channel and ↻ to
   count a channel right away.
 - New history filter "Without channel details", with the number left.
+- The channel list is always shown, with channel pictures, and can be sorted by
+  most watched, largest share watched, most videos or name.
+- Filling in video details shows live what it does (running, waiting for
+  YouTube, stopped, done) and skips single broken videos instead of stopping.
+- Switches: the knob sits centered in Firefox.
 - Video details for older videos are fetched faster (about 7,000 per hour),
   slowing down when YouTube asks for a break, and only checked once a day
   once all videos have them.

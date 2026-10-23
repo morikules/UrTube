@@ -75,23 +75,28 @@
     cursor: pointer;
     transition: background 0.15s;
     margin: 0;
+    /* Firefox keeps a default border on unstyled checkboxes: it shifted the knob. */
+    box-sizing: border-box;
+    border: none;
+    padding: 0;
   }
   input::after {
     content: '';
     position: absolute;
-    top: 3px;
+    top: 50%;
     left: 3px;
     width: 16px;
     height: 16px;
     border-radius: 50%;
     background: #fff;
+    transform: translateY(-50%);
     transition: transform 0.15s;
   }
   input:checked {
     background: var(--accent);
   }
   input:checked::after {
-    transform: translateX(16px);
+    transform: translate(16px, -50%);
   }
   input:disabled {
     cursor: default;

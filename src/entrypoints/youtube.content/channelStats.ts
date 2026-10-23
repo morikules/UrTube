@@ -9,6 +9,7 @@
 import { channelListIds, summarizeChannel } from '@/lib/channelStats';
 import { t } from '@/lib/i18n';
 import { channelListId, channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
+import { CHANNEL_AVATARS_KEY } from '@/lib/subscriptions';
 
 type Playlists = {
   get(id: string): PlaylistInfo | undefined;
@@ -96,6 +97,21 @@ export function createChannelStats(
     if (label.textContent !== value) label.textContent = value;
   }
 
+  /** Channel picture from the header, kept for the channel list in the statistics. */
+  let avatarSavedFor: string | null = null;
+  async function saveAvatar(channelId: string): Promise<void> {
+    const img = document.querySelector<HTMLImageElement>(
+      `ytd-browse[page-subtype="channels"] :is(${HEADER_SELECTOR}) img[src*="yt3."]`,
+    );
+    if (!img?.src || avatarSavedFor === channelId) return;
+    avatarSavedFor = channelId;
+    const stored = (await browser.storage.local.get(CHANNEL_AVATARS_KEY))[CHANNEL_AVATARS_KEY] as
+      | Record<string, string>
+      | undefined;
+    if (stored?.[channelId] === img.src) return;
+    await browser.storage.local.set({ [CHANNEL_AVATARS_KEY]: { ...stored, [channelId]: img.src } });
+  }
+
   /** Called on every scan; cheap when nothing changed. */
   function update(enabled: boolean, onChannelPage: boolean): void {
     const channelId = enabled && onChannelPage ? channelIdOnPage() : null;
@@ -108,6 +124,7 @@ export function createChannelStats(
       shownFor = channelId;
       for (const id of listIds(channelId)) playlists.want(id);
     }
+    if (avatarSavedFor !== channelId) saveAvatar(channelId);
     const line = videoCountLine();
     const fallback = document.querySelector('.ytt-toggle');
     if (line) render(line, channelId, true);
