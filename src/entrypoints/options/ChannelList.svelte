@@ -13,6 +13,7 @@
   import { formatWatchTime } from '@/lib/stats';
   import { channelUrl, formatDate, formatDateTime, videoChannelUrl } from '@/lib/youtube';
   import Dropdown from './Dropdown.svelte';
+  import SearchInput from './SearchInput.svelte';
   import { prefs } from './prefs.svelte';
 
   let { videos }: { videos: Video[] } = $props();
@@ -228,7 +229,7 @@
 </script>
 
 <div class="toolbar">
-  <input type="search" placeholder={C.search} bind:value={query} />
+  <SearchInput placeholder={C.search} bind:value={query} />
   <Dropdown label={C.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
 </div>
 <p class="muted small subs">
@@ -334,15 +335,6 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-  }
-  input[type='search'] {
-    flex: 1 1 240px;
-    font: inherit;
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--fg);
   }
   .subs {
     margin: 8px 0;

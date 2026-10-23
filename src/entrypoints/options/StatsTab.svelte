@@ -166,9 +166,6 @@
           {:else}
             <p class="muted">{T.noChannels}</p>
           {/if}
-          {#if stats.unknownChannel}
-            <p class="muted small">{T.unknownChannel(fmt(stats.unknownChannel))}</p>
-          {/if}
         </div>
       </div>
       <div>
@@ -206,7 +203,6 @@
       <ChannelList {videos} />
     </div>
   {:else}
-    <p class="muted">{T.year.intro}</p>
     <YearReview {videos} {views} />
   {/if}
 </section>

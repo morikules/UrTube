@@ -6,6 +6,7 @@
 export const en = {
   common: {
     loading: 'Loading …',
+    clearSearch: 'Clear search',
     cancel: 'Cancel',
     continue: 'Continue',
     yes: 'Yes',

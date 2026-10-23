@@ -26,7 +26,9 @@
 {#if !years.length}
   <p class="muted">{Y.empty}</p>
 {:else}
+  <!-- Text and year in one line, like the period selection on the other pages. -->
   <div class="toolbar">
+    <p class="muted intro">{Y.intro}</p>
     <Dropdown
       label={Y.label}
       options={years.map((y) => ({ id: String(y), label: String(y) }))}
@@ -118,8 +120,13 @@
 <style>
   .toolbar {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .intro {
+    margin: 0;
   }
   .grid {
     display: grid;

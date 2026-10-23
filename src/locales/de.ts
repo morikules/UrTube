@@ -4,6 +4,7 @@ import type { Messages } from './en';
 export const de: Messages = {
   common: {
     loading: 'Lade …',
+    clearSearch: 'Suche leeren',
     cancel: 'Abbrechen',
     continue: 'Weiter',
     yes: 'Ja',

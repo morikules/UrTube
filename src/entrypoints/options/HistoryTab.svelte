@@ -4,6 +4,7 @@
   import { send } from '@/lib/messages';
   import ConfirmButton from './ConfirmButton.svelte';
   import Dropdown from './Dropdown.svelte';
+  import SearchInput from './SearchInput.svelte';
   import VideoRow from './VideoRow.svelte';
   import { n, t } from '@/lib/i18n';
   import { isGone, isMusicVideo } from '@/lib/youtube';
@@ -185,7 +186,7 @@
 
 <section>
   <div class="toolbar">
-    <input type="search" placeholder={H.search} bind:value={query} />
+    <SearchInput placeholder={H.search} bind:value={query} />
     <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
     <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} />
   </div>
@@ -282,15 +283,6 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-  }
-  input[type='search'] {
-    flex: 1 1 280px;
-    font: inherit;
-    padding: 6px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--fg);
   }
   .toolbar {
     margin-bottom: 10px;

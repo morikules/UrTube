@@ -8,6 +8,7 @@
   import { channelUrl, formatDate, thumbnailUrl } from '@/lib/youtube';
   import { n, t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
+  import SearchInput from './SearchInput.svelte';
 
   let { onresult }: { onresult: (message: string) => void } = $props();
 
@@ -113,7 +114,7 @@
 
   {#if open}
     <div class="toolbar">
-      <input type="search" placeholder={D.search} bind:value={query} />
+      <SearchInput placeholder={D.search} bind:value={query} />
       <select bind:value={filter}>
         <option value="all">{D.all}</option>
         {#each kinds as k}<option value={k.id}>{k.label}</option>{/each}
@@ -161,10 +162,6 @@
     display: flex;
     gap: 8px;
     margin: 8px 0;
-  }
-  .toolbar input {
-    flex: 1;
-    padding: 4px 8px;
   }
   .list {
     list-style: none;
