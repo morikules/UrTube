@@ -66,6 +66,10 @@
     <div class="box">
       {#each modes as m}
         <label class="choice">
+          <span class="text">
+            <span class="label">{m.label}</span>
+            <span class="description">{m.description}</span>
+          </span>
           <input
             type="radio"
             name="switch-mode"
@@ -73,22 +77,41 @@
             checked={s.hideSwitchMode === m.id}
             onchange={() => setPref('hideSwitchMode', m.id)}
           />
-          <span>{m.label}</span>
-          <span class="muted small">{m.description}</span>
         </label>
+        {#if m.id === 'perArea' && s.hideSwitchMode === 'perArea'}
+          <div class="areas">
+            {#each HIDE_AREAS as area}
+              <Toggle
+                label={H.areas[area]}
+                checked={s.hideAreas[area]}
+                onchange={(v) => setPref('hideAreas', { ...s.hideAreas, [area]: v })}
+              />
+            {/each}
+          </div>
+        {/if}
       {/each}
     </div>
-    {#if s.hideSwitchMode === 'perArea'}
-      <div class="box">
-        {#each HIDE_AREAS as area}
-          <Toggle
-            label={H.areas[area]}
-            checked={s.hideAreas[area]}
-            onchange={(v) => setPref('hideAreas', { ...s.hideAreas, [area]: v })}
-          />
-        {/each}
-      </div>
-    {/if}
+  </section>
+
+  <section>
+    <h2>{H.membersTitle}</h2>
+    <p class="muted">{H.membersIntro}</p>
+    <div class="box">
+      <Toggle label={H.filterMembers} checked={s.filterMembersOnly} onchange={(v) => setPref('filterMembersOnly', v)} />
+      <Toggle
+        label={H.filterMembersChannels}
+        description={H.filterMembersChannelsDesc}
+        checked={s.filterMembersOnlyOnChannels}
+        disabled={!s.filterMembersOnly}
+        onchange={(v) => setPref('filterMembersOnlyOnChannels', v)}
+      />
+      <Toggle
+        label={H.membersInStats}
+        description={H.membersInStatsDesc}
+        checked={s.hideMembersInChannelStats}
+        onchange={(v) => setPref('hideMembersInChannelStats', v)}
+      />
+    </div>
   </section>
 
   <section>
@@ -142,14 +165,6 @@
       <Toggle label={H.filterShorts} checked={s.filterShorts} onchange={(v) => setPref('filterShorts', v)} />
       <Toggle label={H.filterPremieres} checked={s.filterPremieres} onchange={(v) => setPref('filterPremieres', v)} />
       <Toggle label={H.filterLive} checked={s.filterLive} onchange={(v) => setPref('filterLive', v)} />
-      <Toggle label={H.filterMembers} checked={s.filterMembersOnly} onchange={(v) => setPref('filterMembersOnly', v)} />
-      <Toggle
-        label={H.filterMembersChannels}
-        description={H.filterMembersChannelsDesc}
-        checked={s.filterMembersOnlyOnChannels}
-        disabled={!s.filterMembersOnly}
-        onchange={(v) => setPref('filterMembersOnlyOnChannels', v)}
-      />
       <Toggle label={H.filterRelevant} checked={s.filterMostRelevant} onchange={(v) => setPref('filterMostRelevant', v)} />
     </div>
   </section>
@@ -188,10 +203,12 @@
 {/if}
 
 <style>
+  /* Same layout as a Toggle row: text left, control right. */
   .choice {
     display: flex;
-    gap: 10px;
-    align-items: baseline;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
@@ -199,7 +216,25 @@
   .choice:last-child {
     border-bottom: none;
   }
-  .box + .box {
-    margin-top: 12px;
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .description {
+    color: var(--muted);
+    font-size: 0.88em;
+  }
+  .choice input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0 10px 0 0;
+    accent-color: var(--accent);
+  }
+  /* The areas belong to "a switch per area": indented below it. */
+  .areas {
+    padding-left: 20px;
+    border-top: 1px solid var(--border);
   }
 </style>

@@ -4,6 +4,7 @@
  */
 import type { EntryPoint, Video, View } from './db';
 import { locale, n, t } from './i18n';
+import { videoChannelUrl } from './youtube';
 
 export interface StatsRange {
   /** Inclusive start (ms) or null for "everything". */
@@ -27,6 +28,8 @@ export interface Bucket {
 export interface CountRow {
   label: string;
   count: number;
+  /** Where the label leads (channel page), if known. */
+  url?: string;
 }
 
 export interface WatchStats {
@@ -143,13 +146,17 @@ export function computeStats(videos: Video[], views: View[], range: StatsRange, 
   const undatedVideos = [...undated].filter((id) => !dated.has(id)).length;
 
   const channels = new Map<string, number>();
+  const channelUrls = new Map<string, string>();
   let unknownChannel = 0;
   let shorts = 0;
   for (const id of all) {
     const video = byId.get(id);
     if (video?.isShort) shorts++;
-    if (video?.channelName) channels.set(video.channelName, (channels.get(video.channelName) ?? 0) + 1);
-    else unknownChannel++;
+    if (video?.channelName) {
+      channels.set(video.channelName, (channels.get(video.channelName) ?? 0) + 1);
+      const url = videoChannelUrl(video);
+      if (url && !channelUrls.has(video.channelName)) channelUrls.set(video.channelName, url);
+    } else unknownChannel++;
   }
 
   const start = range.from ?? (Number.isFinite(first) ? first : range.to);
@@ -178,7 +185,7 @@ export function computeStats(videos: Video[], views: View[], range: StatsRange, 
     granularity,
     buckets,
     topChannels: [...channels]
-      .map(([label, count]) => ({ label, count }))
+      .map(([label, count]) => ({ label, count, url: channelUrls.get(label) }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
       .slice(0, topN),
     unknownChannel,

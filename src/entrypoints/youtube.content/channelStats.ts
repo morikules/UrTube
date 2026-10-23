@@ -55,7 +55,12 @@ function videoCountLine(): Element | null {
   return null;
 }
 
-export function createChannelStats(playlists: Playlists, isWatched: (id: string) => boolean) {
+export function createChannelStats(
+  playlists: Playlists,
+  isWatched: (id: string) => boolean,
+  /** Leave members-only videos out of the line (setting). */
+  hideMembers: () => boolean,
+) {
   let shownFor: string | null = null;
 
   function listIds(channelId: string): string[] {
@@ -67,6 +72,7 @@ export function createChannelStats(playlists: Playlists, isWatched: (id: string)
     const parts: string[] = [];
     let reading = false;
     for (const kind of Object.keys(CHANNEL_KINDS) as ChannelKind[]) {
+      if (kind === 'members' && hideMembers()) continue;
       const p = playlists.get(channelListId(channelId, kind));
       if (!p || p.format !== PLAYLIST_FORMAT) {
         reading = true;

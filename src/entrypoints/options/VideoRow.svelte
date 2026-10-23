@@ -3,7 +3,7 @@
   import { send } from '@/lib/messages';
   import { t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
-  import { formatDate, formatDateTime, formatDuration, thumbnailUrl, videoUrl } from '@/lib/youtube';
+  import { formatDate, formatDateTime, formatDuration, thumbnailUrl, videoChannelUrl, videoUrl } from '@/lib/youtube';
 
   interface Props {
     video: Video;
@@ -79,7 +79,22 @@
     <button class="info" onclick={ontoggleexpand} aria-expanded={expanded}>
       <span class="title">{video.title || video.id}</span>
       <span class="meta">
-        {#if video.channelName}<span>{video.channelName}</span>{/if}
+        {#if video.channelName}
+          {@const chUrl = videoChannelUrl(video)}
+          {#if chUrl}
+            <!-- Inside the row's button a real link is not allowed: opens the channel on click. -->
+            <span
+              class="plain-link"
+              role="link"
+              tabindex="-1"
+              onclick={(e) => {
+                e.stopPropagation();
+                window.open(chUrl, '_blank', 'noreferrer');
+              }}
+              onkeydown={() => {}}>{video.channelName}</span
+            >
+          {:else}<span>{video.channelName}</span>{/if}
+        {/if}
         <span>{V.views(String(video.viewCount))}</span>
         <span>
           {#if video.viewCount > 1}{formatDate(video.firstViewAt)} – {/if}{formatDate(video.lastViewAt)}

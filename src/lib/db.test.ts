@@ -10,6 +10,7 @@ import {
   restoreBackup,
   markMetaTried,
   markUnwatched,
+  mergeBackup,
   mergeResumedViews,
   videosMissingMeta,
   resumableView,
@@ -144,6 +145,24 @@ describe('continued views', () => {
     const other = new TrackerDB(`test-restore-${n++}`);
     const r = await restoreBackup(other, JSON.parse(JSON.stringify(backup)));
     expect(r).toMatchObject({ videos: 1, views: 1, settings: { language: 'de' } });
+  });
+
+  it('merging a backup adds what is missing and deletes nothing', async () => {
+    await view(0, { max: 600, watched: 600, finished: true });
+    await updateVideoMeta(db, A, { channelName: 'Channel A' });
+    await startView(db, { videoId: 'bbbbbbbbbbb', title: 'B', at: HOUR });
+    const backup = JSON.parse(JSON.stringify(await exportBackup(db)));
+
+    const other = new TrackerDB(`test-merge-${n++}`);
+    await startView(other, { videoId: A, title: 'A', at: 0 }); // same view, already there
+    await startView(other, { videoId: 'ccccccccccc', title: 'C', at: 2 * HOUR }); // only here
+    await deleteVideos(other, ['bbbbbbbbbbb']); // deleted here: stays deleted
+
+    expect(await mergeBackup(other, backup)).toMatchObject({ videos: 0, views: 0 });
+    expect(await other.views.count()).toBe(2);
+    expect(await other.videos.get(A)).toMatchObject({ channelName: 'Channel A', viewCount: 1 });
+    expect(await other.videos.get('bbbbbbbbbbb')).toBeUndefined();
+    expect(await other.videos.get('ccccccccccc')).toBeDefined();
   });
 
   it('keeps rewatches after a finished view and restarts that got less far', async () => {

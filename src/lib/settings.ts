@@ -86,6 +86,8 @@ export interface Settings {
   filterMembersOnly: boolean;
   /** The members-only filter also applies on channel pages. */
   filterMembersOnlyOnChannels: boolean;
+  /** Leave members-only videos out of the channel statistics. */
+  hideMembersInChannelStats: boolean;
   filterMostRelevant: boolean;
   /** Hide playlists whose videos were all watched. */
   hidePlaylistsDone: boolean;
@@ -208,6 +210,7 @@ export const defaultSettings: Settings = {
   filterLive: false,
   filterMembersOnly: false,
   filterMembersOnlyOnChannels: false,
+  hideMembersInChannelStats: false,
   filterMostRelevant: false,
   hidePlaylistsDone: true,
   scanDelayMs: 100,

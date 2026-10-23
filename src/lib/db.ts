@@ -1025,6 +1025,82 @@ export async function restoreBackup(
   return { videos: await db.videos.count(), views: await db.views.count(), settings: b.settings };
 }
 
+/** Details of a video that merging fills in where the current database has none. */
+const MERGED_FIELDS = [
+  'channelId',
+  'channelName',
+  'channelHandle',
+  'durationSec',
+  'publishedAt',
+  'category',
+  'isLive',
+  'isShort',
+  'isMusic',
+  'metaUpdatedAt',
+] as const;
+
+/**
+ * Adds a backup to the current database without removing anything: views not
+ * known yet (same video, source and minute), missing videos and missing
+ * details, hidden items. Videos deleted here stay deleted (their views from
+ * before the deletion are skipped). The backup's settings are returned.
+ */
+export async function mergeBackup(
+  db: TrackerDB,
+  data: unknown,
+): Promise<{ videos: number; views: number; settings?: unknown }> {
+  const b = data as Partial<Backup>;
+  if (b?.format !== BACKUP_FORMAT || !Array.isArray(b.videos) || !Array.isArray(b.views)) {
+    throw new Error(t.errors.backupInvalid);
+  }
+  const key = (v: View) => `${v.videoId}|${v.source}|${Math.round(v.at / 60_000)}`;
+  let addedVideos = 0;
+  let addedViews = 0;
+  await db.transaction('rw', [db.videos, db.views, db.deleted, db.dismissed], async () => {
+    const deleted = new Map((await db.deleted.toArray()).map((d) => [d.id, d.deletedAt]));
+    const known = new Set<string>();
+    await db.views.each((v) => void known.add(key(v)));
+    const add: View[] = [];
+    for (const v of b.views!) {
+      const deletedAt = deleted.get(v.videoId);
+      if ((deletedAt !== undefined && v.at <= deletedAt) || known.has(key(v))) continue;
+      known.add(key(v));
+      const { id: _, ...rest } = v;
+      add.push(rest);
+    }
+    await db.views.bulkAdd(add);
+    addedViews = add.length;
+
+    const existing = new Map((await db.videos.toArray()).map((v) => [v.id, v]));
+    const affected = new Set(add.map((v) => v.videoId));
+    for (const bv of b.videos!) {
+      const cur = existing.get(bv.id);
+      if (!cur) {
+        if (!affected.has(bv.id)) continue; // no view of it survived (deleted here)
+        existing.set(bv.id, bv);
+        addedVideos++;
+        continue;
+      }
+      let changed = false;
+      for (const f of MERGED_FIELDS) {
+        if (cur[f] === undefined && bv[f] !== undefined) {
+          (cur as unknown as Record<string, unknown>)[f] = bv[f];
+          changed = true;
+        }
+      }
+      if (changed) affected.add(bv.id);
+    }
+    await rebuildVideos(db, affected, existing);
+
+    const dismissed = new Set(await db.dismissed.toCollection().primaryKeys());
+    await db.dismissed.bulkAdd((b.dismissed ?? []).filter((d) => !dismissed.has(d.id)));
+    // A deletion from the backup only counts for videos this database does not have.
+    await db.deleted.bulkPut((b.deleted ?? []).filter((d) => !existing.has(d.id) && !deleted.has(d.id)));
+  });
+  await mergeResumedViews(db);
+  return { videos: addedVideos, views: addedViews, settings: b.settings };
+}
+
 export async function clearAll(db: TrackerDB): Promise<void> {
   const tables = [db.videos, db.views, db.deleted, db.ytTokens, db.pendingRemovals, db.playlists, db.dismissed];
   await db.transaction('rw', tables, async () => {

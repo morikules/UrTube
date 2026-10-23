@@ -2,7 +2,8 @@
   /** Horizontal bars with label and value (single series, e.g. top channels). */
   import { n } from '@/lib/i18n';
   interface Props {
-    rows: { label: string; count: number }[];
+    /** With `url`, the label opens that page (e.g. the channel). */
+    rows: { label: string; count: number; url?: string }[];
     unit: (count: number) => string;
   }
   let { rows, unit }: Props = $props();
@@ -13,7 +14,9 @@
   <tbody>
     {#each rows as r}
       <tr title={`${r.label}: ${unit(r.count)}`}>
-        <td class="label">{r.label}</td>
+        <td class="label">
+          {#if r.url}<a class="plain" href={r.url} target="_blank" rel="noreferrer">{r.label}</a>{:else}{r.label}{/if}
+        </td>
         <td class="track"><span class="bar" style:width={`${(r.count / max) * 100}%`}></span></td>
         <td class="num">{n(r.count)}</td>
       </tr>

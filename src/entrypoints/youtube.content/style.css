@@ -81,6 +81,25 @@ html.ytt-pl-progress-on a.ytt-pl-thumb[data-ytt-pl]::after {
   pointer-events: none;
 }
 
+/* Shelf headings on channel pages that link to a playlist: the label after the text. */
+html.ytt-pl-progress-on a.ytt-pl-inline[data-ytt-pl]::after {
+  content: attr(data-ytt-pl);
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #606060;
+  font: 500 12px/20px Roboto, Arial, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+html[dark].ytt-pl-progress-on a.ytt-pl-inline[data-ytt-pl]::after {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+
 /* Finished playlists are grayed out more strongly than single videos. */
 html.ytt-fade a.ytt-pl-done img,
 html.ytt-fade a.ytt-pl-done yt-image {
@@ -403,7 +422,41 @@ html[dark] .ytt-watch-btn.is-watched {
   color: #aaa;
 }
 
-html.ytt-eyes .ytt-watch-btn,
-html.ytt-ban-channels .ytt-chan-btn {
+html.ytt-eyes .ytt-watch-btn {
   display: inline-block;
+}
+
+/* Channel page: same size and line as "Join" / "Subscribe" next to it, with an icon. */
+html.ytt-ban-channels .ytt-chan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 36px;
+  margin: 0 0 0 8px;
+  padding: 0 16px 0 12px;
+  vertical-align: middle;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+/* Below the title on a video page it starts a new line, like the "Watched" button. */
+html.ytt-ban-channels ytd-watch-metadata .ytt-chan-btn {
+  margin: 6px 8px 0 0;
+}
+
+.ytt-chan-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.ytt-chan-btn .ytt-ban-off,
+.ytt-chan-btn.is-hidden .ytt-ban-on {
+  display: none;
+}
+
+.ytt-chan-btn.is-hidden .ytt-ban-off {
+  display: inline;
 }

@@ -146,7 +146,11 @@ export default defineContentScript({
       () => schedule(document),
       () => settings.playlistCacheHours * 3_600_000,
     );
-    const channelStats = createChannelStats(playlists, (id) => watched.has(id));
+    const channelStats = createChannelStats(
+      playlists,
+      (id) => watched.has(id),
+      () => settings.hideMembersInChannelStats,
+    );
 
     // --- Display options as classes on <html>, so CSS does the work ---------
 
@@ -339,6 +343,10 @@ export default defineContentScript({
     }
 
     function clearThumb(a: HTMLAnchorElement): void {
+      if (a.classList.contains('ytt-pl-inline')) {
+        a.classList.remove('ytt-pl-inline');
+        delete a.dataset.yttPl;
+      }
       if (!a.classList.contains('ytt-thumb')) return;
       a.classList.remove('ytt-thumb', 'ytt-watched', 'ytt-pl-thumb', 'ytt-pl-done', 'ytt-dismissed');
       delete a.dataset.yttPl;
@@ -365,6 +373,20 @@ export default defineContentScript({
         if (a.dataset.yttPl !== label) a.dataset.yttPl = label;
         a.classList.toggle('ytt-pl-done', pr.done);
       }
+    }
+
+    /** Playlist link outside a card (shelf heading): progress as a small label after it. */
+    function applyPlaylistInline(a: HTMLAnchorElement, listId: string): void {
+      if (a.classList.contains('ytt-thumb')) clearThumb(a);
+      playlists.want(listId);
+      const p = playlists.get(listId);
+      if (isDismissed(listId, 'playlist') || !p || p.format !== PLAYLIST_FORMAT) {
+        clearThumb(a);
+        return;
+      }
+      a.classList.add('ytt-pl-inline');
+      const label = progressLabel(playlistProgress(p, (id) => watched.has(id)));
+      if (a.dataset.yttPl !== label) a.dataset.yttPl = label;
     }
 
     // Marks found via YouTube's progress bar, sent in batches.
@@ -430,10 +452,10 @@ export default defineContentScript({
       }
       const listId = playlistIdFromUrl(href);
       if (listId) {
-        // Only thumbnails in cards: shelf headings and "Play all" on channel pages
-        // link to playlists too, but are no place for a progress label.
+        // Thumbnails in cards get the label on the picture; shelf headings on
+        // channel pages link to the playlist too and get it inline after the text.
         if (a.closest(CARD_SELECTOR)) applyPlaylist(a, listId);
-        else clearThumb(a);
+        else applyPlaylistInline(a, listId);
         return;
       }
       const id = videoIdFromUrl(href);
@@ -677,13 +699,19 @@ export default defineContentScript({
         btn = document.createElement('button');
         btn.className = 'ytt-chan-btn';
         btn.type = 'button';
+        // Icon and text like YouTube's own buttons next to it.
+        const label = document.createElement('span');
+        label.className = 'ytt-chan-btn-text';
+        btn.append(svgIcon('ytt-ban-on', BAN_PATH), svgIcon('ytt-ban-off', UNBAN_PATH), label);
         ch.host.append(btn);
       }
       btn.dataset.yttChannel = ch.key;
       btn.dataset.yttChannelName = ch.name;
       const hidden = dismissed.has(ch.key);
+      btn.classList.toggle('is-hidden', hidden);
       const text = hidden ? t.content.showChannel : t.content.hideChannel;
-      if (btn.textContent !== text) btn.textContent = text;
+      const label = btn.querySelector('.ytt-chan-btn-text')!;
+      if (label.textContent !== text) label.textContent = text;
       btn.title = hidden ? t.content.showChannelTitle : t.content.hideChannelTitle;
     }
 

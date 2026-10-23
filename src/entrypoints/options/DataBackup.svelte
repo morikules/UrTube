@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TrackerDB, exportBackup, restoreBackup } from '@/lib/db';
+  import { TrackerDB, exportBackup, mergeBackup, restoreBackup } from '@/lib/db';
   import { n, t } from '@/lib/i18n';
   import { send } from '@/lib/messages';
   import Notice from './Notice.svelte';
@@ -25,15 +25,20 @@
     });
   }
 
-  function restore(e: Event) {
-    const file = (e.currentTarget as HTMLInputElement).files?.[0];
+  /** Replace everything with the backup, or merge it into the current data. */
+  function restore(e: Event, merge: boolean) {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // the same file can be chosen again
     if (!file) return;
     return runner.run(async () => {
-      const r = await restoreBackup(new TrackerDB(), JSON.parse(await file.text()));
+      const data = JSON.parse(await file.text());
+      const r = await (merge ? mergeBackup : restoreBackup)(new TrackerDB(), data);
       const settingsApplied = withSettings && r.settings !== undefined;
       await send({ type: 'reloadCache' });
       ondatachange();
-      const message = B.restored(n(r.videos), n(r.views)) + (settingsApplied ? ` ${B.settingsRestored}` : '');
+      const result = merge ? B.merged(n(r.videos), n(r.views)) : B.restored(n(r.videos), n(r.views));
+      const message = result + (settingsApplied ? ` ${B.settingsRestored}` : '');
       // Saving the settings reloads the page when the language changes, so it comes last.
       if (settingsApplied) await saveSettings(normalizeSettings(r.settings));
       return message;
@@ -49,7 +54,23 @@
       <button class="primary" onclick={download} disabled={runner.state.busy}>{B.download}</button>
       <label class="button">
         {B.restore}
-        <input type="file" accept=".json,application/json" onchange={restore} disabled={runner.state.busy} hidden />
+        <input
+          type="file"
+          accept=".json,application/json"
+          onchange={(e) => restore(e, false)}
+          disabled={runner.state.busy}
+          hidden
+        />
+      </label>
+      <label class="button">
+        {B.merge}
+        <input
+          type="file"
+          accept=".json,application/json"
+          onchange={(e) => restore(e, true)}
+          disabled={runner.state.busy}
+          hidden
+        />
       </label>
     </div>
     <label class="check">

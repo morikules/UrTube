@@ -26,6 +26,14 @@ All notable changes. Versions before 1.0 were private test builds.
 - The "Hide channel" and "Watched" buttons look like YouTube's own buttons and
   are readable in dark mode.
 - Changing the language reloads the add-on page right away.
+- New: merging a backup adds what is missing and deletes nothing (next to
+  restoring, which replaces everything).
+- New: Settings → Hiding → Channel memberships, with the members-only filters
+  and an option to leave members-only videos out of the channel statistics.
+- Channel names in the history and statistics open the channel page.
+- Video details for older videos are fetched faster (about 7,000 per hour),
+  slowing down when YouTube asks for a break, and only checked once a day
+  once all videos have them.
 
 ## 1.0.2
 

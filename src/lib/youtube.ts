@@ -23,6 +23,17 @@ const shortsRe = new RegExp(`/shorts/${ID}`);
 const youtuBeRe = new RegExp(`youtu\\.be/${ID}`);
 
 /** Extracts the video ID from a YouTube URL or relative href. */
+/** Channel page from a channel key ("@handle" or "UC…"). */
+export function channelUrl(key: string): string {
+  return key.startsWith('@') ? `https://www.youtube.com/${key}` : `https://www.youtube.com/channel/${key}`;
+}
+
+/** Channel page of a video's channel, if known. */
+export function videoChannelUrl(v: { channelHandle?: string; channelId?: string }): string | null {
+  const key = v.channelHandle ?? v.channelId;
+  return key ? channelUrl(key) : null;
+}
+
 export function videoIdFromUrl(url: string): string | null {
   const m = url.match(watchRe) ?? url.match(shortsRe) ?? url.match(youtuBeRe);
   return m?.[1] ?? null;

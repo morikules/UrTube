@@ -5,7 +5,7 @@
    */
   import { TrackerDB, type Dismissed } from '@/lib/db';
   import { send } from '@/lib/messages';
-  import { formatDate, thumbnailUrl } from '@/lib/youtube';
+  import { channelUrl, formatDate, thumbnailUrl } from '@/lib/youtube';
   import { n, t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
 
@@ -59,8 +59,6 @@
     await load();
   }
 
-  const channelUrl = (key: string) =>
-    key.startsWith('@') ? `https://www.youtube.com/${key}` : `https://www.youtube.com/channel/${key}`;
 
   function url(item: Dismissed): string {
     if (item.kind === 'video') return `https://www.youtube.com/watch?v=${item.id}`;
