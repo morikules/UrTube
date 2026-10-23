@@ -5,6 +5,7 @@ export const de: Messages = {
   common: {
     loading: 'Lade …',
     clearSearch: 'Suche leeren',
+    resetFilter: 'Zurück auf alle',
     cancel: 'Abbrechen',
     continue: 'Weiter',
     yes: 'Ja',
@@ -113,7 +114,7 @@ export const de: Messages = {
     badgeGone: 'Nicht mehr auf YouTube',
     continueAt: (pos) => `Weiter bei ${pos}`,
     badgeAbandoned: 'Abgebrochen',
-    badgeAbandonedHint: 'Zuletzt vor einem Viertel des Videos aufgehört.',
+    badgeAbandonedHint: 'Nicht zu Ende geschaut und seit drei Monaten nicht weitergeschaut – das Bild öffnet es trotzdem an der letzten Stelle.',
     badgePremiere: 'Premiere',
     badgeMembers: 'Nur für Mitglieder',
     badgeHidden: 'Ausgeblendet',

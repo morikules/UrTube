@@ -230,7 +230,7 @@
 
 <div class="toolbar">
   <SearchInput placeholder={C.search} bind:value={query} />
-  <Dropdown label={C.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
+  <Dropdown label={C.show} options={filters} value={filter} onchange={(f) => (filter = f)} resettable />
 </div>
 <p class="muted small subs">
   {#if subs?.at}{C.subsInfo(n(subs.channels.length), formatDateTime(subs.at))}{:else}{C.subsNone}{/if}

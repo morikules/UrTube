@@ -258,9 +258,9 @@
 <section>
   <div class="toolbar">
     <SearchInput placeholder={H.search} bind:value={query} />
-    <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} />
-    <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} />
-    <Dropdown label={H.origin} options={originOptions} value={origin} onchange={(o) => (origin = o)} />
+    <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} resettable />
+    <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} resettable />
+    <Dropdown label={H.origin} options={originOptions} value={origin} onchange={(o) => (origin = o)} resettable />
   </div>
   <div class="toolbar second">
     <label class="all" title={H.selectAllHint}>
@@ -271,30 +271,47 @@
         disabled={!filtered.length}
         onchange={toggleAll}
       />
-      {H.selectAll(n(filtered.length))}
+      {selected.size ? H.selected(n(selected.size)) : H.selectAll(n(filtered.length))}
     </label>
-    <label class="date">
-      {H.from}
-      <input
-        type="date"
-        value={dateFrom || oldestDay}
-        min={oldestDay}
-        max={dateTo || today}
-        onchange={(e) => setFrom(e.currentTarget.value)}
-      />
-    </label>
-    <label class="date">
-      {H.to}
-      <input
-        type="date"
-        value={dateTo || today}
-        min={dateFrom || oldestDay}
-        max={today}
-        onchange={(e) => setTo(e.currentTarget.value)}
-      />
-    </label>
-    {#if dateFrom || dateTo}
-      <button class="link" onclick={() => ((dateFrom = ''), (dateTo = ''))}>{H.clearDates}</button>
+    <!-- While videos are selected, their actions take the place of the dates: the list does not move. -->
+    {#if selected.size}
+      <div class="actions">
+        <button onclick={() => act('markUnwatched', [...selected])}>{H.markUnwatched}</button>
+        <button onclick={() => act('markWatched', [...selected])}>{H.markWatched}</button>
+        <button onclick={exportSelected} title={H.exportHint}>{H.exportCsv}</button>
+        <ConfirmButton
+          label={t.common.delete}
+          question={H.deleteQuestion(n(selected.size))}
+          confirmLabel={t.common.delete}
+          danger
+          onconfirm={() => act('deleteVideos', [...selected])}
+        />
+        <button onclick={() => selected.clear()}>{H.clearSelection}</button>
+      </div>
+    {:else}
+      <label class="date">
+        {H.from}
+        <input
+          type="date"
+          value={dateFrom || oldestDay}
+          min={oldestDay}
+          max={dateTo || today}
+          onchange={(e) => setFrom(e.currentTarget.value)}
+        />
+      </label>
+      <label class="date">
+        {H.to}
+        <input
+          type="date"
+          value={dateTo || today}
+          min={dateFrom || oldestDay}
+          max={today}
+          onchange={(e) => setTo(e.currentTarget.value)}
+        />
+      </label>
+      {#if dateFrom || dateTo}
+        <button class="reset" title={t.common.resetFilter} onclick={() => ((dateFrom = ''), (dateTo = ''))}>✕</button>
+      {/if}
     {/if}
   </div>
 
@@ -307,23 +324,6 @@
 
   {#if error}
     <p class="error">{error}</p>
-  {/if}
-
-  {#if selected.size}
-    <div class="selection">
-      <b>{H.selected(n(selected.size))}</b>
-      <button onclick={() => act('markUnwatched', [...selected])}>{H.markUnwatched}</button>
-      <button onclick={() => act('markWatched', [...selected])}>{H.markWatched}</button>
-      <button onclick={exportSelected} title={H.exportHint}>{H.exportCsv}</button>
-      <ConfirmButton
-        label={t.common.delete}
-        question={H.deleteQuestion(n(selected.size))}
-        confirmLabel={t.common.delete}
-        danger
-        onconfirm={() => act('deleteVideos', [...selected])}
-      />
-      <button onclick={() => selected.clear()}>{H.clearSelection}</button>
-    </div>
   {/if}
 
   <ul>
@@ -362,7 +362,14 @@
   .toolbar {
     margin-bottom: 10px;
   }
+  /* Stays at the top while scrolling, so the actions for selected videos are always at hand. */
   .toolbar.second {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    min-height: 34px;
+    padding: 4px 0;
+    background: var(--bg);
     font-size: 0.9em;
   }
   .date {
@@ -390,32 +397,22 @@
     color: var(--muted);
     cursor: pointer;
   }
-  button.link {
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--muted);
-    font: inherit;
-    text-decoration: underline;
-    cursor: pointer;
-  }
   .status {
     margin: 0 0 6px;
     font-size: 0.9em;
   }
-  .selection {
-    position: sticky;
-    top: 0;
-    z-index: 5;
+  .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
-    padding: 8px 10px;
-    margin-bottom: 8px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+  }
+  .reset {
+    padding: 2px 8px;
+    color: var(--muted);
+  }
+  .reset:hover {
+    color: var(--accent);
   }
   ul {
     list-style: none;

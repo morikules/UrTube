@@ -45,13 +45,18 @@ describe('resumePoints', () => {
 });
 
 describe('tags', () => {
-  it('given up: the latest view recorded here stopped under a quarter', () => {
-    const set = abandonedVideos([
-      view('aaaaaaaaaaa', 1, { maxPosition: 60, durationSec: 600 }),
-      view('bbbbbbbbbbb', 1, { maxPosition: 60, durationSec: 600 }),
-      view('bbbbbbbbbbb', 2, { maxPosition: 590, durationSec: 600, finishedAt: 3 }), // watched later
-      view('ccccccccccc', 1, { maxPosition: 300, durationSec: 600 }), // half: continue, not given up
-    ]);
+  it('given up: unfinished and not continued for three months (paused ones are not)', () => {
+    const DAY = 86_400_000;
+    const now = 1000 * DAY;
+    const set = abandonedVideos(
+      [
+        view('aaaaaaaaaaa', now - 120 * DAY, { maxPosition: 60, durationSec: 600 }),
+        view('bbbbbbbbbbb', now - 120 * DAY, { maxPosition: 60, durationSec: 600 }),
+        view('bbbbbbbbbbb', now - 100 * DAY, { maxPosition: 590, durationSec: 600, finishedAt: 1 }), // finished later
+        view('ccccccccccc', now - 10 * DAY, { maxPosition: 30, durationSec: 600 }), // paused, still watching
+      ],
+      now,
+    );
     expect([...set]).toEqual(['aaaaaaaaaaa']);
   });
 

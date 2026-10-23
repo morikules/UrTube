@@ -51,7 +51,11 @@ All notable changes. Versions before 1.0 were private test builds.
   when the page is reloaded.
 - History: new filter "Watched more than once"; deleting a single view no
   longer makes the rows jump.
-- History: new labels and filters "Given up" (stopped before a quarter),
+- History: the actions for selected videos appear in the bar with "Select
+  all" (which stays at the top while scrolling), so the list does not move;
+  every chosen filter has an ✕ that sets it back to "All".
+- History: new labels and filters "Given up" (unfinished and not continued
+  for three months),
   "Premiere", "Members only" (from counted channels) and "Hidden with ⊘", plus
   a filter by origin (recorded here, YouTube/Firefox history, progress bar,
   Watchmarker, Takeout).

@@ -7,6 +7,7 @@ export const en = {
   common: {
     loading: 'Loading …',
     clearSearch: 'Clear search',
+    resetFilter: 'Back to all',
     cancel: 'Cancel',
     continue: 'Continue',
     yes: 'Yes',
@@ -115,7 +116,7 @@ export const en = {
     badgeGone: 'No longer on YouTube',
     continueAt: (pos: string) => `Continue at ${pos}`,
     badgeAbandoned: 'Given up',
-    badgeAbandonedHint: 'Last time stopped before a quarter of the video.',
+    badgeAbandonedHint: 'Not finished and not continued for three months – the thumbnail still opens it where you stopped.',
     badgePremiere: 'Premiere',
     badgeMembers: 'Members only',
     badgeHidden: 'Hidden',

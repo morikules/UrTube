@@ -29,11 +29,14 @@ export function resumePoints(views: View[], finishedThreshold: number): Map<stri
   return points;
 }
 
-/** Below this share watched, an unfinished last view counts as given up. */
-const ABANDONED_BELOW = 0.25;
+/** An unfinished video not touched for this long counts as given up (paused ones are not). */
+export const ABANDONED_AFTER_MS = 90 * 86_400_000;
 
-/** Videos whose latest view recorded here was given up early (under a quarter). */
-export function abandonedVideos(views: View[]): Set<string> {
+/**
+ * Videos given up: the latest view recorded here is unfinished and was not
+ * continued for three months. Where it stopped is still kept (resumePoints).
+ */
+export function abandonedVideos(views: View[], now = Date.now()): Set<string> {
   const latest = new Map<string, View>();
   for (const v of views) {
     if (v.source !== 'extension' || v.kind !== 'watch') continue;
@@ -42,8 +45,7 @@ export function abandonedVideos(views: View[]): Set<string> {
   }
   const out = new Set<string>();
   for (const [id, v] of latest) {
-    if (v.finishedAt || !v.durationSec) continue;
-    if ((v.maxPosition ?? 0) / v.durationSec < ABANDONED_BELOW) out.add(id);
+    if (!v.finishedAt && now - v.at > ABANDONED_AFTER_MS) out.add(id);
   }
   return out;
 }
