@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Video, View } from './db';
-import { computeStats, formatWatchTime, granularityFor, rangeFor } from './stats';
+import { computeHighlights, computeStats, formatWatchTime, granularityFor, rangeFor } from './stats';
 
 const t = (iso: string) => Date.parse(iso);
 const video = (id: string, extra: Partial<Video> = {}): Video => ({
@@ -80,6 +80,47 @@ describe('computeStats', () => {
     expect(s.buckets[0]).toMatchObject({ key: '2026-09-30', label: '09/30' });
     expect(s.buckets.find((b) => b.key === '2026-10-01')?.videos).toBe(1);
     expect(s.buckets.at(-1)?.key).toBe('2026-10-06');
+  });
+});
+
+describe('computeHighlights', () => {
+  const vids = [
+    video('aaaaaaaaaaa', { channelId: 'UCx', channelName: 'X', category: 'Gaming' }),
+    video('bbbbbbbbbbb', { channelId: 'UCx', channelName: 'X', category: 'Gaming' }),
+    video('ccccccccccc', { channelId: 'UCy', channelName: 'Y', category: 'Education' }),
+    video('ddddddddddd'),
+  ];
+  const vws = [
+    view('aaaaaaaaaaa', '2026-10-01T10:00:00Z'),
+    view('aaaaaaaaaaa', '2026-10-02T10:00:00Z'),
+    view('aaaaaaaaaaa', '2026-10-03T10:00:00Z'),
+    view('bbbbbbbbbbb', '2026-10-03T12:00:00Z'),
+    view('ccccccccccc', '2026-10-10T10:00:00Z'),
+    view('ccccccccccc', '2026-10-11T10:00:00Z'),
+    view('ddddddddddd', '2024-01-01T10:00:00Z', { dateUncertain: true }),
+  ];
+  const range = { from: t('2026-10-01T00:00:00Z'), to: t('2026-10-12T00:00:00Z') };
+  const buckets = [{ key: '2026-10', label: 'Oct' }];
+  const h = computeHighlights(vids, vws, range, buckets, 'month', 10, t('2026-10-11T18:00:00Z'));
+
+  it('most rewatched videos and categories', () => {
+    expect(h.rewatched).toEqual([
+      { id: 'aaaaaaaaaaa', title: 'aaaaaaaaaaa', channelName: 'X', count: 3 },
+      { id: 'ccccccccccc', title: 'ccccccccccc', channelName: 'Y', count: 2 },
+    ]);
+    expect(h.categories).toEqual([
+      { label: 'Gaming', count: 2 },
+      { label: 'Education', count: 1 },
+    ]);
+  });
+
+  it('streaks, busiest day, new channels and the first video', () => {
+    expect(h.longestStreak).toEqual({ days: 3, from: '2026-10-01', to: '2026-10-03' });
+    expect(h.currentStreak).toBe(2);
+    expect(h.busiestDay).toEqual({ day: '2026-10-03', videos: 2 });
+    expect(h.newChannelsTotal).toBe(2);
+    expect(h.newChannels).toEqual([{ key: '2026-10', label: 'Oct', channels: 2 }]);
+    expect(h.first?.id).toBe('aaaaaaaaaaa');
   });
 });
 

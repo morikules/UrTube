@@ -1,7 +1,9 @@
 <script lang="ts">
   import { TrackerDB, type Video, type View } from '@/lib/db';
   import { n as fmt, t } from '@/lib/i18n';
-  import { RANGE_IDS, computeStats, formatWatchTime, rangeFor, type RangeId } from '@/lib/stats';
+  import { RANGE_IDS, computeHighlights, computeStats, formatWatchTime, rangeFor, type RangeId } from '@/lib/stats';
+  import { formatDate, videoUrl } from '@/lib/youtube';
+  import YearReview from './YearReview.svelte';
   import BarList from './BarList.svelte';
   import ChannelList from './ChannelList.svelte';
   import ColumnChart from './ColumnChart.svelte';
@@ -29,7 +31,13 @@
     });
   });
 
-  const stats = $derived(computeStats(videos, views, rangeFor(rangeId)));
+  const range = $derived(rangeFor(rangeId));
+  const stats = $derived(computeStats(videos, views, range));
+  const highlights = $derived(computeHighlights(videos, views, range, stats.buckets, stats.granularity));
+  /** YouTube's category names are English; translated where known. */
+  const categoryName = (c: string) => (T.categoryNames as Record<string, string>)[c] ?? c;
+  /** "2026-10-03" → date in the current language */
+  const dayLabel = (day: string) => formatDate(Date.parse(`${day}T12:00:00`));
 
   const finishedPct = $derived(stats.sessions ? Math.round((stats.finished / stats.sessions) * 100) : 0);
 </script>
@@ -102,6 +110,80 @@
       </div>
     </div>
 
+    <div class="tiles streaks">
+      <div class="tile">
+        <span>{T.longestStreak}</span><b>{T.daysCount(fmt(highlights.longestStreak.days))}</b>
+        {#if highlights.longestStreak.from && highlights.longestStreak.days > 1}
+          <small class="muted">{dayLabel(highlights.longestStreak.from)} – {dayLabel(highlights.longestStreak.to!)}</small>
+        {/if}
+      </div>
+      <div class="tile"><span>{T.currentStreak}</span><b>{T.daysCount(fmt(highlights.currentStreak))}</b></div>
+      <div class="tile">
+        <span>{T.busiestDay}</span><b>{highlights.busiestDay ? t.common.videos(fmt(highlights.busiestDay.videos)) : '–'}</b>
+        {#if highlights.busiestDay}<small class="muted">{dayLabel(highlights.busiestDay.day)}</small>{/if}
+      </div>
+      <div class="tile"><span>{T.newChannels}</span><b>{fmt(highlights.newChannelsTotal)}</b></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h2>{T.rewatchedTitle}</h2>
+        <div class="box list-box">
+          {#if highlights.rewatched.length}
+            <ol class="rewatched">
+              {#each highlights.rewatched as r, i (r.id)}
+                <li>
+                  <span class="rank muted">{i + 1}.</span>
+                  <span class="what">
+                    <a class="plain" href={videoUrl(r.id)} target="_blank" rel="noreferrer">{r.title}</a>
+                    {#if r.channelName}<span class="muted small"> · {r.channelName}</span>{/if}
+                  </span>
+                  <span class="count">{T.viewsCount(fmt(r.count))}</span>
+                </li>
+              {/each}
+            </ol>
+          {:else}
+            <p class="muted">{T.noRewatched}</p>
+          {/if}
+        </div>
+      </div>
+      <div>
+        <h2>{T.categoriesTitle}</h2>
+        <div class="box list-box">
+          {#if highlights.categories.length}
+            <BarList
+              rows={highlights.categories.map((c) => ({ ...c, label: categoryName(c.label) }))}
+              unit={(c) => t.common.videos(fmt(c))}
+            />
+          {:else}
+            <p class="muted">{T.noCategories}</p>
+          {/if}
+          {#if highlights.unknownCategory}
+            <p class="muted small">{T.unknownCategory(fmt(highlights.unknownCategory))}</p>
+          {/if}
+        </div>
+      </div>
+    </div>
+
+    <h2>{T.newChannelsTitle(T.per[stats.granularity])}</h2>
+    {#if highlights.newChannelsTotal}
+      <div class="box chart-box">
+        <ColumnChart
+          data={highlights.newChannels.map((b) => ({
+            label: stats.granularity === 'week' ? T.weekFrom(b.label) : b.label,
+            value: b.channels,
+          }))}
+          unit={(v) => T.channelsCount(fmt(v))}
+        />
+      </div>
+    {:else}
+      <p class="muted">{T.noNewChannels}</p>
+    {/if}
+
+    <h2>{T.year.title}</h2>
+    <p class="muted">{T.year.intro}</p>
+    <YearReview {videos} {views} />
+
     <h2>{T.channels.title}</h2>
     <p class="muted">{T.channels.intro}</p>
     <div class="box list-box">
@@ -161,6 +243,30 @@
   }
   .list-box {
     padding: 10px 16px;
+  }
+  .streaks {
+    margin-top: 22px;
+  }
+  .tile small {
+    font-size: 0.85em;
+  }
+  /* Rank, title (may wrap), count on the right – each in its own column. */
+  .rewatched {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rewatched li {
+    display: grid;
+    grid-template-columns: 1.6em 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    padding: 4px 0;
+  }
+  .rewatched .count {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .cols {
     display: grid;

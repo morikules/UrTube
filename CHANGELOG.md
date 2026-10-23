@@ -35,6 +35,9 @@ All notable changes. Versions before 1.0 were private test builds.
   of plus your subscriptions (read from YouTube once a day), searchable and
   filterable to subscriptions only, with watched / total per channel and ↻ to
   count a channel right away.
+- New statistics: longest and current streak, busiest day, new channels (count
+  and chart), most rewatched videos, categories, and a year in review with the
+  highlights of a chosen year.
 - New history filters "Without channel details" (still to be filled in) and
   "No longer on YouTube" (deleted, private or a broken ID), with their numbers;
   such videos carry a badge.
