@@ -57,6 +57,7 @@
   {:else if view === 'videos'}
     <div class="tiles">
       <div class="tile"><span>{T.watchedVideos}</span><b>{fmt(stats.videos)}</b></div>
+      <div class="tile"><span>{T.rewatchedTile}</span><b>{fmt(highlights.rewatchedCount)}</b></div>
       <div class="tile"><span>{T.shorts}</span><b>{fmt(stats.shorts)}</b></div>
       <div class="tile"><span>{T.watchTime}</span><b>{formatWatchTime(stats.watchedSeconds)}</b></div>
       <div class="tile">

@@ -510,6 +510,29 @@ export default defineContentScript({
       updateHeaderToggle();
       updatePlaylistHeader();
       channelStats.update(settings.showChannelStats, page === 'channel');
+      collapseLiveChat();
+    }
+
+    /**
+     * Live chat: collapsed once per video when it appears (YouTube's own
+     * "Hide chat" button), so "Show chat" still brings it back.
+     */
+    let chatCollapsedFor: string | null = null;
+    function collapseLiveChat(): void {
+      if (!settings.hideLiveChat || page !== 'watch') return;
+      // From the address, not the session: scan also runs before the session exists.
+      const id = videoIdFromUrl(location.href);
+      if (!id || chatCollapsedFor === id) return;
+      const frame = document.querySelector('ytd-live-chat-frame#chat, ytd-live-chat-frame');
+      if (!frame) return;
+      if (frame.hasAttribute('collapsed')) {
+        chatCollapsedFor = id;
+        return;
+      }
+      const button = frame.querySelector<HTMLElement>('#show-hide-button button, #show-hide-button tp-yt-paper-button');
+      if (!button) return;
+      chatCollapsedFor = id;
+      button.click();
     }
 
     // Collect changed nodes and process them in one batch instead of per mutation.

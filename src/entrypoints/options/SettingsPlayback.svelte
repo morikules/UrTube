@@ -77,6 +77,19 @@
       />
     </div>
   </section>
+
+  <section>
+    <h2>{P.liveTitle}</h2>
+    <p class="muted">{P.liveIntro}</p>
+    <div class="box">
+      <Toggle
+        label={P.hideChat}
+        description={P.hideChatDesc}
+        checked={s.hideLiveChat}
+        onchange={(v) => setPref('hideLiveChat', v)}
+      />
+    </div>
+  </section>
 {/if}
 
 <style>

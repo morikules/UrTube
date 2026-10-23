@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Component } from 'svelte';
-  import type { Stats } from '@/lib/db';
-  import { send, type PageEvent } from '@/lib/messages';
+  import type { PageEvent } from '@/lib/messages';
   import AboutTab from './AboutTab.svelte';
   import DataBackup from './DataBackup.svelte';
   import DataCleanup from './DataCleanup.svelte';
@@ -102,18 +101,21 @@
   // Clicking the toolbar icon again may change the hash of this tab.
   window.addEventListener('hashchange', () => (route = parseHash()));
 
-  let stats = $state<Stats | null>(null);
   /** Bumped whenever the data changes, so the history list reloads. */
   let dataVersion = $state(0);
 
-  async function refreshStats() {
-    stats = await send({ type: 'getStats' });
-  }
-
   function dataChanged() {
     dataVersion++;
-    refreshStats();
   }
+
+  // "Back to top" appears once the page is scrolled down a good way.
+  let scrolledDown = $state(false);
+  $effect(() => {
+    const onScroll = () => (scrolledDown = window.scrollY > 800);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  });
+  const icon = browser.runtime.getURL('/icon/48.png');
 
   // The background announces every change (new views, deletions, imports).
   browser.runtime.onMessage.addListener((msg: PageEvent) => {
@@ -128,24 +130,15 @@
   });
 
   const name = appName();
-  refreshStats();
 </script>
 
 <div class="page">
-  <header>
-    <h1>{name}</h1>
-    {#if stats}
-      <div class="cards">
-        <div class="card"><b>{n(stats.watched)}</b><span>{t.app.watched}</span></div>
-        <div class="card"><b>{n(stats.multi)}</b><span>{t.app.multi}</span></div>
-      </div>
-    {/if}
-  </header>
-
+  <!-- The name and logo sit at the right of the menu bar; no extra header above. -->
   <nav class="tabs">
     {#each tabs.filter((x) => !x.hidden) as tab}
       <button class:active={route.tab === tab} onclick={() => go(tab)}>{tab.label}</button>
     {/each}
+    <span class="brand"><img src={icon} alt="" width="22" height="22" />{name}</span>
   </nav>
 
   {#if route.tab.sub}
@@ -158,7 +151,7 @@
 
   <main>
     {#if route.tab.id === 'history'}
-      <HistoryTab {dataVersion} onchange={refreshStats} />
+      <HistoryTab {dataVersion} onchange={() => {}} />
     {:else if route.tab.id === 'stats'}
       <StatsTab {dataVersion} view={route.subId} />
     {:else}
@@ -166,44 +159,54 @@
       <Current ondatachange={dataChanged} />
     {/if}
   </main>
+
+  {#if scrolledDown}
+    <button
+      class="to-top"
+      title={t.app.toTop}
+      aria-label={t.app.toTop}
+      onclick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>↑</button
+    >
+  {/if}
 </div>
 
 <style>
   .page {
     max-width: 980px;
     margin: 0 auto;
-    padding: 24px 16px 64px;
+    padding: 16px 16px 64px;
   }
-  header {
+  .brand {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-left: auto;
+    padding: 0 4px;
+    font-weight: 600;
+    font-size: 1.05em;
   }
-  h1 {
-    margin: 0;
+  .brand img {
+    border-radius: 5px;
   }
-  .cards {
-    display: flex;
-    gap: 10px;
-  }
-  .card {
+  .to-top {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
     background: var(--card);
-    border-radius: 10px;
-    padding: 8px 16px;
-    display: flex;
-    flex-direction: column;
-    min-width: 130px;
+    color: var(--fg);
+    font-size: 18px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
   }
-  .card b {
-    font-size: 1.4em;
-    font-variant-numeric: tabular-nums;
-  }
-  .card span {
-    color: var(--muted);
-    font-size: 0.9em;
+  .to-top:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
   /* Both tab rows: plain text, the active one highlighted with the card color. */
   .tabs,

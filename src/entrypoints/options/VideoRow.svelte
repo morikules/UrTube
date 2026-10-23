@@ -167,7 +167,7 @@
                   {progress(v)}
                   {#if v.watchedSeconds}· {V.watchedTime(formatDuration(v.watchedSeconds))}{/if}
                 </td>
-                <td>
+                <td class="act">
                   <ConfirmButton
                     label={V.removeView}
                     question={V.removeViewQuestion}
@@ -289,9 +289,20 @@
     padding: 4px 8px 12px 160px;
     font-size: 0.9em;
   }
+  .views table {
+    width: 100%;
+  }
   .views td {
     padding: 3px 12px 3px 0;
     vertical-align: top;
+  }
+  /* Room for the question "Delete this view? Delete Cancel" reserved, so asking
+     does not push the other columns around and wrap the row. */
+  .views td.act {
+    width: 17em;
+    padding-right: 0;
+    text-align: right;
+    white-space: nowrap;
   }
   .when {
     white-space: nowrap;

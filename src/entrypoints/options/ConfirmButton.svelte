@@ -63,6 +63,11 @@
   .small button {
     font-size: 0.85em;
   }
+  /* Small ones sit in table rows: asking must not wrap and make the row taller. */
+  .ask.small {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
   .danger {
     color: var(--accent);
   }

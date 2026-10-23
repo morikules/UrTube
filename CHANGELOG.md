@@ -45,6 +45,13 @@ All notable changes. Versions before 1.0 were private test builds.
 - Statistics are split into Videos, Channels and Year in review, more compact
   with smaller charts; new: time per channel (total length of the videos
   watched), top 5 categories and the last video in the year in review.
+- Add-on page: no header any more – name and logo sit at the right of the menu
+  bar; the totals moved into the statistics ("Watched more than once"). A ↑
+  button brings you back to the top; the history keeps its scroll position
+  when the page is reloaded.
+- History: new filter "Watched more than once"; deleting a single view no
+  longer makes the rows jump.
+- New: Settings → Playback → Live streams: hide the chat automatically.
 - Views remember which YouTube account they were recorded with (a short hash,
   no e-mail address) – not shown or used for filtering yet.
 - Data → Backup: export all videos or all views as CSV (for Excel/LibreOffice).

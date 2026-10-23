@@ -115,6 +115,8 @@ export interface Settings {
   playerCaptionLang: string;
   /** Pause the trailer that starts by itself on a channel's home page. */
   pauseChannelTrailer: boolean;
+  /** Collapse the chat next to live streams (and their replays) when the video opens. */
+  hideLiveChat: boolean;
 
   /** Color scheme of the add-on's own pages. */
   uiTheme: 'system' | 'light' | 'dark';
@@ -223,6 +225,7 @@ export const defaultSettings: Settings = {
   playerCaptions: 'keep',
   playerCaptionLang: 'en',
   pauseChannelTrailer: false,
+  hideLiveChat: false,
   uiTheme: 'system',
   language: 'auto',
 };

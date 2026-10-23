@@ -22,8 +22,7 @@ export const en = {
 
   app: {
     pageTitle: (name: string) => `${name} – Settings`,
-    watched: 'watched videos',
-    multi: 'watched repeatedly',
+    toTop: 'Back to top',
     tabs: {
       history: 'History',
       stats: 'Statistics',
@@ -56,6 +55,7 @@ export const en = {
       all: 'All',
       watched: 'Watched',
       unwatched: 'Reset',
+      multi: 'Watched more than once',
       shorts: 'Shorts only',
       music: 'Music only',
       nomusic: 'Without music',
@@ -208,6 +208,7 @@ export const en = {
       more: (n: string) => `Show more (${n} left)`,
     },
     views: 'Views',
+    rewatchedTile: 'Watched more than once',
     channelsWatched: 'Channels watched',
     longestChannel: 'Most time on',
     channelTimeTitle: 'Time per channel',
@@ -410,6 +411,10 @@ export const en = {
     channelIntro: 'Many channels play a trailer or featured video as soon as you open their page.',
     pauseTrailer: 'Do not play channel trailers automatically',
     pauseTrailerDesc: 'The video is paused right away; press play to watch it.',
+    liveTitle: 'Live streams',
+    liveIntro: 'Next to live streams and their replays YouTube shows the chat.',
+    hideChat: 'Hide the chat automatically',
+    hideChatDesc: 'The chat is collapsed when the stream opens; “Show chat” brings it back.',
   },
 
   design: {

@@ -203,6 +203,8 @@ export interface RewatchedVideo {
 export interface Highlights {
   /** Videos watched more than once in the range, most views first. */
   rewatched: RewatchedVideo[];
+  /** How many videos were watched more than once in the range. */
+  rewatchedCount: number;
   /** YouTube's categories of the videos watched in the range. */
   categories: CountRow[];
   unknownCategory: number;
@@ -330,6 +332,7 @@ export function computeHighlights(
 
   return {
     rewatched,
+    rewatchedCount: [...viewsPerVideo.values()].filter((c) => c > 1).length,
     categories: [...categories]
       .map(([label, count]) => ({ label, count }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))

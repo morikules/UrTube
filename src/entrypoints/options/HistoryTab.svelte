@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import { TrackerDB, type Video } from '@/lib/db';
   import { send } from '@/lib/messages';
@@ -66,8 +67,43 @@
     ]);
     all = videos;
     resume = resumePoints(recorded, prefs.s?.finishedThreshold ?? 0.9);
+    const first = loading;
     loading = false;
+    if (first) restoreScroll();
   }
+
+  // Reloading the page (F5) comes back to where the list was scrolled to.
+  const SCROLL_KEY = 'historyScroll';
+  function restoreScroll() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) ?? 'null') as { y: number; limit: number } | null;
+      if (!saved) return;
+      limit = Math.max(PAGE, saved.limit);
+      tick().then(() => window.scrollTo(0, saved.y));
+    } catch {
+      // nothing saved or storage blocked: start at the top
+    }
+  }
+  function saveScroll() {
+    try {
+      sessionStorage.setItem(SCROLL_KEY, JSON.stringify({ y: window.scrollY, limit }));
+    } catch {
+      // storage blocked: not remembered
+    }
+  }
+  $effect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      clearTimeout(timer);
+      timer = setTimeout(saveScroll, 200);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pagehide', saveScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pagehide', saveScroll);
+    };
+  });
 
   /** Exports the selected videos (in list order). */
   function exportSelected() {
@@ -102,6 +138,7 @@
       if (filter === 'watched' && v.status !== 'watched') return false;
       if (filter === 'unwatched' && v.status !== 'unwatched') return false;
       if (filter === 'shorts' && !v.isShort) return false;
+      if (filter === 'multi' && v.viewCount < 2) return false;
       if (filter === 'nochannel' && !noChannel(v)) return false;
       if (filter === 'gone' && !isGone(v)) return false;
       if (filter === 'continue' && !resume.has(v.id)) return false;
@@ -231,8 +268,6 @@
     <p class="status muted">{t.common.loading}</p>
   {:else if !all.length}
     <p class="status muted">{H.empty}</p>
-  {:else if query.trim() || filter !== 'all' || length !== 'all' || dateFrom || dateTo}
-    <p class="status muted">{H.hits(n(filtered.length))}</p>
   {/if}
 
   {#if error}

@@ -20,8 +20,7 @@ export const de: Messages = {
 
   app: {
     pageTitle: (name) => `${name} – Einstellungen`,
-    watched: 'gesehene Videos',
-    multi: 'mehrfach gesehen',
+    toTop: 'Nach oben',
     tabs: {
       history: 'Verlauf',
       stats: 'Statistik',
@@ -54,6 +53,7 @@ export const de: Messages = {
       all: 'Alle',
       watched: 'Gesehen',
       unwatched: 'Zurückgesetzt',
+      multi: 'mehrfach gesehen',
       shorts: 'nur Shorts',
       music: 'nur Musik',
       nomusic: 'ohne Musik',
@@ -206,6 +206,7 @@ export const de: Messages = {
       more: (n) => `Mehr anzeigen (noch ${n})`,
     },
     views: 'Ansichten',
+    rewatchedTile: 'Mehrfach gesehen',
     channelsWatched: 'Gesehene Kanäle',
     longestChannel: 'Meiste Zeit bei',
     channelTimeTitle: 'Zeit pro Kanal',
@@ -423,6 +424,10 @@ export const de: Messages = {
     channelIntro: 'Viele Kanäle spielen einen Trailer oder ein empfohlenes Video ab, sobald man ihre Seite öffnet.',
     pauseTrailer: 'Kanal-Trailer nicht automatisch abspielen',
     pauseTrailerDesc: 'Das Video wird sofort angehalten; mit Play schaust du es trotzdem.',
+    liveTitle: 'Livestreams',
+    liveIntro: 'Neben Livestreams und ihren Aufzeichnungen zeigt YouTube den Chat.',
+    hideChat: 'Chat automatisch ausblenden',
+    hideChatDesc: 'Der Chat wird beim Öffnen eingeklappt; mit „Chat anzeigen“ holst du ihn zurück.',
   },
 
   design: {
