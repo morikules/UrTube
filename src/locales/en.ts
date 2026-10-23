@@ -465,9 +465,10 @@ export const en = {
       `${n} deleted videos are looked up in the YouTube history and removed. The result is shown under Settings → Recording (needs an open YouTube tab).`,
     metaTitle: 'Missing video details',
     metaIntro:
-      'Videos from imports (e.g. Watchmarker) often have no channel, length or date. They can be fetched from YouTube for all older videos too – very slowly, about 2,000 per hour while a YouTube tab is open, so it can take a day for large imports. It continues by itself and can be switched off any time.',
+      'Videos from imports (e.g. Watchmarker) often have no channel, length or date. They can be fetched from YouTube for all older videos too – about 7,000 per hour while a YouTube tab is open, slower when YouTube asks for a break. It continues by itself; once all videos have details, it only checks once a day for new gaps.',
     metaAll: 'Fill in details for all older videos too',
     metaMissing: (count: string) => `${count} videos still without details`,
+    metaAllDone: 'All videos have details.',
     metaFilled: (count: string) => `${count} filled in`,
     metaNotFound: (count: string) => `${count} no longer on YouTube`,
     clearTitle: 'Delete everything',

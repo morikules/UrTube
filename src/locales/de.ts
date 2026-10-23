@@ -463,9 +463,10 @@ export const de: Messages = {
       `${n} gelöschte Videos werden im YouTube-Verlauf gesucht und entfernt. Das Ergebnis steht unter Einstellungen → Erfassung (braucht einen offenen YouTube-Tab).`,
     metaTitle: 'Fehlende Video-Angaben',
     metaIntro:
-      'Videos aus Importen (z. B. Watchmarker) haben oft keinen Kanal, keine Länge und kein Datum. Die lassen sich auch für alle älteren Videos bei YouTube nachladen – sehr langsam, etwa 2.000 pro Stunde, solange ein YouTube-Tab offen ist; bei großen Importen kann das einen Tag dauern. Es läuft von selbst weiter und lässt sich jederzeit ausschalten.',
+      'Videos aus Importen (z. B. Watchmarker) haben oft keinen Kanal, keine Länge und kein Datum. Die lassen sich auch für alle älteren Videos bei YouTube nachladen – etwa 7.000 pro Stunde, solange ein YouTube-Tab offen ist, langsamer, wenn YouTube um eine Pause bittet. Es läuft von selbst weiter; haben alle Videos ihre Angaben, wird nur noch einmal am Tag nach neuen Lücken gesehen.',
     metaAll: 'Angaben auch für alle älteren Videos nachladen',
     metaMissing: (count: string) => `noch ${count} Videos ohne Angaben`,
+    metaAllDone: 'Alle Videos haben Angaben.',
     metaFilled: (count: string) => `${count} nachgeladen`,
     metaNotFound: (count: string) => `${count} nicht mehr auf YouTube`,
     clearTitle: 'Alles löschen',

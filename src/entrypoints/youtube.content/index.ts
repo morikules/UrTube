@@ -29,7 +29,7 @@ import { incrementalSyncDue, processRemovals, runHistorySync } from './history';
 import { createPlaylists } from './playlists';
 import { createWatchLater } from './watchLater';
 import { readDomMeta, readPlayerMeta } from './player';
-import { fillMissingMeta } from './metaFill';
+import { fillMissingMeta, recheckAll } from './metaFill';
 import { createChannelStats } from './channelStats';
 
 const LINK_SELECTOR = 'a[href*="watch?v="], a[href*="/shorts/"], a[href*="/playlist?list="]';
@@ -703,7 +703,7 @@ export default defineContentScript({
           music = musicSets(musicIds);
           sentMarks.clear();
           scan(document);
-          fillMeta(); // e.g. a restored backup with videos still lacking details
+          recheckAll().then(fillMeta); // e.g. a restored backup or import with videos lacking details
         });
       } else if (msg.type === 'musicChanged') {
         music[msg.kind].add(msg.videoId);
@@ -740,8 +740,11 @@ export default defineContentScript({
       const all = settings.fetchMissingMetaAll;
       fillMissingMeta(all, () => settings.fetchMissingMeta && (!all || settings.fetchMissingMetaAll));
     }
+    let fillAllBefore = settings.fetchMissingMeta && settings.fetchMissingMetaAll;
     onSettingsChanged((s) => {
-      if (s.fetchMissingMeta && s.fetchMissingMetaAll) fillMeta(); // started from the options page
+      const fillAll = s.fetchMissingMeta && s.fetchMissingMetaAll;
+      if (fillAll && !fillAllBefore) recheckAll().then(fillMeta); // switched on in the options page
+      fillAllBefore = fillAll;
     });
 
     // Give the page time to finish loading before the first check.

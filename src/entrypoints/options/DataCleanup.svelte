@@ -169,7 +169,7 @@
     <div class="box">
       <Toggle
         label={C.metaAll}
-        description={missingMeta === null ? undefined : C.metaMissing(n(missingMeta))}
+        description={missingMeta === null ? undefined : missingMeta ? C.metaMissing(n(missingMeta)) : C.metaAllDone}
         checked={prefs.s.fetchMissingMetaAll}
         disabled={!prefs.s.fetchMissingMeta}
         onchange={(v) => setPref('fetchMissingMetaAll', v)}
