@@ -6,7 +6,7 @@
   import Dropdown from './Dropdown.svelte';
   import VideoRow from './VideoRow.svelte';
   import { n, t } from '@/lib/i18n';
-  import { isMusicVideo } from '@/lib/youtube';
+  import { isGone, isMusicVideo } from '@/lib/youtube';
   import { prefs } from './prefs.svelte';
 
   /** `dataVersion` changes whenever the background reports new data. */
@@ -17,14 +17,15 @@
   const H = t.history;
 
   type Filter = keyof typeof H.filters;
-  /** Videos without channel details yet (filled in from YouTube in the background). */
-  const noChannel = (v: Video) => !v.channelName && !v.channelId;
-  // The "without channel" entry shows how many are left, so progress is visible.
+  /** Videos still waiting for channel details (filled in from YouTube in the background). */
+  const noChannel = (v: Video) => !v.channelName && !v.channelId && !isGone(v);
+  // These entries show how many there are, so progress of filling in details is visible.
+  const counted: Partial<Record<Filter, (v: Video) => boolean>> = { nochannel: noChannel, gone: isGone };
   const filters = $derived(
-    (Object.keys(H.filters) as Filter[]).map((id) => ({
-      id,
-      label: id === 'nochannel' ? `${H.filters[id]} (${n(all.filter(noChannel).length)})` : H.filters[id],
-    })),
+    (Object.keys(H.filters) as Filter[]).map((id) => {
+      const test = counted[id];
+      return { id, label: test ? `${H.filters[id]} (${n(all.filter(test).length)})` : H.filters[id] };
+    }),
   );
 
   // raw: ~50k videos, replaced as a whole on reload
@@ -51,6 +52,7 @@
       if (filter === 'unwatched' && v.status !== 'unwatched') return false;
       if (filter === 'shorts' && !v.isShort) return false;
       if (filter === 'nochannel' && !noChannel(v)) return false;
+      if (filter === 'gone' && !isGone(v)) return false;
       if (filter === 'music' || filter === 'nomusic') {
         if (isMusicVideo(v, withCategory) !== (filter === 'music')) return false;
       }

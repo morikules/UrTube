@@ -23,6 +23,14 @@ const shortsRe = new RegExp(`/shorts/${ID}`);
 const youtuBeRe = new RegExp(`youtu\\.be/${ID}`);
 
 /** Extracts the video ID from a YouTube URL or relative href. */
+/**
+ * YouTube had no details for the video when asked (see metaFill): it no
+ * longer exists under this ID (deleted, private or a broken ID from an import).
+ */
+export function isGone(v: { metaTriedAt?: number; metaUpdatedAt?: number }): boolean {
+  return v.metaTriedAt !== undefined && !v.metaUpdatedAt;
+}
+
 /** Channel page from a channel key ("@handle" or "UC…"). */
 export function channelUrl(key: string): string {
   return key.startsWith('@') ? `https://www.youtube.com/${key}` : `https://www.youtube.com/channel/${key}`;

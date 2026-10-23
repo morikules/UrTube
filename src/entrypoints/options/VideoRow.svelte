@@ -3,7 +3,7 @@
   import { send } from '@/lib/messages';
   import { t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
-  import { formatDate, formatDateTime, formatDuration, thumbnailUrl, videoChannelUrl, videoUrl } from '@/lib/youtube';
+  import { formatDate, formatDateTime, formatDuration, isGone, thumbnailUrl, videoChannelUrl, videoUrl } from '@/lib/youtube';
 
   interface Props {
     video: Video;
@@ -106,6 +106,7 @@
         {#if video.isShort}<span class="badge">{V.badgeShort}</span>{/if}
         {#if video.isLive}<span class="badge" title={V.badgeLiveHint}>{V.badgeLive}</span>{/if}
         {#if video.isMusic}<span class="badge">{V.badgeMusic}</span>{/if}
+        {#if isGone(video)}<span class="badge" title={V.badgeGoneHint}>{V.badgeGone}</span>{/if}
       </span>
     </button>
 

@@ -35,7 +35,9 @@ All notable changes. Versions before 1.0 were private test builds.
   of plus your subscriptions (read from YouTube once a day), searchable and
   filterable to subscriptions only, with watched / total per channel and ↻ to
   count a channel right away.
-- New history filter "Without channel details", with the number left.
+- New history filters "Without channel details" (still to be filled in) and
+  "No longer on YouTube" (deleted, private or a broken ID), with their numbers;
+  such videos carry a badge.
 - The channel list is always shown, with channel pictures, and can be sorted by
   most watched, largest share watched, most videos or name.
 - Filling in video details shows live what it does (running, waiting for
