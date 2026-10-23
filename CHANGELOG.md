@@ -16,6 +16,16 @@ All notable changes. Versions before 1.0 were private test builds.
 - Shorts in playlists and a channel's Shorts are counted.
 - Playlist progress labels stay on one line, like YouTube's own labels.
 - Channel trailers are paused after their first frame, so they stay visible.
+- New: the hide switch can work per area (subscriptions, home page, channel
+  pages, playlists and Watch later, search and recommendations); the switch
+  on a page then shows and changes that area (Settings → Hiding).
+- Channel statistics also count members-only videos where YouTube gives out
+  the list; the members-only filter on channel pages uses it too.
+- Playlist labels only on playlist thumbnails, no longer on shelf headings of
+  channel pages.
+- The "Hide channel" and "Watched" buttons look like YouTube's own buttons and
+  are readable in dark mode.
+- Changing the language reloads the add-on page right away.
 
 ## 1.0.2
 

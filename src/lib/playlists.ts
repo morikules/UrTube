@@ -45,10 +45,11 @@ export const MAX_CHANNEL_VIDEOS = 5000;
 
 /**
  * YouTube keeps hidden upload playlists per channel, split by kind:
- * "UULF…" long videos, "UUSH…" Shorts, "UULV…" live streams (the channel ID
- * without its "UC").
+ * "UULF…" long videos, "UUSH…" Shorts, "UULV…" live streams, "UUMO…"
+ * members-only videos (the channel ID without its "UC"). A list YouTube does
+ * not give out (e.g. members-only for some accounts) is simply empty.
  */
-export const CHANNEL_KINDS = { videos: 'UULF', shorts: 'UUSH', live: 'UULV' } as const;
+export const CHANNEL_KINDS = { videos: 'UULF', shorts: 'UUSH', live: 'UULV', members: 'UUMO' } as const;
 export type ChannelKind = keyof typeof CHANNEL_KINDS;
 
 export function channelListId(channelId: string, kind: ChannelKind): string {

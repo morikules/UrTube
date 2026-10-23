@@ -54,8 +54,12 @@ export interface Settings {
   showChannelStats: boolean;
 
   // --- Hiding (switch in the YouTube header) ---
-  /** State of the header switch "hide watched". */
+  /** State of the header switch "hide watched" (one switch for all areas). */
   hideEnabled: boolean;
+  /** One switch for everything, or one per area (the switch on a page then toggles its area). */
+  hideSwitchMode: 'global' | 'perArea';
+  /** State of the switch per area, used with hideSwitchMode 'perArea'. */
+  hideAreas: Record<HideArea, boolean>;
   hideOnSubscriptions: boolean;
   /** Only hide watched videos published within this many days (0 = no limit). */
   hideWindowSubscriptions: number;
@@ -116,6 +120,30 @@ export interface Settings {
   language: LanguagePref;
 }
 
+/** Areas with their own hide switch: "other" are search results and the sidebar next to a video. */
+export const HIDE_AREAS = ['subscriptions', 'home', 'channel', 'playlist', 'other'] as const;
+export type HideArea = (typeof HIDE_AREAS)[number];
+
+/** The area of a page kind (see youtube.ts pageKind); null where nothing is hidden. */
+export function hideAreaOf(page: string): HideArea | null {
+  if (page === 'search' || page === 'watch') return 'other';
+  return (HIDE_AREAS as readonly string[]).includes(page) ? (page as HideArea) : null;
+}
+
+/** Whether the switch is on for this page. */
+export function isHidingOn(s: Settings, page: string): boolean {
+  if (s.hideSwitchMode === 'global') return s.hideEnabled;
+  const area = hideAreaOf(page);
+  return area ? s.hideAreas[area] : s.hideEnabled;
+}
+
+/** Settings with the switch of this page flipped (its area, or the global one). */
+export function toggleHiding(s: Settings, page: string): Settings {
+  const area = s.hideSwitchMode === 'perArea' ? hideAreaOf(page) : null;
+  if (!area) return { ...s, hideEnabled: !s.hideEnabled };
+  return { ...s, hideAreas: { ...s.hideAreas, [area]: !s.hideAreas[area] } };
+}
+
 /** YouTube's quality names, best first. */
 export const QUALITY_LEVELS = [
   'highres',
@@ -161,6 +189,8 @@ export const defaultSettings: Settings = {
   showPlaylistProgress: true,
   showChannelStats: true,
   hideEnabled: true,
+  hideSwitchMode: 'global',
+  hideAreas: { subscriptions: true, home: true, channel: true, playlist: true, other: true },
   hideOnSubscriptions: true,
   hideWindowSubscriptions: 30,
   hideOnHome: true,
@@ -231,7 +261,10 @@ export function normalizeSettings(stored: unknown): Settings {
   delete s.showDismissButton;
   // Existing installs keep what they had; only new installs get the v1.0 defaults.
   const legacy = stored && typeof stored === 'object' && Object.keys(stored).length ? LEGACY_DEFAULTS : {};
-  return { ...defaultSettings, ...legacy, ...s };
+  const merged = { ...defaultSettings, ...legacy, ...s };
+  // Areas added later get their default.
+  merged.hideAreas = { ...defaultSettings.hideAreas, ...s.hideAreas };
+  return merged;
 }
 
 export async function loadSettings(): Promise<Settings> {

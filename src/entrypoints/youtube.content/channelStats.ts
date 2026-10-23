@@ -1,5 +1,5 @@
 /**
- * "Watched: Videos 34 / 120 · Shorts 5 / 80 · Live 2 / 15 · Playlists 1 / 12"
+ * "Watched: Videos 34 / 120 · Shorts 5 / 80 · Live 2 / 15 · Members only 1 / 4 · Playlists 1 / 12"
  * on a channel page. Counts come from the channel's hidden upload playlists
  * and its "Playlists" tab, read and cached like any playlist (old numbers stay
  * visible while they are read again). Shown below the line with the number of
@@ -144,5 +144,11 @@ export function createChannelStats(playlists: Playlists, isWatched: (id: string)
     else if (fallback) render(fallback, channelId, false);
   }
 
-  return { update };
+  /** Whether the video is members-only on the channel shown (from its members list). */
+  function isMembersOnly(videoId: string): boolean {
+    if (!shownFor) return false;
+    return playlists.get(channelListId(shownFor, 'members'))?.videoIds.includes(videoId) ?? false;
+  }
+
+  return { update, isMembersOnly };
 }

@@ -216,6 +216,22 @@ export const en = {
     watchedTitle: 'Hide watched videos',
     watchedIntro:
       'The switch in the YouTube header next to the search turns hiding on and off. The time limit refers to the age of the video: older watched videos stay, so YouTube does not keep loading forever.',
+    switchModeTitle: 'The switch in the YouTube header',
+    switchModeIntro:
+      'Either one switch turns hiding on and off everywhere, or every area has its own: the switch then shows and changes the area of the page you are on.',
+    modeGlobal: 'One switch for everything',
+    modeGlobalDesc: 'Like before: on or off on every page.',
+    modePerArea: 'A switch per area',
+    modePerAreaDesc: 'Below: where hiding is currently on.',
+    areas: {
+      subscriptions: 'Subscriptions',
+      home: 'Home page',
+      channel: 'Channel pages',
+      playlist: 'Playlists and Watch later',
+      other: 'Search and recommendations',
+    },
+    /** Next to the switch in the YouTube header. */
+    areasShort: { subscriptions: 'Subscriptions', home: 'Home', channel: 'Channel', playlist: 'Playlists', other: 'Search' },
     onSubs: 'In subscriptions',
     onHome: 'On the home page',
     onChannels: 'On channel pages',
@@ -600,6 +616,7 @@ export const en = {
       videos: 'Videos',
       shorts: 'Shorts',
       live: 'Live streams',
+      members: 'Members only',
       playlists: 'Playlists',
       reading: 'Counting watched videos …',
       none: 'Nothing published yet',

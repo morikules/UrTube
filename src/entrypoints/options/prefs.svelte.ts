@@ -6,10 +6,15 @@ import { loadSettings, onSettingsChanged, saveSettings, type Settings } from '@/
 
 export const prefs = $state<{ s: Settings | null }>({ s: null });
 
-loadSettings().then((s) => (prefs.s = s));
+/** Language the page was rendered in (setPref updates prefs.s before the change event). */
+let shownLanguage: Settings['language'] | null = null;
+loadSettings().then((s) => {
+  prefs.s = s;
+  shownLanguage = s.language;
+});
 onSettingsChanged((s) => {
   // Texts are not re-rendered one by one: a new language reloads the page.
-  if (prefs.s && s.language !== prefs.s.language) location.reload();
+  if (shownLanguage !== null && s.language !== shownLanguage) location.reload();
   prefs.s = s;
 });
 

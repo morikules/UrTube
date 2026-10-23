@@ -2,7 +2,15 @@ import './style.css';
 import type { EntryPoint, Mark, View } from '@/lib/db';
 import { n, setLanguage, t } from '@/lib/i18n';
 import { send, type Broadcast } from '@/lib/messages';
-import { loadSettings, onSettingsChanged, saveSettings, type Settings } from '@/lib/settings';
+import {
+  hideAreaOf,
+  isHidingOn,
+  loadSettings,
+  onSettingsChanged,
+  saveSettings,
+  toggleHiding,
+  type Settings,
+} from '@/lib/settings';
 import { PLAYLIST_FORMAT, playlistIdFromUrl, playlistProgress, progressLabel } from '@/lib/playlists';
 import {
   channelKeyFromPath,
@@ -161,7 +169,7 @@ export default defineContentScript({
       c.toggle('ytt-ban-channels', settings.dismissChannels);
       c.toggle('ytt-pl-progress-on', settings.showPlaylistProgress);
       // Hiding: the header switch, the page type and the shelf filters.
-      c.toggle('ytt-hiding', settings.hideEnabled);
+      c.toggle('ytt-hiding', isHidingOn(settings, page));
       for (const kind of ['subscriptions', 'home', 'channel'] as const) {
         c.toggle(`ytt-page-${kind}`, page === kind);
       }
@@ -226,7 +234,13 @@ export default defineContentScript({
         reason =
           id && isDismissed(id, 'video')
             ? 'dismissed'
-            : hideReason(target, page, settings, id && !keep ? watched.get(id) : undefined);
+            : hideReason(
+                target,
+                page,
+                settings,
+                id && !keep ? watched.get(id) : undefined,
+                page === 'channel' && id !== null && channelStats.isMembersOnly(id),
+              );
       }
       const el = target as HTMLElement;
       if (reason) {
@@ -277,12 +291,17 @@ export default defineContentScript({
       const spinnerEl = box.querySelector<HTMLElement>('.ytt-toggle-spinner');
       if (spinnerEl && spinnerEl.title !== spinnerTitle) spinnerEl.title = spinnerTitle;
       const btn = box.querySelector('button')!;
-      btn.setAttribute('aria-checked', String(settings.hideEnabled));
-      btn.title = settings.hideEnabled ? t.content.switchShow : t.content.switchHide;
-      let label = '';
+      const on = isHidingOn(settings, page);
+      btn.setAttribute('aria-checked', String(on));
+      // With one switch per area, the label names the area this switch belongs to.
+      const area = settings.hideSwitchMode === 'perArea' ? hideAreaOf(page) : null;
+      const areaName = area ? t.hide.areasShort[area] : '';
+      btn.title = `${on ? t.content.switchShow : t.content.switchHide}${areaName ? ` (${areaName})` : ''}`;
+      let label = areaName;
       if (settings.showHiddenCount) {
         const count = n(document.querySelectorAll('[data-ytt-hide]').length);
-        label = settings.hideEnabled ? t.content.countHidden(count) : t.content.countHideable(count);
+        const countText = on ? t.content.countHidden(count) : t.content.countHideable(count);
+        label = areaName ? `${areaName} · ${countText}` : countText;
       }
       const labelEl = box.querySelector('.ytt-toggle-label')!;
       if (labelEl.textContent !== label) labelEl.textContent = label;
@@ -411,7 +430,10 @@ export default defineContentScript({
       }
       const listId = playlistIdFromUrl(href);
       if (listId) {
-        applyPlaylist(a, listId);
+        // Only thumbnails in cards: shelf headings and "Play all" on channel pages
+        // link to playlists too, but are no place for a progress label.
+        if (a.closest(CARD_SELECTOR)) applyPlaylist(a, listId);
+        else clearThumb(a);
         return;
       }
       const id = videoIdFromUrl(href);
@@ -584,7 +606,7 @@ export default defineContentScript({
           }
         } else if (hideSwitch) {
           // Saved settings reach all YouTube tabs via onSettingsChanged.
-          saveSettings({ ...settings, hideEnabled: !settings.hideEnabled });
+          saveSettings(toggleHiding(settings, page));
         } else if (ban) {
           const a = ban.closest<HTMLAnchorElement>('a.ytt-thumb');
           if (a) toggleDismissed(a);

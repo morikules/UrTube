@@ -1,10 +1,15 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
+  import { HIDE_AREAS, type Settings } from '@/lib/settings';
   import Toggle from './Toggle.svelte';
   import WindowInput from './WindowInput.svelte';
   import { prefs, setPref } from './prefs.svelte';
 
   const H = t.hide;
+  const modes: { id: Settings['hideSwitchMode']; label: string; description: string }[] = [
+    { id: 'global', label: H.modeGlobal, description: H.modeGlobalDesc },
+    { id: 'perArea', label: H.modePerArea, description: H.modePerAreaDesc },
+  ];
   const cacheHours = [
     { h: 1, label: H.hour },
     { h: 6, label: H.hours(6) },
@@ -53,6 +58,37 @@
         onchange={(v) => setPref('hideOnSidebar', v)}
       />
     </div>
+  </section>
+
+  <section>
+    <h2>{H.switchModeTitle}</h2>
+    <p class="muted">{H.switchModeIntro}</p>
+    <div class="box">
+      {#each modes as m}
+        <label class="choice">
+          <input
+            type="radio"
+            name="switch-mode"
+            value={m.id}
+            checked={s.hideSwitchMode === m.id}
+            onchange={() => setPref('hideSwitchMode', m.id)}
+          />
+          <span>{m.label}</span>
+          <span class="muted small">{m.description}</span>
+        </label>
+      {/each}
+    </div>
+    {#if s.hideSwitchMode === 'perArea'}
+      <div class="box">
+        {#each HIDE_AREAS as area}
+          <Toggle
+            label={H.areas[area]}
+            checked={s.hideAreas[area]}
+            onchange={(v) => setPref('hideAreas', { ...s.hideAreas, [area]: v })}
+          />
+        {/each}
+      </div>
+    {/if}
   </section>
 
   <section>
@@ -150,3 +186,20 @@
     </div>
   </section>
 {/if}
+
+<style>
+  .choice {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .choice:last-child {
+    border-bottom: none;
+  }
+  .box + .box {
+    margin-top: 12px;
+  }
+</style>

@@ -22,6 +22,7 @@ describe('channel lists', () => {
     expect(channelListId(CH, 'videos')).toBe('UULFz75RVbH8q2jdBJ4SnwuZZQ');
     expect(channelListId(CH, 'shorts')).toBe('UUSHz75RVbH8q2jdBJ4SnwuZZQ');
     expect(channelListId(CH, 'live')).toBe('UULVz75RVbH8q2jdBJ4SnwuZZQ');
+    expect(channelListId(CH, 'members')).toBe('UUMOz75RVbH8q2jdBJ4SnwuZZQ');
     expect(channelOfPlaylistsId(channelPlaylistsId(CH))).toBe(CH);
     expect(channelOfPlaylistsId('PLabc')).toBeNull();
   });

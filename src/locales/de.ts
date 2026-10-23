@@ -214,6 +214,22 @@ export const de: Messages = {
     watchedTitle: 'Gesehene ausblenden',
     watchedIntro:
       'Der Schalter in der YouTube-Kopfzeile neben der Suche schaltet das Ausblenden an und aus. Die Zeitgrenze bezieht sich auf das Alter des Videos: Ältere gesehene Videos bleiben stehen, damit YouTube nicht endlos nachlädt.',
+    switchModeTitle: 'Der Schalter in der YouTube-Kopfzeile',
+    switchModeIntro:
+      'Entweder schaltet ein Schalter das Ausblenden überall an und aus, oder jeder Bereich hat seinen eigenen: Der Schalter zeigt und ändert dann den Bereich der Seite, auf der du bist.',
+    modeGlobal: 'Ein Schalter für alles',
+    modeGlobalDesc: 'Wie bisher: an oder aus auf allen Seiten.',
+    modePerArea: 'Ein Schalter je Bereich',
+    modePerAreaDesc: 'Darunter: wo das Ausblenden gerade an ist.',
+    areas: {
+      subscriptions: 'Abos',
+      home: 'Startseite',
+      channel: 'Kanalseiten',
+      playlist: 'Playlists und Später ansehen',
+      other: 'Suche und Empfehlungen',
+    },
+    /** Next to the switch in the YouTube header. */
+    areasShort: { subscriptions: 'Abos', home: 'Startseite', channel: 'Kanal', playlist: 'Playlists', other: 'Suche' },
     onSubs: 'In den Abos',
     onHome: 'Auf der Startseite',
     onChannels: 'Auf Kanalseiten',
@@ -598,6 +614,7 @@ export const de: Messages = {
       videos: 'Videos',
       shorts: 'Shorts',
       live: 'Livestreams',
+      members: 'Nur für Mitglieder',
       playlists: 'Playlisten',
       reading: 'Gesehene Videos werden gezählt …',
       none: 'Noch nichts veröffentlicht',

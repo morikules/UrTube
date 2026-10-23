@@ -117,6 +117,8 @@ export function hideReason(
   page: PageKind,
   settings: Settings,
   watchedAt: number | undefined,
+  /** Known as members-only from the channel's members list (channel pages). */
+  knownMembersOnly = false,
 ): HideReason | null {
   if (page === 'other') return null;
 
@@ -129,7 +131,7 @@ export function hideReason(
       if (settings.filterMembersOnly && isMembersOnly(card, texts)) return 'members';
     }
   } else if (page === 'channel' && settings.filterMembersOnly && settings.filterMembersOnlyOnChannels) {
-    if (isMembersOnly(card, shortTexts(card))) return 'members';
+    if (knownMembersOnly || isMembersOnly(card, shortTexts(card))) return 'members';
   }
 
   if (watchedAt === undefined) return null;
