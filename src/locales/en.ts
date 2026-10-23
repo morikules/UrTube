@@ -162,8 +162,12 @@ export const en = {
       filterAll: 'All',
       filterSubs: 'Subscriptions only',
       colChannel: 'Channel',
-      colWatched: 'Watched',
-      colUploads: 'Videos watched',
+      colWatched: 'In history',
+      colWatchedHint:
+        'Videos of this channel in your history. Only counts videos whose channel UrTube knows already – after a Watchmarker import the number grows while details are filled in.',
+      colUploads: 'Uploads watched',
+      colUploadsHint:
+        'Of all public videos of the channel (videos, Shorts, live streams), how many you watched – matched by video ID, regardless of channel details.',
       colShare: 'Share',
       colPlaylists: 'Playlists',
       colCounted: 'Counted',

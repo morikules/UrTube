@@ -39,8 +39,8 @@ All notable changes. Versions before 1.0 were private test builds.
   "No longer on YouTube" (deleted, private or a broken ID), with their numbers;
   such videos carry a badge.
 - The channel list is always shown, as a table with channel pictures; click a
-  column header to sort (channel, watched, videos watched, share, playlists,
-  counted).
+  column header to sort (channel, in history, uploads watched, share,
+  playlists, counted). A channel's uploads are read up to 20,000 videos.
 - Filling in video details shows live what it does (running, waiting for
   YouTube, stopped, done) and skips single broken videos instead of stopping.
 - Switches: the knob sits centered in Firefox.

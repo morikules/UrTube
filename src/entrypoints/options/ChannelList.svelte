@@ -226,9 +226,9 @@
 {#if !filtered.length}
   <p class="muted">{C.empty}</p>
 {:else}
-  {#snippet header(key: SortKey, label: string, cls = '')}
+  {#snippet header(key: SortKey, label: string, cls = '', hint = '')}
     <th class={cls} aria-sort={sortKey === key ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
-      <button class="sort" class:active={sortKey === key} onclick={() => sortBy(key)}>
+      <button class="sort" class:active={sortKey === key} onclick={() => sortBy(key)} title={hint || undefined}>
         {label}<span class="arrow">{sortKey === key ? (sortDesc ? '▼' : '▲') : ''}</span>
       </button>
     </th>
@@ -238,8 +238,8 @@
       <thead>
         <tr>
           {@render header('name', C.colChannel)}
-          {@render header('watched', C.colWatched, 'num')}
-          {@render header('uploads', C.colUploads, 'num')}
+          {@render header('watched', C.colWatched, 'num', C.colWatchedHint)}
+          {@render header('uploads', C.colUploads, 'num', C.colUploadsHint)}
           {@render header('share', C.colShare, 'num')}
           {@render header('playlists', C.colPlaylists, 'num')}
           {@render header('counted', C.colCounted, 'num')}

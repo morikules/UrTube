@@ -40,8 +40,11 @@ export const WATCH_LATER_RESULT_KEY = 'watchLaterResult';
 
 /** Larger playlists are only read up to this many videos. */
 export const MAX_PLAYLIST_VIDEOS = 2000;
-/** A channel's uploads are read further (they are counted, not shown as a list). */
-export const MAX_CHANNEL_VIDEOS = 5000;
+/**
+ * A channel's uploads are read much further (they are counted, not shown as a
+ * list): 20,000 are about 200 requests, a few minutes for the largest channels.
+ */
+export const MAX_CHANNEL_VIDEOS = 20_000;
 
 /**
  * YouTube keeps hidden upload playlists per channel, split by kind:

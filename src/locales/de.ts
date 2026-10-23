@@ -160,8 +160,12 @@ export const de: Messages = {
       filterAll: 'Alle',
       filterSubs: 'Nur Abos',
       colChannel: 'Kanal',
-      colWatched: 'Gesehen',
-      colUploads: 'Videos gesehen',
+      colWatched: 'Im Verlauf',
+      colWatchedHint:
+        'Videos dieses Kanals in deinem Verlauf. Zählt nur Videos, deren Kanal UrTube schon kennt – nach einem Watchmarker-Import wächst die Zahl, während Angaben nachgeladen werden.',
+      colUploads: 'Uploads gesehen',
+      colUploadsHint:
+        'Von allen öffentlichen Videos des Kanals (Videos, Shorts, Livestreams), wie viele du gesehen hast – abgeglichen über die Video-IDs, unabhängig von Kanal-Angaben.',
       colShare: 'Anteil',
       colPlaylists: 'Playlisten',
       colCounted: 'Gezählt',
