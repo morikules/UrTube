@@ -5,8 +5,10 @@
     /** With `url`, the label opens that page (e.g. the channel). */
     rows: { label: string; count: number; url?: string }[];
     unit: (count: number) => string;
+    /** How the value is shown next to the bar (default: the number). */
+    format?: (count: number) => string;
   }
-  let { rows, unit }: Props = $props();
+  let { rows, unit, format = n }: Props = $props();
   const max = $derived(Math.max(1, ...rows.map((r) => r.count)));
 </script>
 
@@ -18,7 +20,7 @@
           {#if r.url}<a class="plain" href={r.url} target="_blank" rel="noreferrer">{r.label}</a>{:else}{r.label}{/if}
         </td>
         <td class="track"><span class="bar" style:width={`${(r.count / max) * 100}%`}></span></td>
-        <td class="num">{n(r.count)}</td>
+        <td class="num">{format(r.count)}</td>
       </tr>
     {/each}
   </tbody>
@@ -53,6 +55,7 @@
   }
   .num {
     width: 10%;
+    white-space: nowrap;
     padding-left: 10px;
     text-align: right;
     font-variant-numeric: tabular-nums;

@@ -121,6 +121,17 @@ describe('computeHighlights', () => {
     expect(h.newChannelsTotal).toBe(2);
     expect(h.newChannels).toEqual([{ key: '2026-10', label: 'Oct', channels: 2 }]);
     expect(h.first?.id).toBe('aaaaaaaaaaa');
+    expect(h.last?.id).toBe('ccccccccccc');
+  });
+
+  it('length of the videos watched per channel, each video once', () => {
+    const timed = vids.map((v, i) => ({ ...v, durationSec: [600, 300, 1200, 50][i] }));
+    const r = computeHighlights(timed, vws, range, buckets, 'month', 10, t('2026-10-11T18:00:00Z'));
+    expect(r.channelTime.map((c) => [c.label, c.count])).toEqual([
+      ['Y', 1200],
+      ['X', 900],
+    ]);
+    expect(r.channels).toBe(2);
   });
 });
 

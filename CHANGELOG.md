@@ -40,7 +40,13 @@ All notable changes. Versions before 1.0 were private test builds.
   highlights of a chosen year.
 - History: new filters "Continue watching" (unfinished videos; the thumbnail
   opens them where you stopped, with a red progress bar), length and date
-  range; the videos shown can be exported as CSV.
+  range (from the oldest entry to today); "Select all" selects every video
+  matching search and filters, and selected videos can be exported as CSV.
+- Statistics are split into Videos, Channels and Year in review, more compact
+  with smaller charts; new: time per channel (total length of the videos
+  watched), top 5 categories and the last video in the year in review.
+- Views remember which YouTube account they were recorded with (a short hash,
+  no e-mail address) – not shown or used for filtering yet.
 - Data → Backup: export all videos or all views as CSV (for Excel/LibreOffice).
 - New history filters "Without channel details" (still to be filled in) and
   "No longer on YouTube" (deleted, private or a broken ID), with their numbers;

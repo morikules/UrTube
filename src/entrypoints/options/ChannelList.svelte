@@ -10,6 +10,7 @@
   import { send } from '@/lib/messages';
   import { channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
   import { CHANNEL_AVATARS_KEY, SUBSCRIPTIONS_KEY, type Subscriptions } from '@/lib/subscriptions';
+  import { formatWatchTime } from '@/lib/stats';
   import { channelUrl, formatDate, formatDateTime, videoChannelUrl } from '@/lib/youtube';
   import Dropdown from './Dropdown.svelte';
   import { prefs } from './prefs.svelte';
@@ -26,6 +27,8 @@
     name: string;
     url: string | null;
     watched: number;
+    /** Total length of the watched videos (seconds). */
+    seconds: number;
     subscribed: boolean;
   }
 
@@ -35,7 +38,7 @@
   let query = $state('');
   let filter = $state<'all' | 'subs'>('all');
   /** Sorted by a column header; a second click turns the order around. */
-  type SortKey = 'name' | 'watched' | 'uploads' | 'share' | 'playlists' | 'counted';
+  type SortKey = 'name' | 'watched' | 'time' | 'uploads' | 'share' | 'playlists' | 'counted';
   let sortKey = $state<SortKey>('watched');
   let sortDesc = $state(true);
   function sortBy(key: SortKey) {
@@ -81,14 +84,17 @@
       if (v.status !== 'watched' || !v.channelName) continue;
       const key = v.channelId ?? `name:${v.channelName}`;
       const row = byKey.get(key);
-      if (row) row.watched++;
-      else {
+      if (row) {
+        row.watched++;
+        row.seconds += v.durationSec ?? 0;
+      } else {
         byKey.set(key, {
           key,
           channelId: v.channelId,
           name: v.channelName,
           url: videoChannelUrl(v),
           watched: 1,
+          seconds: v.durationSec ?? 0,
           subscribed: v.channelId ? subscribed.has(v.channelId) : false,
         });
       }
@@ -96,7 +102,15 @@
     // Subscribed channels never watched appear with 0.
     for (const c of subscribed.values()) {
       if (byKey.has(c.id)) continue;
-      byKey.set(c.id, { key: c.id, channelId: c.id, name: c.name, url: channelUrl(c.handle ?? c.id), watched: 0, subscribed: true });
+      byKey.set(c.id, {
+        key: c.id,
+        channelId: c.id,
+        name: c.name,
+        url: channelUrl(c.handle ?? c.id),
+        watched: 0,
+        seconds: 0,
+        subscribed: true,
+      });
     }
     return [...byKey.values()];
   });
@@ -118,6 +132,7 @@
     const s = (r: Row) => summaries.get(r.key);
     const value: Record<Exclude<SortKey, 'name'>, (r: Row) => number> = {
       watched: (r) => r.watched,
+      time: (r) => r.seconds,
       uploads: (r) => (s(r)?.unknown ? -1 : (s(r)?.total ?? -1)),
       share,
       playlists: (r) => (s(r)?.unknown ? -1 : (s(r)?.playlistsTotal ?? -1)),
@@ -239,6 +254,7 @@
         <tr>
           {@render header('name', C.colChannel)}
           {@render header('watched', C.colWatched, 'num', C.colWatchedHint)}
+          {@render header('time', C.colTime, 'num', C.colTimeHint)}
           {@render header('uploads', C.colUploads, 'num', C.colUploadsHint)}
           {@render header('share', C.colShare, 'num')}
           {@render header('playlists', C.colPlaylists, 'num')}
@@ -275,6 +291,7 @@
               </span>
             </div></td>
             <td class="num">{n(row.watched)}</td>
+            <td class="num">{row.seconds ? formatWatchTime(row.seconds) : '–'}</td>
             {#if counted}
               <!-- The breakdown (videos, Shorts, live …) as tooltip. -->
               <td class="num" title={s!.text}>{n(s!.seen)} / {n(s!.total)}</td>

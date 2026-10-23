@@ -20,6 +20,7 @@ import {
 } from '@/lib/playlists';
 import { channelListIds } from '@/lib/channelStats';
 import { subscriptionsDue, syncSubscriptions } from './subscriptions';
+import { currentAccount } from './account';
 import {
   channelKeyFromPath,
   entryFromPath,
@@ -431,7 +432,9 @@ export default defineContentScript({
         const marks = [...pendingMarks.values()];
         pendingMarks.clear();
         for (const m of marks) sentMarks.add(m.videoId);
-        send({ type: 'addMarks', marks }).catch(() => {});
+        currentAccount()
+          .then((account) => send({ type: 'addMarks', marks: marks.map((m) => ({ ...m, account })) }))
+          .catch(() => {});
       }, 1000);
     }
 
@@ -587,7 +590,10 @@ export default defineContentScript({
     /** Eye button: watched → delete completely, otherwise mark as watched. */
     async function toggleWatched(id: string, title: string, isShort: boolean): Promise<void> {
       if (watched.has(id)) await send({ type: 'deleteVideos', ids: [id] });
-      else await send({ type: 'addMarks', marks: [{ videoId: id, title, source: 'manual', isShort }] });
+      else {
+        const account = await currentAccount();
+        await send({ type: 'addMarks', marks: [{ videoId: id, title, source: 'manual', isShort, account }] });
+      }
     }
 
     /** ⊘ button: hide the video/playlist (not counted as watched), or show it again. */
@@ -877,6 +883,7 @@ export default defineContentScript({
         title: pageTitle(),
         entry: s.entry,
         isShort: s.isShort,
+        account: await currentAccount(),
         ...s.playlist,
       });
       s.viewId = res.viewId;

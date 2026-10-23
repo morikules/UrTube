@@ -68,8 +68,29 @@
     loading = false;
   }
 
-  function exportCsv() {
-    download(videosCsv(filtered), `urtube-history-${new Date().toISOString().slice(0, 10)}.csv`);
+  /** Exports the selected videos (in list order). */
+  function exportSelected() {
+    const rows = filtered.filter((v) => selected.has(v.id));
+    download(videosCsv(rows), `urtube-history-${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  // The date fields show the whole history by default: oldest entry to today.
+  const dayOf = (ms: number) => {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const oldestDay = $derived.by(() => {
+    let min = Infinity;
+    for (const v of all) if (v.firstViewAt > 0 && v.firstViewAt < min) min = v.firstViewAt;
+    return Number.isFinite(min) ? dayOf(min) : dayOf(Date.now());
+  });
+  const today = dayOf(Date.now());
+  /** Changing a field back to its default removes that limit. */
+  function setFrom(value: string) {
+    dateFrom = !value || value <= oldestDay ? '' : value;
+  }
+  function setTo(value: string) {
+    dateTo = !value || value >= today ? '' : value;
   }
 
   const withCategory = $derived(prefs.s?.musicFromCategory ?? true);
@@ -96,6 +117,14 @@
     });
   });
   const visible = $derived(filtered.slice(0, limit));
+
+  /** All videos matching the filters are selected (not only the ones loaded so far). */
+  const allSelected = $derived(filtered.length > 0 && filtered.every((v) => selected.has(v.id)));
+  const someSelected = $derived(!allSelected && filtered.some((v) => selected.has(v.id)));
+  function toggleAll() {
+    if (allSelected) for (const v of filtered) selected.delete(v.id);
+    else for (const v of filtered) selected.add(v.id);
+  }
 
   // Reset paging when the search or filter changes.
   $effect(() => {
@@ -161,20 +190,39 @@
     <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} />
   </div>
   <div class="toolbar second">
+    <label class="all" title={H.selectAllHint}>
+      <input
+        type="checkbox"
+        checked={allSelected}
+        indeterminate={someSelected}
+        disabled={!filtered.length}
+        onchange={toggleAll}
+      />
+      {H.selectAll(n(filtered.length))}
+    </label>
     <label class="date">
       {H.from}
-      <input type="date" bind:value={dateFrom} max={dateTo || undefined} />
+      <input
+        type="date"
+        value={dateFrom || oldestDay}
+        min={oldestDay}
+        max={dateTo || today}
+        onchange={(e) => setFrom(e.currentTarget.value)}
+      />
     </label>
     <label class="date">
       {H.to}
-      <input type="date" bind:value={dateTo} min={dateFrom || undefined} />
+      <input
+        type="date"
+        value={dateTo || today}
+        min={dateFrom || oldestDay}
+        max={today}
+        onchange={(e) => setTo(e.currentTarget.value)}
+      />
     </label>
     {#if dateFrom || dateTo}
       <button class="link" onclick={() => ((dateFrom = ''), (dateTo = ''))}>{H.clearDates}</button>
     {/if}
-    <button class="export" onclick={exportCsv} disabled={!filtered.length} title={H.exportHint}>
-      {H.exportCsv(n(filtered.length))}
-    </button>
   </div>
 
   <!-- The total is in the header; only show a count when it differs. -->
@@ -195,6 +243,7 @@
       <b>{H.selected(n(selected.size))}</b>
       <button onclick={() => act('markUnwatched', [...selected])}>{H.markUnwatched}</button>
       <button onclick={() => act('markWatched', [...selected])}>{H.markWatched}</button>
+      <button onclick={exportSelected} title={H.exportHint}>{H.exportCsv}</button>
       <ConfirmButton
         label={t.common.delete}
         question={H.deleteQuestion(n(selected.size))}
@@ -264,8 +313,15 @@
     color: var(--fg);
     color-scheme: light dark;
   }
-  .export {
-    margin-left: auto;
+  /* Lines up with the checkboxes of the rows below. */
+  .all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: auto;
+    padding-left: 4px;
+    color: var(--muted);
+    cursor: pointer;
   }
   button.link {
     padding: 0;

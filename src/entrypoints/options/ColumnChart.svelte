@@ -8,10 +8,12 @@
     data: { label: string; value: number }[];
     /** Text for the tooltip, e.g. (v) => `${v} Videos`. */
     unit: (value: number) => string;
+    /** Total height in pixels. */
+    height?: number;
   }
-  let { data, unit }: Props = $props();
+  let { data, unit, height = 180 }: Props = $props();
 
-  const H = 180;
+  const H = $derived(height);
   const PAD = { top: 12, right: 8, bottom: 22, left: 40 };
   const BAR_MAX = 24;
 
@@ -27,7 +29,7 @@
   });
 
   const plotW = $derived(Math.max(50, width - PAD.left - PAD.right));
-  const plotH = H - PAD.top - PAD.bottom;
+  const plotH = $derived(H - PAD.top - PAD.bottom);
   const band = $derived(plotW / Math.max(1, data.length));
   const barW = $derived(Math.min(BAR_MAX, band * 0.7));
   /** Show every n-th month label so they never collide. */

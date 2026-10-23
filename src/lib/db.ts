@@ -97,6 +97,11 @@ export interface View {
   dayOnly?: boolean;
   /** When this row was written (not set for rows from before v0.3). */
   createdAt?: number;
+  /**
+   * YouTube account the view was recorded with (since 1.1): a short hash of
+   * YouTube's account ID, "anon" when logged out; names in ACCOUNTS_KEY.
+   */
+  account?: string;
 }
 
 export type ViewProgress = Pick<
@@ -371,6 +376,7 @@ export interface StartView {
   playlistId?: string;
   playlistIndex?: number;
   at?: number;
+  account?: string;
 }
 
 /** Starts a viewing session; progress is added later with `updateView`. */
@@ -390,6 +396,7 @@ export async function startView(
       isShort: s.isShort,
       playlistId: s.playlistId,
       playlistIndex: s.playlistIndex,
+      account: s.account,
       createdAt: Date.now(),
     });
     const old = await db.videos.get(s.videoId);
@@ -421,6 +428,7 @@ export interface MusicPlay {
   channelName?: string;
   durationSec?: number;
   at?: number;
+  account?: string;
 }
 
 /**
@@ -437,6 +445,7 @@ export async function recordMusicPlay(db: TrackerDB, p: MusicPlay): Promise<Vide
       source: 'youtube-music',
       dateUncertain: false,
       durationSec: p.durationSec,
+      account: p.account,
       createdAt: Date.now(),
     });
     await db.deleted.delete(p.videoId);
@@ -698,6 +707,7 @@ export interface Mark {
   source: 'manual' | 'youtube-progress';
   isShort?: boolean;
   reportedPercent?: number;
+  account?: string;
 }
 
 /**
@@ -731,6 +741,7 @@ export async function addMarks(db: TrackerDB, marks: Mark[], at = Date.now()): P
         // The bar shows that it was watched, not when.
         dateUncertain: m.source === 'youtube-progress',
         reportedPercent: m.reportedPercent,
+        account: m.account,
         createdAt: Date.now(),
       });
       await db.videos.put({
@@ -756,6 +767,7 @@ export interface ExternalView {
   /** Only the day of `at` is known (YouTube history). */
   dayOnly?: boolean;
   isShort?: boolean;
+  account?: string;
 }
 
 /**
@@ -818,6 +830,7 @@ export async function addExternalViews(
         source,
         dateUncertain: item.dateUncertain ?? false,
         dayOnly: item.dayOnly,
+        account: item.account,
         createdAt,
       });
     }

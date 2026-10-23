@@ -36,7 +36,16 @@
   const S = t.app.sub;
   const tabs: Tab[] = [
     { id: 'history', label: L.history, pane: HistoryTab },
-    { id: 'stats', label: L.stats, pane: StatsTab },
+    {
+      id: 'stats',
+      label: L.stats,
+      // One pane with three views: they share the loaded data (rendered below).
+      sub: [
+        { id: 'videos', label: S.statsVideos, pane: StatsTab },
+        { id: 'channels', label: S.statsChannels, pane: StatsTab },
+        { id: 'review', label: S.statsReview, pane: StatsTab },
+      ],
+    },
     {
       id: 'settings',
       label: L.settings,
@@ -151,7 +160,7 @@
     {#if route.tab.id === 'history'}
       <HistoryTab {dataVersion} onchange={refreshStats} />
     {:else if route.tab.id === 'stats'}
-      <StatsTab {dataVersion} />
+      <StatsTab {dataVersion} view={route.subId} />
     {:else}
       {@const Current = current}
       <Current ondatachange={dataChanged} />

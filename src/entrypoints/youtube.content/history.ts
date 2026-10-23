@@ -13,6 +13,7 @@ import {
   type RemovalResult,
   type SyncStatus,
 } from '@/lib/youtubeHistory';
+import { currentAccount } from './account';
 import { innertube, readConfig, sleep, type YtConfig } from './innertube';
 
 /** History pages searched for videos to remove (like Watchmarker). */
@@ -152,6 +153,8 @@ export async function runHistorySync(full: boolean): Promise<void> {
       if (status.pages === 0 && !page.items.length && !page.continuation) {
         throw new Error('Kein Verlauf gefunden – bei YouTube angemeldet und Verlauf nicht pausiert?');
       }
+      // The YouTube history belongs to the account logged in here.
+      const account = await currentAccount();
       const views: ExternalView[] = page.items.map((i) => ({
         videoId: i.videoId,
         title: i.title,
@@ -159,6 +162,7 @@ export async function runHistorySync(full: boolean): Promise<void> {
         at: i.day ? dayToTimestamp(i.day, now) : now,
         dayOnly: i.day !== null,
         dateUncertain: i.day === null,
+        account,
       }));
       const tokens = page.items.flatMap((i) => (i.removalToken ? [{ videoId: i.videoId, token: i.removalToken }] : []));
       const { added } = await send({ type: 'addYoutubeHistory', views, tokens });

@@ -17,7 +17,7 @@
 
   const range = $derived(yearRange(year));
   const stats = $derived(computeStats(videos, views, range, 5));
-  const h = $derived(computeHighlights(videos, views, range, stats.buckets, stats.granularity, 3));
+  const h = $derived(computeHighlights(videos, views, range, stats.buckets, stats.granularity, 5));
   const busiestMonth = $derived(stats.buckets.reduce((a, b) => (b.videos > (a?.videos ?? 0) ? b : a), stats.buckets[0]));
   const categoryName = (c: string) => (T.categoryNames as Record<string, string>)[c] ?? c;
   const dayLabel = (day: string) => formatDate(Date.parse(`${day}T12:00:00`));
@@ -54,9 +54,14 @@
       {:else}<b>–</b>{/if}
     </div>
     <div class="card">
-      <span>{Y.topCategory}</span>
-      <b>{h.categories[0] ? categoryName(h.categories[0].label) : '–'}</b>
-      {#if h.categories[1]}<small class="muted">{Y.then(h.categories.slice(1).map((c) => categoryName(c.label)).join(', '))}</small>{/if}
+      <span>{Y.topCategories}</span>
+      {#if h.categories.length}
+        <ol>
+          {#each h.categories as c (c.label)}
+            <li>{categoryName(c.label)} <span class="muted">{n(c.count)}</span></li>
+          {/each}
+        </ol>
+      {:else}<b>–</b>{/if}
     </div>
     <div class="card">
       <span>{Y.mostRewatched}</span>
@@ -93,6 +98,20 @@
         <small class="muted">{formatDate(h.first.at)}</small>
       {:else}<b>–</b>{/if}
     </div>
+    {#if h.last && h.last.id !== h.first?.id}
+      <div class="card">
+        <span>{Y.last}</span>
+        <a class="plain title" href={videoUrl(h.last.id)} target="_blank" rel="noreferrer">{h.last.title}</a>
+        <small class="muted">{formatDate(h.last.at)}</small>
+      </div>
+    {/if}
+    {#if h.channelTime[0]}
+      <div class="card">
+        <span>{Y.longestChannel}</span>
+        <b>{h.channelTime[0].label}</b>
+        <small class="muted">{formatWatchTime(h.channelTime[0].count)}</small>
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -104,15 +123,15 @@
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
   }
   .card {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 12px 14px;
-    border-radius: 10px;
+    gap: 3px;
+    padding: 10px 12px;
+    border-radius: 8px;
     background: var(--card);
     min-width: 0;
   }
@@ -121,7 +140,7 @@
     font-size: 0.9em;
   }
   .card b {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: 600;
   }
   /* The total in the accent color: the headline of the year. */

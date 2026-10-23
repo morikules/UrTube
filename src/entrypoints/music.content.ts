@@ -6,6 +6,7 @@ import { setLanguage, t } from '@/lib/i18n';
 import { send, type Broadcast } from '@/lib/messages';
 import { loadSettings, onSettingsChanged, type Settings } from '@/lib/settings';
 import { formatDate, videoIdFromUrl } from '@/lib/youtube';
+import { currentAccount } from './youtube.content/account';
 
 /** Seconds of actual playback before a track counts as listened to. */
 const LISTEN_MIN_SEC = 10;
@@ -136,13 +137,19 @@ export default defineContentScript({
         lastTime = now;
         if (recorded || played < LISTEN_MIN_SEC) return;
         recorded = true;
-        send({
-          type: 'recordMusicPlay',
-          videoId: id,
-          title: data?.title ? String(data.title) : '',
-          channelName: data?.author ? String(data.author) : undefined,
-          durationSec: Number.isFinite(video.duration) ? Math.round(video.duration) : undefined,
-        }).catch(() => {});
+        const durationSec = Number.isFinite(video.duration) ? Math.round(video.duration) : undefined;
+        currentAccount()
+          .then((account) =>
+            send({
+              type: 'recordMusicPlay',
+              videoId: id,
+              title: data?.title ? String(data.title) : '',
+              channelName: data?.author ? String(data.author) : undefined,
+              durationSec,
+              account,
+            }),
+          )
+          .catch(() => {});
       },
       true,
     );

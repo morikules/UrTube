@@ -215,8 +215,13 @@ export interface Highlights {
   /** New channels per bucket: channels whose first watched video falls into it. */
   newChannels: { key: string; label: string; channels: number }[];
   newChannelsTotal: number;
-  /** First video watched in the range. */
+  /** First and last video watched in the range. */
   first?: { id: string; title: string; at: number };
+  last?: { id: string; title: string; at: number };
+  /** Total length of the distinct videos watched per channel (seconds), longest first. */
+  channelTime: CountRow[];
+  /** Channels with a watched video in the range. */
+  channels: number;
 }
 
 /**
@@ -240,6 +245,7 @@ export function computeHighlights(
   const videosPerDay = new Map<string, Set<string>>();
   const allDays = new Set<string>();
   let first: View | undefined;
+  let last: View | undefined;
   for (const v of dated) {
     allDays.add(dayKey(v.at));
     if (!inRange(v.at)) continue;
@@ -249,6 +255,21 @@ export function computeHighlights(
     if (!set) videosPerDay.set(day, (set = new Set()));
     set.add(v.videoId);
     if (!first || v.at < first.at) first = v;
+    if (!last || v.at > last.at) last = v;
+  }
+
+  // Length of all videos watched, per channel (each video once). Unlike the
+  // figures above, "everything" also counts imports without a real date.
+  const watchedIds = new Set(viewsPerVideo.keys());
+  if (range.from === null) for (const v of views) if (v.dateUncertain) watchedIds.add(v.videoId);
+  const time = new Map<string, { label: string; seconds: number; url?: string }>();
+  for (const id of watchedIds) {
+    const video = byId.get(id);
+    if (!video?.channelName) continue;
+    const key = video.channelId ?? video.channelName;
+    const row = time.get(key) ?? { label: video.channelName, seconds: 0, url: videoChannelUrl(video) ?? undefined };
+    row.seconds += video.durationSec ?? 0;
+    time.set(key, row);
   }
 
   const rewatched = [...viewsPerVideo]
@@ -320,6 +341,13 @@ export function computeHighlights(
     newChannels: buckets.map((b) => ({ ...b, channels: perBucket.get(b.key) ?? 0 })),
     newChannelsTotal,
     first: first && { id: first.videoId, title: byId.get(first.videoId)?.title || first.videoId, at: first.at },
+    last: last && { id: last.videoId, title: byId.get(last.videoId)?.title || last.videoId, at: last.at },
+    channelTime: [...time.values()]
+      .filter((r) => r.seconds > 0)
+      .map((r) => ({ label: r.label, count: r.seconds, url: r.url }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, topN),
+    channels: time.size,
   };
 }
 
