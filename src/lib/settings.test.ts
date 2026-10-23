@@ -19,6 +19,7 @@ describe('normalizeSettings', () => {
         filterMembersOnlyOnChannels: false,
         fetchMissingMeta: true,
         fetchMissingMetaAll: false,
+        showChannelStats: true,
       });
     }
   });

@@ -322,6 +322,9 @@ export const en = {
     playlistsTitle: 'Playlists',
     playlistsIntro: 'Progress on playlist thumbnails and – for an open playlist – next to the switch in the header.',
     playlistProgress: 'Show “12 / 23 watched”',
+    channelStats: 'Show watched videos on channel pages',
+    channelStatsDesc:
+      'Below the number of videos in the channel header: watched / total for videos, Shorts, live streams and playlists. Counted once a day, ↻ counts again right away.',
     switchTitle: 'The “Hide” switch',
     switchIntro:
       'The switch in the YouTube header next to the search. Off: watched and hidden items are shown again, hidden ones with the note “Hidden” and a button to show them.',
@@ -587,6 +590,16 @@ export const en = {
     banTitle: 'Hide / show again',
     readingProgress: 'Reading progress …',
     playlistProgress: (seen: string, total: string) => `${seen} / ${total} watched`,
+    channelStats: {
+      watched: 'Watched:',
+      videos: 'Videos',
+      shorts: 'Shorts',
+      live: 'Live streams',
+      playlists: 'Playlists',
+      reading: 'Counting watched videos …',
+      none: 'Nothing published yet',
+      refresh: 'Count again',
+    },
     watchedOn: (date: string) => `✓ Watched on ${date} – remove`,
     markWatched: 'Mark as watched',
     showChannel: '↺ Show channel again',

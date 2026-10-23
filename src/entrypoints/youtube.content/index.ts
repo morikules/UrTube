@@ -22,12 +22,13 @@ import { createPlaylists } from './playlists';
 import { createWatchLater } from './watchLater';
 import { readDomMeta, readPlayerMeta } from './player';
 import { fillMissingMeta } from './metaFill';
+import { createChannelStats } from './channelStats';
 
 const LINK_SELECTOR = 'a[href*="watch?v="], a[href*="/shorts/"], a[href*="/playlist?list="]';
 /** Suggested videos at the end of a video, inside the player (also in full screen). */
 const ENDSCREEN_SELECTOR = 'a.ytp-modern-videowall-still, a.ytp-videowall-still';
 /** Classes of elements the extension inserts itself (ignored by the observer). */
-const OWN_ELEMENTS = ['ytt-eye', 'ytt-ban', 'ytt-watch-btn', 'ytt-chan-btn', 'ytt-toggle', 'ytt-pl-progress'];
+const OWN_ELEMENTS = ['ytt-eye', 'ytt-ban', 'ytt-watch-btn', 'ytt-chan-btn', 'ytt-toggle', 'ytt-pl-progress', 'ytt-chan-stats'];
 /** Channel link inside a card or on the video page. */
 const CHANNEL_LINK = 'a[href^="/@"], a[href^="/channel/"]';
 /** Places for the "hide channel" button on a channel page (new and old header layout). */
@@ -137,6 +138,7 @@ export default defineContentScript({
       () => schedule(document),
       () => settings.playlistCacheHours * 3_600_000,
     );
+    const channelStats = createChannelStats(playlists, (id) => watched.has(id));
 
     // --- Display options as classes on <html>, so CSS does the work ---------
 
@@ -443,6 +445,7 @@ export default defineContentScript({
       updateChannelButton();
       updateHeaderToggle();
       updatePlaylistHeader();
+      channelStats.update(settings.showChannelStats, page === 'channel');
     }
 
     // Collect changed nodes and process them in one batch instead of per mutation.

@@ -2,6 +2,14 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.1.0 (in progress)
+
+- New: channel pages show how much of the channel you watched, below the
+  number of videos in the header: videos, Shorts, live streams and playlists,
+  each as watched / total (a playlist counts once all its videos are watched).
+  Counted once a day and remembered in between; ↻ counts again right away.
+  Can be switched off under Appearance → Thumbnails.
+
 ## 1.0.2
 
 - Watching a video in several sittings no longer counts as several views:

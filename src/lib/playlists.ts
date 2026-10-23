@@ -39,6 +39,43 @@ export const WATCH_LATER_RESULT_KEY = 'watchLaterResult';
 
 /** Larger playlists are only read up to this many videos. */
 export const MAX_PLAYLIST_VIDEOS = 2000;
+/** A channel's uploads are read further (they are counted, not shown as a list). */
+export const MAX_CHANNEL_VIDEOS = 5000;
+
+/**
+ * YouTube keeps hidden upload playlists per channel, split by kind:
+ * "UULF…" long videos, "UUSH…" Shorts, "UULV…" live streams (the channel ID
+ * without its "UC").
+ */
+export const CHANNEL_KINDS = { videos: 'UULF', shorts: 'UUSH', live: 'UULV' } as const;
+export type ChannelKind = keyof typeof CHANNEL_KINDS;
+
+export function channelListId(channelId: string, kind: ChannelKind): string {
+  return CHANNEL_KINDS[kind] + channelId.slice(2);
+}
+
+/**
+ * Pseudo playlist holding the IDs of a channel's playlists (in `videoIds`),
+ * so it is cached and refreshed like any playlist.
+ */
+const CHANNEL_PLAYLISTS = 'channel-playlists:';
+export const channelPlaylistsId = (channelId: string) => CHANNEL_PLAYLISTS + channelId;
+export const channelOfPlaylistsId = (id: string) => (id.startsWith(CHANNEL_PLAYLISTS) ? id.slice(CHANNEL_PLAYLISTS.length) : null);
+/** Browse parameter of a channel's "Playlists" tab. */
+export const CHANNEL_PLAYLISTS_PARAMS = 'EglwbGF5bGlzdHPyBgQKAkIA';
+
+/** Playlist IDs on one page of a channel's "Playlists" tab. */
+export function extractChannelPlaylistsPage(response: unknown): { playlistIds: string[]; continuation?: string } {
+  const ids: string[] = [];
+  walkKeys(response, (key, v) => {
+    if (!isObj(v)) return;
+    if (key === 'lockupViewModel' && v.contentType === 'LOCKUP_CONTENT_TYPE_PLAYLIST' && typeof v.contentId === 'string') {
+      ids.push(v.contentId);
+    }
+    if ((key === 'gridPlaylistRenderer' || key === 'playlistRenderer') && typeof v.playlistId === 'string') ids.push(v.playlistId);
+  });
+  return { playlistIds: [...new Set(ids)], continuation: findContinuation(response) };
+}
 
 const ID_RE = /^[\w-]{11}$/;
 

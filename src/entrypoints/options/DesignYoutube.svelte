@@ -40,6 +40,12 @@
         checked={s.showPlaylistProgress}
         onchange={(v) => setPref('showPlaylistProgress', v)}
       />
+      <Toggle
+        label={D.channelStats}
+        description={D.channelStatsDesc}
+        checked={s.showChannelStats}
+        onchange={(v) => setPref('showChannelStats', v)}
+      />
     </div>
   </section>
 

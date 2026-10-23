@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { TrackerDB, clearAll, exportBackup, restoreBackup, setDismissed } from './db';
 import {
   PLAYLIST_FORMAT,
+  channelListId,
+  channelOfPlaylistsId,
+  channelPlaylistsId,
+  extractChannelPlaylistsPage,
   extractPlaylistPage,
   isPlaylistStale,
   isTrackablePlaylist,
@@ -10,6 +14,33 @@ import {
   progressLabel,
   type PlaylistInfo,
 } from './playlists';
+
+describe('channel lists', () => {
+  const CH = 'UCz75RVbH8q2jdBJ4SnwuZZQ';
+
+  it('builds the upload lists per kind and the playlists entry', () => {
+    expect(channelListId(CH, 'videos')).toBe('UULFz75RVbH8q2jdBJ4SnwuZZQ');
+    expect(channelListId(CH, 'shorts')).toBe('UUSHz75RVbH8q2jdBJ4SnwuZZQ');
+    expect(channelListId(CH, 'live')).toBe('UULVz75RVbH8q2jdBJ4SnwuZZQ');
+    expect(channelOfPlaylistsId(channelPlaylistsId(CH))).toBe(CH);
+    expect(channelOfPlaylistsId('PLabc')).toBeNull();
+  });
+
+  it('reads playlist IDs from the Playlists tab, not videos', () => {
+    const response = {
+      contents: [
+        { lockupViewModel: { contentId: 'PLone', contentType: 'LOCKUP_CONTENT_TYPE_PLAYLIST' } },
+        { lockupViewModel: { contentId: 'aaaaaaaaaaa', contentType: 'LOCKUP_CONTENT_TYPE_VIDEO' } },
+        { gridPlaylistRenderer: { playlistId: 'PLtwo' } },
+        { lockupViewModel: { contentId: 'PLone', contentType: 'LOCKUP_CONTENT_TYPE_PLAYLIST' } },
+        {
+          continuationItemRenderer: { continuationEndpoint: { continuationCommand: { token: 'next' } } },
+        },
+      ],
+    };
+    expect(extractChannelPlaylistsPage(response)).toEqual({ playlistIds: ['PLone', 'PLtwo'], continuation: 'next' });
+  });
+});
 
 describe('playlistIdFromUrl', () => {
   it.each([

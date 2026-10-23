@@ -95,6 +95,39 @@ html.ytt-gray a.ytt-pl-done yt-image {
   font: 500 13px/1.5 Roboto, Arial, sans-serif;
 }
 
+/* Watched videos of a channel: a line in the channel header like YouTube's own. */
+.ytt-chan-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--yt-spec-text-secondary, inherit);
+  font: 400 14px/1.5 Roboto, Arial, sans-serif;
+}
+
+.ytt-chan-stats.ytt-chan-stats-chip {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, 0.06));
+  color: var(--yt-spec-text-primary, inherit);
+  font: 500 13px/1.5 Roboto, Arial, sans-serif;
+}
+
+.ytt-chan-stats-sync {
+  padding: 0 4px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ytt-chan-stats-sync:hover {
+  background: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, 0.1));
+}
+
 /* --- Hidden ("Ausblenden") items while the switch is off: shown, but marked --- */
 
 html:not(.ytt-hiding) :is(a.ytt-dismissed, a.ytt-chan-hidden) img,

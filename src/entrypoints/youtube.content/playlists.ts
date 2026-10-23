@@ -5,8 +5,12 @@
  */
 import { send } from '@/lib/messages';
 import {
+  CHANNEL_PLAYLISTS_PARAMS,
+  MAX_CHANNEL_VIDEOS,
   MAX_PLAYLIST_VIDEOS,
   PLAYLIST_FORMAT,
+  channelOfPlaylistsId,
+  extractChannelPlaylistsPage,
   extractPlaylistPage,
   isPlaylistStale,
   isTrackablePlaylist,
@@ -17,7 +21,31 @@ import { innertube, readConfig, sleep } from './innertube';
 const PAGE_DELAY_MS = 400;
 const BETWEEN_PLAYLISTS_MS = 600;
 
+/** The playlists of a channel ("Playlists" tab), stored as a pseudo playlist. */
+async function fetchChannelPlaylists(id: string, channelId: string): Promise<PlaylistInfo> {
+  const cfg = readConfig();
+  const ids: string[] = [];
+  let continuation: string | undefined;
+  do {
+    const response = await innertube(
+      cfg,
+      'browse',
+      continuation ? { continuation } : { browseId: channelId, params: CHANNEL_PLAYLISTS_PARAMS },
+      `/channel/${channelId}/playlists`,
+    );
+    const page = extractChannelPlaylistsPage(response);
+    for (const p of page.playlistIds) if (!ids.includes(p)) ids.push(p);
+    continuation = page.continuation;
+    if (continuation) await sleep(PAGE_DELAY_MS);
+  } while (continuation && ids.length < MAX_PLAYLIST_VIDEOS);
+  return { id, videoIds: ids, partial: Boolean(continuation), fetchedAt: Date.now(), format: PLAYLIST_FORMAT };
+}
+
 export async function fetchPlaylist(id: string): Promise<PlaylistInfo> {
+  const channelId = channelOfPlaylistsId(id);
+  if (channelId) return fetchChannelPlaylists(id, channelId);
+  // A channel's upload lists ("UU…") are counted, so they are read further.
+  const max = id.startsWith('UU') ? MAX_CHANNEL_VIDEOS : MAX_PLAYLIST_VIDEOS;
   const cfg = readConfig();
   const videoIds: string[] = [];
   let title: string | undefined;
@@ -34,7 +62,7 @@ export async function fetchPlaylist(id: string): Promise<PlaylistInfo> {
     for (const v of page.videoIds) if (!videoIds.includes(v)) videoIds.push(v);
     continuation = page.continuation;
     if (continuation) await sleep(PAGE_DELAY_MS);
-  } while (continuation && videoIds.length < MAX_PLAYLIST_VIDEOS);
+  } while (continuation && videoIds.length < max);
   return { id, title, videoIds, partial: Boolean(continuation), fetchedAt: Date.now(), format: PLAYLIST_FORMAT };
 }
 
@@ -90,6 +118,15 @@ export function createPlaylists(onUpdate: () => void, maxAgeMs: () => number) {
 
     /** Number of playlists still to be read (0 = idle). */
     busy: () => queue.length + (working ? 1 : 0),
+
+    /** Reads the playlists again now, however recent the cached copies are (manual sync). */
+    refresh(ids: string[]): void {
+      for (const id of ids) {
+        if (!isTrackablePlaylist(id) || queue.includes(id)) continue;
+        queue.push(id);
+      }
+      work();
+    },
 
     /** Makes sure the playlist is known; `refresh` forces a new read (playlist page opened). */
     want(id: string, refresh = false): void {

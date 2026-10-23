@@ -2,7 +2,7 @@
   "name": "urtube",
   "description": "Modern tracking for a better watching experience – remembers every YouTube video you watch, all stored locally.",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.1.0",
   "homepage": "https://github.com/morikules/UrTube",
   "bugs": "https://github.com/morikules/UrTube/issues",
   "license": "MIT",

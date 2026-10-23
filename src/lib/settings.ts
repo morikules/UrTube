@@ -50,6 +50,8 @@ export interface Settings {
   dismissChannels: boolean;
   /** "12 / 23 gesehen" on playlist thumbnails. */
   showPlaylistProgress: boolean;
+  /** Watched / total videos, Shorts, live streams and playlists in a channel's header. */
+  showChannelStats: boolean;
 
   // --- Hiding (switch in the YouTube header) ---
   /** State of the header switch "hide watched". */
@@ -157,6 +159,7 @@ export const defaultSettings: Settings = {
   dismissPlaylists: true,
   dismissChannels: true,
   showPlaylistProgress: true,
+  showChannelStats: true,
   hideEnabled: true,
   hideOnSubscriptions: true,
   hideWindowSubscriptions: 30,

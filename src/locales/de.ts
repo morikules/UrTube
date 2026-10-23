@@ -321,6 +321,9 @@ export const de: Messages = {
     playlistsIntro:
       'Fortschritt auf den Vorschaubildern von Playlists und – bei einer geöffneten Playlist – neben dem Schalter in der Kopfzeile.',
     playlistProgress: '„12 / 23 gesehen“ anzeigen',
+    channelStats: 'Gesehene Videos auf Kanalseiten anzeigen',
+    channelStatsDesc:
+      'Unter der Videoanzahl im Kanalkopf: gesehen / gesamt für Videos, Shorts, Livestreams und Playlisten. Wird einmal am Tag neu gezählt, ↻ zählt sofort neu.',
     switchTitle: 'Schalter „Ausblenden“',
     switchIntro:
       'Der Schalter in der YouTube-Kopfzeile neben der Suche. Aus: Gesehenes und Ausgeblendetes wird wieder angezeigt, Ausgeblendetes mit dem Hinweis „Ausgeblendet“ und einem Knopf zum Einblenden.',
@@ -585,6 +588,16 @@ export const de: Messages = {
     banTitle: 'Ausblenden / wieder einblenden',
     readingProgress: 'Fortschritt wird gelesen …',
     playlistProgress: (seen, total) => `${seen} / ${total} gesehen`,
+    channelStats: {
+      watched: 'Gesehen:',
+      videos: 'Videos',
+      shorts: 'Shorts',
+      live: 'Livestreams',
+      playlists: 'Playlisten',
+      reading: 'Gesehene Videos werden gezählt …',
+      none: 'Noch nichts veröffentlicht',
+      refresh: 'Neu zählen',
+    },
     watchedOn: (date) => `✓ Gesehen am ${date} – entfernen`,
     markWatched: 'Als gesehen markieren',
     showChannel: '↺ Kanal wieder einblenden',
