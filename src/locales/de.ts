@@ -341,7 +341,7 @@ export const de: Messages = {
     day: '1 Tag',
     days: (n) => `${n} Tage`,
     week: '1 Woche',
-    immediately: 'sofort (0,1 s)',
+    immediately: 'sofort',
     watchedTitle: 'Gesehene ausblenden',
     watchedIntro:
       'Der Schalter in der YouTube-Kopfzeile neben der Suche schaltet das Ausblenden an und aus. Die Zeitgrenze bezieht sich auf das Alter des Videos: Ältere gesehene Videos bleiben stehen, damit YouTube nicht endlos nachlädt.',
@@ -410,7 +410,7 @@ export const de: Messages = {
     keepFor: 'Inhalt merken für',
     refreshTitle: 'Aktualisierung',
     refreshIntro:
-      'Wie schnell die Erweiterung reagiert, wenn YouTube neue Videos nachlädt. Ein längerer Abstand spart Leistung, dafür sind gesehene Videos kurz sichtbar, bevor sie verschwinden.',
+      'Wie schnell die Erweiterung reagiert, wenn YouTube neue Videos nachlädt. „Sofort“ blendet gesehene Videos aus, bevor sie erscheinen; ein längerer Abstand spart Leistung, dafür sind sie kurz sichtbar, bevor sie verschwinden.',
     interval: 'Abstand',
   },
 
@@ -665,7 +665,7 @@ export const de: Messages = {
     feedbackBug: 'Fehler melden',
     feedbackIdea: 'Idee vorschlagen',
     feedbackReview: 'Bewertung schreiben',
-    lead: 'Behalte den Überblick über alles, was du auf YouTube schaust. Die Erweiterung merkt sich jedes gesehene Video, markiert es überall auf YouTube und räumt Abos, Startseite und Playlists auf, damit Neues nicht zwischen Bekanntem untergeht.',
+    lead: 'Behalte den Überblick über alles, was du auf YouTube schaust. Die Erweiterung merkt sich jedes gesehene Video, markiert es überall auf YouTube und räumt Abos, Startseite und Playlists auf – so siehst du auf einen Blick, was du noch nicht gesehen hast.',
     lead2: 'Sie ersetzt mehrere einzelne Erweiterungen durch eine – mit einer gemeinsamen Datenbank, die nur auf deinem Rechner liegt.',
     version: (v) => `Version ${v}`,
     featuresTitle: 'Was sie kann',

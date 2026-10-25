@@ -44,6 +44,12 @@ import { createChannelStats } from './channelStats';
 const LINK_SELECTOR = 'a[href*="watch?v="], a[href*="/shorts/"], a[href*="/playlist?list="]';
 /** Suggested videos at the end of a video, inside the player (also in full screen). */
 const ENDSCREEN_SELECTOR = 'a.ytp-modern-videowall-still, a.ytp-videowall-still';
+/** Link of a video the channel placed on the end of its video ("end screen element"). */
+const END_CARD_LINK = '.ytp-ce-video > a.ytp-ce-covering-overlay';
+/** Delays up to this are "immediately": cards are handled before the page is drawn. */
+const IMMEDIATE_MS = 100;
+/** Updates of single elements on the page (buttons, switch) wait this long at most. */
+const PAGE_UPDATE_MS = 100;
 /** Classes of elements the extension inserts itself (ignored by the observer). */
 const OWN_ELEMENTS = ['ytt-eye', 'ytt-ban', 'ytt-watch-btn', 'ytt-chan-btn', 'ytt-toggle', 'ytt-pl-progress', 'ytt-chan-stats'];
 /** Channel link inside a card or on the video page. */
@@ -141,14 +147,21 @@ interface Session {
 
 export default defineContentScript({
   matches: ['*://www.youtube.com/*', '*://m.youtube.com/*'],
-  runAt: 'document_idle',
+  // Early, so watched videos are hidden before YouTube draws its first cards.
+  runAt: 'document_start',
 
   async main() {
-    let settings: Settings = await loadSettings();
-    let watched = new Map(await send({ type: 'getWatched' }));
-    let music = musicSets(await send({ type: 'getMusic' }));
+    const [loaded, watchedList, musicIds, dismissedIds] = await Promise.all([
+      loadSettings(),
+      send({ type: 'getWatched' }),
+      send({ type: 'getMusic' }),
+      send({ type: 'getDismissed' }),
+    ]);
+    let settings: Settings = loaded;
+    let watched = new Map(watchedList);
+    let music = musicSets(musicIds);
     /** Hidden ("Ausblenden") video and playlist IDs. */
-    let dismissed = new Set(await send({ type: 'getDismissed' }));
+    let dismissed = new Set(dismissedIds);
     let page: PageKind = pageKind(location.pathname);
     const watchLater = createWatchLater();
     /** Channels counted on request (statistics ↻): their playlists are read again too. */
@@ -439,22 +452,28 @@ export default defineContentScript({
     }
 
     /**
-     * Suggestions at the end of a video (in the player): marked like other
-     * thumbnails, but nothing is hidden and no buttons are added there.
+     * Suggestions at the end of a video and the videos a channel places there
+     * (in the player): marked like other thumbnails, videos hidden with ⊘ are
+     * left out while hiding is on; no buttons are added there.
      */
-    function applyEndscreen(a: HTMLAnchorElement): void {
+    function applyEndscreen(el: HTMLElement, href: string): void {
       // Playlists and mixes start with some video; they are not marked as that one.
-      const isList = a.dataset.isList === 'true' || a.dataset.isMix === 'true';
-      const id = isList ? null : videoIdFromUrl(a.href);
+      const isList = el.dataset.isList === 'true' || el.dataset.isMix === 'true';
+      const id = isList ? null : videoIdFromUrl(href);
       const at = id ? watched.get(id) : undefined;
-      a.classList.add('ytt-endscreen');
-      a.classList.toggle('ytt-watched', at !== undefined);
-      if (at !== undefined) a.dataset.yttDate = formatDate(at);
+      el.classList.add('ytt-endscreen');
+      el.classList.toggle('ytt-watched', at !== undefined);
+      el.classList.toggle('ytt-dismissed', id !== null && isDismissed(id, 'video'));
+      if (at !== undefined) el.dataset.yttDate = formatDate(at);
     }
 
     function apply(a: HTMLAnchorElement): void {
       if (a.matches(ENDSCREEN_SELECTOR)) {
-        applyEndscreen(a);
+        applyEndscreen(a, a.href);
+        return;
+      }
+      if (a.matches(END_CARD_LINK)) {
+        applyEndscreen(a.parentElement!, a.href);
         return;
       }
       const href = a.getAttribute('href') ?? '';
@@ -501,10 +520,20 @@ export default defineContentScript({
       }
     }
 
-    function scan(root: ParentNode): void {
+    /** Thumbnails and cards inside `root`: marking and hiding. */
+    function scanCards(root: ParentNode): void {
       if (root instanceof HTMLAnchorElement) apply(root);
       root.querySelectorAll<HTMLAnchorElement>(LINK_SELECTOR).forEach(apply);
       evaluateCards(root);
+    }
+
+    function scan(root: ParentNode): void {
+      scanCards(root);
+      updatePage();
+    }
+
+    /** Single elements of the page: buttons, the switch, channel statistics, chat. */
+    function updatePage(): void {
       updateWatchButton();
       updateChannelButton();
       updateHeaderToggle();
@@ -582,14 +611,28 @@ export default defineContentScript({
       if (chip.textContent !== text) chip.textContent = text;
     }
 
+    // "Immediately": cards are handled right in the observer, which runs before
+    // the browser draws the page, so watched videos and their red bars never show.
+    // The page's single elements follow shortly after.
+    let pageScheduled = false;
+    function schedulePage(): void {
+      if (pageScheduled) return;
+      pageScheduled = true;
+      setTimeout(() => {
+        pageScheduled = false;
+        updatePage();
+      }, PAGE_UPDATE_MS);
+    }
+
     new MutationObserver((mutations) => {
+      const changed = new Set<Element>();
       for (const m of mutations) {
-        if (m.type === 'attributes') schedule(m.target as Element);
+        if (m.type === 'attributes') changed.add(m.target as Element);
         else {
           m.addedNodes.forEach((n) => {
             // Ignore our own elements to avoid feedback loops.
             if (n instanceof Element) {
-              if (!OWN_ELEMENTS.some((c) => n.classList.contains(c))) schedule(n);
+              if (!OWN_ELEMENTS.some((c) => n.classList.contains(c))) changed.add(n);
             } else if (
               n.nodeType === Node.TEXT_NODE &&
               m.target instanceof Element &&
@@ -597,12 +640,19 @@ export default defineContentScript({
               !m.target.closest('ytd-player, #movie_player')
             ) {
               // Texts like "vor 3 Tagen" or "Geplant für …" are often filled in later.
-              schedule(m.target);
+              changed.add(m.target);
             }
           });
         }
       }
-    }).observe(document.body, {
+      if (!changed.size) return;
+      if (settings.scanDelayMs <= IMMEDIATE_MS) {
+        for (const el of changed) if (el.isConnected) scanCards(el);
+        schedulePage();
+      } else {
+        changed.forEach(schedule);
+      }
+    }).observe(document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
@@ -1052,6 +1102,8 @@ export default defineContentScript({
 
     document.addEventListener('yt-navigate-finish', onNavigate);
     window.addEventListener('popstate', onNavigate);
-    onNavigate();
+    // The script starts before the page is built: the first video waits for it.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onNavigate, { once: true });
+    else onNavigate();
   },
 });

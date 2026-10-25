@@ -328,7 +328,7 @@ export const en = {
     day: '1 day',
     days: (n: number) => `${n} days`,
     week: '1 week',
-    immediately: 'immediately (0.1 s)',
+    immediately: 'immediately',
     watchedTitle: 'Hide watched videos',
     watchedIntro:
       'The switch in the YouTube header next to the search turns hiding on and off. The time limit refers to the age of the video: older watched videos stay, so YouTube does not keep loading forever.',
@@ -397,7 +397,7 @@ export const en = {
     keepFor: 'Remember contents for',
     refreshTitle: 'Updating',
     refreshIntro:
-      'How fast the extension reacts when YouTube loads more videos. A longer interval saves resources, but watched videos are briefly visible before they disappear.',
+      'How fast the extension reacts when YouTube loads more videos. “Immediately” hides watched videos before they appear; a longer interval saves resources, but they are briefly visible before they disappear.',
     interval: 'Interval',
   },
 
@@ -652,7 +652,7 @@ export const en = {
     feedbackBug: 'Report a bug',
     feedbackIdea: 'Suggest an idea',
     feedbackReview: 'Write a review',
-    lead: 'Keep track of everything you watch on YouTube. The extension remembers every video you have seen, marks it everywhere on YouTube and tidies up your subscriptions, home page and playlists, so new videos do not get lost among the ones you know.',
+    lead: 'Keep track of everything you watch on YouTube. The extension remembers every video you have seen, marks it everywhere on YouTube and tidies up your subscriptions, home page and playlists – so you always see at a glance what you have not watched yet.',
     lead2: 'It replaces several separate extensions with one – with a single database that stays on your computer.',
     version: (v: string) => `Version ${v}`,
     featuresTitle: 'What it does',

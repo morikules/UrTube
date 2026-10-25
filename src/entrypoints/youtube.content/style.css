@@ -44,19 +44,54 @@ html.ytt-hide-progress a.ytt-watched :is(
   display: none !important;
 }
 
-/* Suggestions at the end of a video: the picture is a background image. */
-html.ytt-fade a.ytt-endscreen.ytt-watched :is(.ytp-modern-videowall-still-image, .ytp-videowall-still-image) {
+/* Suggestions at the end of a video and the channel's own end screen videos:
+   the picture is a background image. */
+html.ytt-fade .ytt-endscreen.ytt-watched :is(
+    .ytp-modern-videowall-still-image,
+    .ytp-videowall-still-image,
+    .ytp-ce-covering-image
+  ) {
   opacity: 0.35;
 }
 
-html.ytt-gray a.ytt-endscreen.ytt-watched :is(.ytp-modern-videowall-still-image, .ytp-videowall-still-image) {
+html.ytt-gray .ytt-endscreen.ytt-watched :is(
+    .ytp-modern-videowall-still-image,
+    .ytp-videowall-still-image,
+    .ytp-ce-covering-image
+  ) {
   filter: grayscale(1);
 }
 
-html.ytt-badge a.ytt-endscreen.ytt-watched::after {
+html.ytt-badge .ytt-endscreen.ytt-watched::after {
+  content: var(--ytt-t-watched, '✓');
+  position: absolute;
   top: 8px;
   bottom: auto;
   left: 8px;
+  z-index: 10;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font: 500 12px/1.4 Roboto, Arial, sans-serif;
+  pointer-events: none;
+}
+
+html.ytt-badge.ytt-badge-date .ytt-endscreen.ytt-watched::after {
+  content: '✓ ' attr(data-ytt-date);
+}
+
+/* Hidden with ⊘: the place stays empty while hiding is on, otherwise faded. */
+html.ytt-hiding .ytt-endscreen.ytt-dismissed {
+  visibility: hidden !important;
+}
+
+html:not(.ytt-hiding) .ytt-endscreen.ytt-dismissed :is(
+    .ytp-modern-videowall-still-image,
+    .ytp-videowall-still-image,
+    .ytp-ce-covering-image
+  ) {
+  opacity: 0.3;
 }
 
 /* --- Playlists: progress on the thumbnail and on the playlist page --- */
