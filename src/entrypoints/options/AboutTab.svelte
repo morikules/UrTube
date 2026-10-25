@@ -3,8 +3,9 @@
 
   const A = t.about;
   const REPO = 'https://github.com/morikules/UrTube';
-  /** AMO resolves the add-on by its ID. */
-  const REVIEWS = `https://addons.mozilla.org/firefox/addon/${encodeURIComponent(browser.runtime.id)}/reviews/`;
+  /** The store page, by its fixed name (not the add-on ID, which differs in test builds). */
+  const STORE = 'https://addons.mozilla.org/firefox/addon/urtube/';
+  const REVIEWS = `${STORE}reviews/`;
   const manifest = browser.runtime.getManifest();
   const icon = browser.runtime.getURL('/icon/128.png');
 
@@ -107,7 +108,8 @@
 
   <footer class="muted">
     {A.license} {A.madeBy('morikules', 'Claude Opus 5.5')}
-    <a href={REPO} target="_blank" rel="noreferrer">GitHub</a>
+    <a href={REPO} target="_blank" rel="noreferrer">GitHub</a> ·
+    <a href={STORE} target="_blank" rel="noreferrer">addons.mozilla.org</a>
   </footer>
 </div>
 

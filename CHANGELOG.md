@@ -2,7 +2,7 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
-## 1.1.0 (in progress)
+## 1.1.0
 
 - New: channel pages show how much of the channel you watched, below the
   number of videos in the header: videos, Shorts, live streams and playlists,
@@ -89,6 +89,8 @@ All notable changes. Versions before 1.0 were private test builds.
   need; the diagnosis of the YouTube history sync contains no titles or IDs.
 - The add-on page in a background tab no longer reloads its data on every
   change, only once when it is shown again.
+- About page: "Write a review" always opens UrTube's store page; links to
+  GitHub and addons.mozilla.org at the bottom.
 - New wording on the About page and in the store: keep track of what you have
   and have not watched; FAQ about continuing videos, channel numbers and
   moving to another computer.

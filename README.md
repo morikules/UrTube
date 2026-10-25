@@ -14,6 +14,8 @@ tidying up subscriptions, a bigger player) in one, with a single database.
 
 English and German.
 
+**[Get UrTube for Firefox on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/urtube/)**
+
 <p align="center">
   <img src="docs/screenshots/1-history.png" width="49%" alt="History with a video expanded">
   <img src="docs/screenshots/2-statistics.png" width="49%" alt="Statistics">
@@ -99,7 +101,8 @@ translations, releasing) and [CHANGELOG.md](CHANGELOG.md).
 UrTube is a hobby project and keeps growing – feedback is very welcome!
 [Report a bug](https://github.com/morikules/UrTube/issues/new?template=bug.yml),
 [suggest an idea](https://github.com/morikules/UrTube/issues/new?template=idea.yml)
-or leave a review on addons.mozilla.org. English or German is fine.
+or leave a [review on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/urtube/reviews/).
+English or German is fine.
 
 ## Thanks
 
