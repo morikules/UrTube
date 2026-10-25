@@ -21,6 +21,23 @@ English and German.
   <img src="docs/screenshots/2-statistics.png" width="49%" alt="Statistics">
 </p>
 
+## Why UrTube?
+
+- **One add-on instead of several** – marking watched videos, tidying up your
+  subscriptions, playlist progress, statistics and player settings share one
+  database, instead of separate add-ons that each keep their own data.
+- **Light on YouTube and your browser** – watched videos are hidden before they
+  appear, and each page has a time window, so YouTube does not keep loading
+  older and older videos until your feed (or the browser) gives up.
+- **Much more than a checkmark** – history with filters, statistics, a year in
+  review, progress per channel and playlist, continue where you stopped.
+- **Easy to switch** – brings along your existing history from YouTube
+  Watchmarker and Google Takeout; nothing is counted twice.
+- **Actively developed** – made by a power user who uses it every day; ideas
+  and bug reports go straight into the next version.
+- **Clean, modern design** – light and dark, English and German, private by
+  design: no server, no account, no analytics.
+
 ## Features
 
 - **Recording** – every video you open, with date, progress, where you came from
