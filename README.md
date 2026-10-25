@@ -7,36 +7,18 @@
 A Firefox extension that remembers every YouTube video you watch, marks watched
 videos everywhere on YouTube, hides them where you want, and shows your history
 and statistics. Everything is stored locally in your browser – no server, no
-account, no analytics.
-
-It combines what used to take several extensions (marking watched videos,
-tidying up subscriptions, a bigger player) in one, with a single database.
-
-English and German.
+account, no analytics. English and German.
 
 **[Get UrTube for Firefox on addons.mozilla.org](https://addons.mozilla.org/firefox/addon/urtube/)**
 
 <p align="center">
-  <img src="docs/screenshots/1-history.png" width="49%" alt="History with a video expanded">
-  <img src="docs/screenshots/2-statistics.png" width="49%" alt="Statistics">
+  <img src="docs/screenshots/subscriptions.gif" width="100%" alt="Subscriptions: watched videos are marked, one switch hides them">
 </p>
-
-## Why UrTube?
-
-- **One add-on instead of several** – marking watched videos, tidying up your
-  subscriptions, playlist progress, statistics and player settings share one
-  database, instead of separate add-ons that each keep their own data.
-- **Light on YouTube and your browser** – watched videos are hidden before they
-  appear, and each page has a time window, so YouTube does not keep loading
-  older and older videos until your feed (or the browser) gives up.
-- **Much more than a checkmark** – history with filters, statistics, a year in
-  review, progress per channel and playlist, continue where you stopped.
-- **Easy to switch** – brings along your existing history from YouTube
-  Watchmarker and Google Takeout; nothing is counted twice.
-- **Actively developed** – made by a power user who uses it every day; ideas
-  and bug reports go straight into the next version.
-- **Clean, modern design** – light and dark, English and German, private by
-  design: no server, no account, no analytics.
+<p align="center">
+  <img src="docs/screenshots/channel.png" width="32%" alt="Channel page: watched / total videos and playlists">
+  <img src="docs/screenshots/1-history.png" width="32%" alt="History with a video expanded">
+  <img src="docs/screenshots/2-statistics.png" width="32%" alt="Statistics">
+</p>
 
 ## Features
 
@@ -75,6 +57,23 @@ English and German.
   quiet.
 - **Backup** as a JSON file, with settings: restore (replace everything) or
   merge (add what is missing, e.g. from another computer).
+
+## Why UrTube?
+
+- **One add-on instead of several** – marking watched videos, tidying up your
+  subscriptions, playlist progress, statistics and player settings share one
+  database, instead of separate add-ons that each keep their own data.
+- **Light on YouTube and your browser** – watched videos are hidden before they
+  appear, and each page has a time window, so YouTube does not keep loading
+  older and older videos until your feed (or the browser) gives up.
+- **Much more than a checkmark** – history with filters, statistics, a year in
+  review, progress per channel and playlist, continue where you stopped.
+- **Easy to switch** – brings along your existing history from YouTube
+  Watchmarker and Google Takeout; nothing is counted twice.
+- **Actively developed** – made by a power user who uses it every day; ideas
+  and bug reports go straight into the next version.
+- **Clean, modern design** – light and dark, English and German, private by
+  design: no server, no account, no analytics.
 
 ## Privacy
 
