@@ -97,10 +97,15 @@ export function inDateRange(v: Video, from: string, to: string): boolean {
   return true;
 }
 
-/** One CSV field: quoted when needed (separator, quote, line break). */
+/**
+ * One CSV field: quoted when needed (separator, quote, line break). Texts
+ * starting like a formula (titles come from uploaders) get a leading ', so
+ * spreadsheet programs show them instead of running them.
+ */
 function field(value: unknown): string {
   if (value === undefined || value === null) return '';
-  const s = String(value);
+  let s = String(value);
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

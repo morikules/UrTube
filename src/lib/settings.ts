@@ -267,10 +267,26 @@ export function normalizeSettings(stored: unknown): Settings {
   delete s.showDismissButton;
   // Existing installs keep what they had; only new installs get the v1.0 defaults.
   const legacy = stored && typeof stored === 'object' && Object.keys(stored).length ? LEGACY_DEFAULTS : {};
-  const merged = { ...defaultSettings, ...legacy, ...s };
+  const base: Settings = { ...defaultSettings, ...legacy };
+  // Only known settings of the right kind (e.g. from a backup file); numbers finite and not negative.
+  const merged = { ...base } as Record<string, unknown>;
+  for (const [k, v] of Object.entries(s)) {
+    const def = (base as unknown as Record<string, unknown>)[k];
+    if (def === undefined || typeof v !== typeof def || (def !== null && typeof def === 'object')) continue;
+    if (typeof v === 'number' && !(Number.isFinite(v) && v >= 0)) continue;
+    merged[k] = v;
+  }
+  const result = merged as unknown as Settings;
+  if (result.syncIntervalMin < 1) result.syncIntervalMin = base.syncIntervalMin;
   // Areas added later get their default.
-  merged.hideAreas = { ...defaultSettings.hideAreas, ...s.hideAreas };
-  return merged;
+  result.hideAreas = { ...defaultSettings.hideAreas };
+  if (s.hideAreas && typeof s.hideAreas === 'object') {
+    for (const area of Object.keys(result.hideAreas) as (keyof Settings['hideAreas'])[]) {
+      const on = (s.hideAreas as Record<string, unknown>)[area];
+      if (typeof on === 'boolean') result.hideAreas[area] = on;
+    }
+  }
+  return result;
 }
 
 export async function loadSettings(): Promise<Settings> {

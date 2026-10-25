@@ -647,7 +647,15 @@ export default defineContentScript({
       }
       if (!changed.size) return;
       if (settings.scanDelayMs <= IMMEDIATE_MS) {
-        for (const el of changed) if (el.isConnected) scanCards(el);
+        // YouTube fills a card in many small steps: each card is handled once,
+        // and nothing inside an element that is handled anyway.
+        const roots = new Set<Element>();
+        for (const el of changed) if (el.isConnected) roots.add(el.closest(HIDE_CARD_SELECTOR) ?? el);
+        for (const el of roots) {
+          let p = el.parentElement;
+          while (p && !roots.has(p)) p = p.parentElement;
+          if (!p) scanCards(el);
+        }
         schedulePage();
       } else {
         changed.forEach(schedule);
@@ -702,6 +710,8 @@ export default defineContentScript({
     document.addEventListener(
       'click',
       (e) => {
+        // Only real clicks: scripts on the page must not delete or hide anything.
+        if (!e.isTrusted) return;
         const target = e.target as Element | null;
         const eye = target?.closest?.('.ytt-eye');
         const ban = target?.closest?.('.ytt-ban');

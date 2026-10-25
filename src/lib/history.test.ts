@@ -94,6 +94,10 @@ describe('CSV', () => {
     expect(toCsv(['a', 'b'], [['x;y', 'say "hi"'], [1, undefined]])).toBe('﻿a;b\r\n"x;y";"say ""hi"""\r\n1;\r\n');
   });
 
+  it('texts that look like formulas are not run', () => {
+    expect(toCsv(['a'], [['=HYPERLINK("x")'], ['-abc'], [-5]])).toBe('﻿a\r\n"\'=HYPERLINK(""x"")"\r\n\'-abc\r\n-5\r\n');
+  });
+
   it('one line per video with link', () => {
     const csv = videosCsv([video('aaaaaaaaaaa', { title: 'T', channelName: 'C', isShort: true })]);
     expect(csv.split('\r\n')[1]).toContain('aaaaaaaaaaa;T;C;;https://www.youtube.com/shorts/aaaaaaaaaaa;watched;1');

@@ -22,43 +22,55 @@ English and German.
 ## Features
 
 - **Recording** – every video you open, with date, progress, where you came from
-  and rewatches. Optionally also the red progress bar, the Firefox history, the
-  YouTube history (also from your phone or TV) and music played on
-  music.youtube.com.
+  and rewatches; continuing an unfinished video counts as one view. Optionally
+  also the red progress bar, the Firefox history, the YouTube history (also from
+  your phone or TV) and music played on music.youtube.com. Channel, length and
+  date of videos known only by their ID are filled in from YouTube.
 - **Marking** – watched thumbnails are faded, grayed out and/or get a “✓ date”
-  badge; an eye button marks or unmarks a video by hand.
+  badge, also among the suggestions and the channel's own videos at the end of
+  a video; an eye button marks or unmarks a video by hand.
 - **Hiding** – a switch in the YouTube header hides watched videos in
   subscriptions, on the home page, on channel pages (each with a time window),
-  in playlists, search results and recommendations. Content filters for
-  Shorts, premieres, live streams, members-only videos and “Most relevant”.
+  in playlists, search results and recommendations – before they appear. One
+  switch for everything or one per area. Content filters for Shorts,
+  premieres, live streams, members-only videos and “Most relevant”.
 - **⊘ Hide** – hide videos, playlists or whole channels you are not interested
   in, without counting them as watched.
+- **Channels** – every channel page shows how many of its videos, Shorts, live
+  streams and playlists you have watched (watched / total).
 - **Playlists** – “12 / 23 watched” on playlist thumbnails; finished playlists
   can be hidden.
-- **History & statistics** – searchable history with every view; statistics by
-  period, channel and where you open videos.
+- **History** – searchable, with every view and filters such as “Continue
+  watching” (opens where you stopped), given up, length, date range, origin,
+  premieres and members-only; export as CSV.
+- **Statistics** – time watched, streaks, busiest day, categories, most
+  rewatched videos, all your channels and subscriptions with your share, and a
+  year in review.
 - **Import** – Google Takeout (your full YouTube history with exact times) and
   YouTube Watchmarker exports. Imports never count anything twice; for every
   view the most exact date wins.
 - **Clean up** – remove watched videos from “Watch later”, remove deleted
   videos from your YouTube history.
 - **Playback** – a big player that fills the window in theater mode, preferred
-  resolution, speed and subtitles.
-- **Backup & restore** as a JSON file.
+  resolution, speed and subtitles; channel trailers and live chat can stay
+  quiet.
+- **Backup** as a JSON file, with settings: restore (replace everything) or
+  merge (add what is missing, e.g. from another computer).
 
 ## Privacy
 
 All data lives in the extension's IndexedDB in your Firefox profile. The
 extension only talks to youtube.com, from inside your YouTube tabs and the same
-way the site itself does (with your login) – to read playlists and your watch
-history, and to edit “Watch later” or your history when you ask it to. The
+way the site itself does (with your login) – to read playlists, channel video
+lists, your subscriptions, your watch history and the details of single videos,
+and to edit “Watch later” or your history when you ask it to. The
 browser history is only read if you enable that sync and grant the permission.
 Nothing is sent anywhere else.
 
 ## Install
 
-- **Firefox:** from addons.mozilla.org *(link follows after publication)*, or a
-  signed `.xpi` from the releases.
+- **Firefox:** from
+  [addons.mozilla.org](https://addons.mozilla.org/firefox/addon/urtube/).
 - **Chrome:** not yet (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#chrome)).
 
 After installing, a short introduction opens; it can be shown again from the

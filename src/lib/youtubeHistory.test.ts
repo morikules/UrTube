@@ -150,8 +150,9 @@ describe('extractHistoryPage', () => {
       NOW,
     );
     const sample = JSON.parse(page.missingTokenSample!);
-    expect(sample.lockupViewModel.contentId).toBe('fffffffffff');
-    expect(sample.lockupViewModel.metadata.long).toHaveLength(61); // 60 chars + "…"
+    // Only the structure, no content.
+    expect(sample.lockupViewModel.contentId).toBe('<11>');
+    expect(sample.lockupViewModel.metadata.long).toBe('<200>');
   });
 
   it('picks the menu entry with the DELETE icon (new layout, as in Watchmarker)', () => {

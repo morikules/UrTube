@@ -18,6 +18,11 @@ export interface SubscribedChannel {
 /** Channel pictures seen on channel pages and in the subscriptions: {channelId: url}. */
 export const CHANNEL_AVATARS_KEY = 'channelAvatars';
 
+/** Channel pictures come only from YouTube's image servers. */
+export function isAvatarUrl(url: unknown): url is string {
+  return typeof url === 'string' && /^https:\/\/yt\d\.(?:ggpht|googleusercontent)\.com\//.test(url);
+}
+
 /** The first channel picture URL below `node` (absolute). */
 export function avatarIn(node: unknown): string | undefined {
   const url = JSON.stringify(node ?? null).match(/"url":"((?:https:)?\/\/yt\d\.(?:ggpht|googleusercontent)\.com\/[^"]+)"/)?.[1];

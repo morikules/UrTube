@@ -147,6 +147,19 @@ describe('continued views', () => {
     expect(r).toMatchObject({ videos: 1, views: 1, settings: { language: 'de' } });
   });
 
+  it('restoring leaves out broken records and repairs missing titles', async () => {
+    await view(0, { max: 600, watched: 600, finished: true });
+    const backup = JSON.parse(JSON.stringify(await exportBackup(db)));
+    backup.videos[0].title = null;
+    backup.videos.push({ id: 'bbbbbbbbbbb', title: 'B', lastViewAt: 'x' }, null);
+    backup.views.push({ videoId: 'bbbbbbbbbbb', at: null, source: 'watch' });
+    backup.dismissed = [{ id: 'x', kind: 'evil' }];
+    const other = new TrackerDB(`test-restore-${n++}`);
+    expect(await restoreBackup(other, backup)).toMatchObject({ videos: 1, views: 1 });
+    expect((await other.videos.get(A))?.title).toBe('');
+    expect(await other.dismissed.count()).toBe(0);
+  });
+
   it('merging a backup adds what is missing and deletes nothing', async () => {
     await view(0, { max: 600, watched: 600, finished: true });
     await updateVideoMeta(db, A, { channelName: 'Channel A' });

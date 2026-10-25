@@ -50,21 +50,27 @@ export function parseExport(text: string): WatchmarkerEntry[] {
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
   const data: unknown = JSON.parse(new TextDecoder('utf-8').decode(bytes));
   if (!Array.isArray(data)) throw new Error(t.errors.notAList);
-  return data.map((row, i) => {
+  const entries: WatchmarkerEntry[] = [];
+  data.forEach((row, i) => {
     if (
       typeof row?.strIdent !== 'string' ||
       typeof row?.intTimestamp !== 'number'
     ) {
       throw new Error(t.errors.wmInvalid(i));
     }
-    return {
+    // Entries that are no video or have no real time are skipped.
+    if (!VIDEO_ID.test(row.strIdent) || !Number.isFinite(row.intTimestamp) || row.intTimestamp <= 0) return;
+    entries.push({
       strIdent: row.strIdent,
       intTimestamp: row.intTimestamp,
       strTitle: typeof row.strTitle === 'string' ? row.strTitle : '',
-      intCount: typeof row.intCount === 'number' ? row.intCount : 1,
-    };
+      intCount: Number.isFinite(row.intCount) && row.intCount > 0 ? row.intCount : 1,
+    });
   });
+  return entries;
 }
+
+const VIDEO_ID = /^[\w-]{11}$/;
 
 export function mergeExports(exports: WatchmarkerEntry[][]): MergeResult {
   const byId = new Map<

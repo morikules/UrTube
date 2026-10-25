@@ -559,10 +559,27 @@ export async function updateVideoMeta(
 ): Promise<void> {
   const patch: Partial<Video> = { metaUpdatedAt: Date.now() };
   for (const [k, v] of Object.entries(meta)) {
-    if (v !== undefined && v !== '') (patch as Record<string, unknown>)[k] = v;
+    // Only the details themselves, never status or counts.
+    if (!(k in META_TYPES) || typeof v !== META_TYPES[k as keyof typeof META_TYPES] || v === '') continue;
+    if (typeof v === 'number' && !Number.isFinite(v)) continue;
+    (patch as Record<string, unknown>)[k] = v;
   }
   await db.videos.update(videoId, patch);
 }
+
+/** Fields `updateVideoMeta` takes, with their type. */
+const META_TYPES = {
+  title: 'string',
+  channelId: 'string',
+  channelName: 'string',
+  channelHandle: 'string',
+  durationSec: 'number',
+  publishedAt: 'string',
+  isShort: 'boolean',
+  isLive: 'boolean',
+  isPremiere: 'boolean',
+  category: 'string',
+} as const satisfies Record<keyof VideoMeta | 'title', 'string' | 'number' | 'boolean'>;
 
 /** Videos seen within this time count as recent for filling in missing details. */
 export const RECENT_META_MS = 30 * 86_400_000;
@@ -1013,6 +1030,43 @@ export async function exportBackup(db: TrackerDB, settings?: unknown): Promise<B
   return { format: BACKUP_FORMAT, version: 1, exportedAt: Date.now(), videos, views, deleted, dismissed, settings };
 }
 
+const isKey = (x: unknown): x is string => typeof x === 'string' && x.length > 0 && x.length <= 200;
+const isTime = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+const record = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null;
+const list = (x: unknown): unknown[] => (Array.isArray(x) ? x : []);
+
+/**
+ * The records of a backup file that can be stored: broken ones (no ID, no
+ * valid time) are left out, a missing title or unknown status is repaired.
+ * Throws if the file is no backup at all.
+ */
+function cleanBackup(data: unknown): Required<Pick<Backup, 'videos' | 'views' | 'deleted' | 'dismissed'>> & {
+  settings?: unknown;
+} {
+  const b = data as Partial<Backup>;
+  if (!record(b) || b.format !== BACKUP_FORMAT || !Array.isArray(b.videos) || !Array.isArray(b.views)) {
+    throw new Error(t.errors.backupInvalid);
+  }
+  const videos = list(b.videos)
+    .filter((v): v is Video => record(v) && isKey(v.id) && isTime(v.firstViewAt) && isTime(v.lastViewAt))
+    .map((v) => ({
+      ...v,
+      title: typeof v.title === 'string' ? v.title : '',
+      status: v.status === 'unwatched' ? ('unwatched' as const) : ('watched' as const),
+      viewCount: isTime(v.viewCount) ? v.viewCount : 0,
+    }));
+  const views = list(b.views).filter(
+    (v): v is View => record(v) && isKey(v.videoId) && isTime(v.at) && typeof v.source === 'string',
+  );
+  const deleted = list(b.deleted).filter((d): d is Tombstone => record(d) && isKey(d.id) && isTime(d.deletedAt));
+  const dismissed = list(b.dismissed)
+    .filter(
+      (d): d is Dismissed => record(d) && isKey(d.id) && ['video', 'playlist', 'channel'].includes(d.kind as string),
+    )
+    .map((d) => (isTime(d.at) ? d : { ...d, at: 0 }));
+  return { videos, views, deleted, dismissed, settings: b.settings };
+}
+
 /**
  * Replaces the whole database with a backup; views from before 1.0.2 are
  * repaired (see mergeResumedViews). The backup's settings are returned, not
@@ -1022,19 +1076,16 @@ export async function restoreBackup(
   db: TrackerDB,
   data: unknown,
 ): Promise<{ videos: number; views: number; settings?: unknown }> {
-  const b = data as Partial<Backup>;
-  if (b?.format !== BACKUP_FORMAT || !Array.isArray(b.videos) || !Array.isArray(b.views)) {
-    throw new Error(t.errors.backupInvalid);
-  }
+  const b = cleanBackup(data);
   await db.transaction('rw', [db.videos, db.views, db.deleted, db.dismissed], async () => {
     await db.videos.clear();
     await db.views.clear();
     await db.deleted.clear();
     await db.dismissed.clear();
-    await db.videos.bulkAdd(b.videos!);
-    await db.views.bulkAdd(b.views!);
-    await db.deleted.bulkAdd(b.deleted ?? []);
-    await db.dismissed.bulkAdd(b.dismissed ?? []);
+    await db.videos.bulkPut(b.videos);
+    await db.views.bulkPut(b.views);
+    await db.deleted.bulkPut(b.deleted);
+    await db.dismissed.bulkPut(b.dismissed);
   });
   await mergeResumedViews(db);
   return { videos: await db.videos.count(), views: await db.views.count(), settings: b.settings };
@@ -1064,10 +1115,7 @@ export async function mergeBackup(
   db: TrackerDB,
   data: unknown,
 ): Promise<{ videos: number; views: number; settings?: unknown }> {
-  const b = data as Partial<Backup>;
-  if (b?.format !== BACKUP_FORMAT || !Array.isArray(b.videos) || !Array.isArray(b.views)) {
-    throw new Error(t.errors.backupInvalid);
-  }
+  const b = cleanBackup(data);
   const key = (v: View) => `${v.videoId}|${v.source}|${Math.round(v.at / 60_000)}`;
   let addedVideos = 0;
   let addedViews = 0;

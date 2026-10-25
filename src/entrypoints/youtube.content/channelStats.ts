@@ -9,7 +9,7 @@
 import { channelListIds, summarizeChannel } from '@/lib/channelStats';
 import { t } from '@/lib/i18n';
 import { channelListId, channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
-import { CHANNEL_AVATARS_KEY } from '@/lib/subscriptions';
+import { CHANNEL_AVATARS_KEY, isAvatarUrl } from '@/lib/subscriptions';
 
 type Playlists = {
   get(id: string): PlaylistInfo | undefined;
@@ -103,13 +103,14 @@ export function createChannelStats(
     const img = document.querySelector<HTMLImageElement>(
       `ytd-browse[page-subtype="channels"] :is(${HEADER_SELECTOR}) img[src*="yt3."]`,
     );
-    if (!img?.src || avatarSavedFor === channelId) return;
+    const src = img?.src;
+    if (!isAvatarUrl(src) || avatarSavedFor === channelId) return;
     avatarSavedFor = channelId;
     const stored = (await browser.storage.local.get(CHANNEL_AVATARS_KEY))[CHANNEL_AVATARS_KEY] as
       | Record<string, string>
       | undefined;
-    if (stored?.[channelId] === img.src) return;
-    await browser.storage.local.set({ [CHANNEL_AVATARS_KEY]: { ...stored, [channelId]: img.src } });
+    if (stored?.[channelId] === src) return;
+    await browser.storage.local.set({ [CHANNEL_AVATARS_KEY]: { ...stored, [channelId]: src } });
   }
 
   /** Called on every scan; cheap when nothing changed. */

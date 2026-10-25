@@ -104,9 +104,17 @@
   /** Bumped whenever the data changes, so the history list reloads. */
   let dataVersion = $state(0);
 
+  // In a tab in the background nothing is reloaded; once when it is shown again.
+  let missedChange = false;
   function dataChanged() {
-    dataVersion++;
+    if (document.hidden) missedChange = true;
+    else dataVersion++;
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !missedChange) return;
+    missedChange = false;
+    dataVersion++;
+  });
 
   // "Back to top" appears once the page is scrolled down a good way.
   let scrolledDown = $state(false);

@@ -166,11 +166,12 @@ export function findRemovalToken(node: unknown): string | undefined {
 }
 
 /**
- * Copy of `node` for diagnosis: long strings cut, deep levels and long lists
- * shortened, so it shows the structure without much content.
+ * Copy of `node` for diagnosis: only the structure – texts are replaced by
+ * their length (no titles, IDs or channels in bug reports), deep levels and
+ * long lists shortened.
  */
 export function shorten(node: unknown, depth = 0): unknown {
-  if (typeof node === 'string') return node.length > 60 ? `${node.slice(0, 60)}…` : node;
+  if (typeof node === 'string') return `<${node.length}>`;
   if (depth > 14) return '…';
   if (Array.isArray(node)) return node.slice(0, 4).map((n) => shorten(n, depth + 1));
   if (isObj(node)) {

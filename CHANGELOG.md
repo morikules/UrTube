@@ -78,6 +78,20 @@ All notable changes. Versions before 1.0 were private test builds.
 - Video details for older videos are fetched faster (about 7,000 per hour),
   slowing down when YouTube asks for a break, and only checked once a day
   once all videos have them.
+- Watched videos are hidden before YouTube draws them (with the interval
+  “immediately”, the default), also right after reloading the subscriptions –
+  no more flashing of watched videos and their red bars.
+- At the end of a video, the videos the channel placed there are marked too;
+  videos hidden with ⊘ are left out there while hiding is on.
+- Safer: CSV exports cannot run formulas from video titles; backups, settings
+  in backups and Watchmarker files are checked entry by entry; only real clicks
+  work the buttons on YouTube; YouTube pages can only send the add-on what they
+  need; the diagnosis of the YouTube history sync contains no titles or IDs.
+- The add-on page in a background tab no longer reloads its data on every
+  change, only once when it is shown again.
+- New wording on the About page and in the store: keep track of what you have
+  and have not watched; FAQ about continuing videos, channel numbers and
+  moving to another computer.
 
 ## 1.0.2
 

@@ -657,12 +657,15 @@ export const en = {
     version: (v: string) => `Version ${v}`,
     featuresTitle: 'What it does',
     features: [
-      ['Record', 'Every video you open lands in the history with date, progress and where you came from – rewatches included.'],
-      ['Mark & hide', 'Watched videos are grayed out and hidden on request: in subscriptions, on the home page, in playlists and more.'],
+      ['Record', 'Every video you open lands in the history with date, progress and where you came from – rewatches included, continuing counts once.'],
+      ['Mark & hide', 'Watched videos are grayed out and hidden on request: in subscriptions, on the home page, in playlists, at the end of a video and more.'],
       ['Sort out', 'With ⊘ videos, playlists or whole channels you are not interested in disappear – without counting as watched.'],
-      ['History & statistics', 'A searchable history with every view, plus statistics by period and channel.'],
+      ['Channels', 'Every channel page shows how many of its videos, Shorts, live streams and playlists you have watched.'],
+      ['Playlists', '“12 / 23 watched” on every playlist; finished playlists can be hidden.'],
+      ['History', 'Searchable, with filters such as “Continue watching”, length, period and origin – and CSV export.'],
+      ['Statistics', 'Time watched, streaks, categories, your channels with their share and a year in review.'],
       ['Sync & import', 'Takes over videos from the YouTube and browser history, from Google Takeout and from YouTube Watchmarker.'],
-      ['Playback', 'Big video player, preferred resolution, speed and subtitles – set them once, always get them.'],
+      ['Playback', 'Big video player, preferred resolution, speed and subtitles; channel trailers and live chat stay quiet on request.'],
     ] as [string, string][],
     privacyTitle: 'Privacy',
     privacyClaim: 'Your data belongs to you and stays on your computer.',
@@ -687,8 +690,16 @@ export const en = {
         'Hiding has a time limit per page (Settings → Hiding). If all watched videos disappeared, YouTube would keep loading more until something unwatched comes up – that costs time and resources.',
       ],
       [
+        'I watch a video in several sittings – does it count several times?',
+        'No. If you play an unfinished video from where you stopped (YouTube resumes there), its view is continued, however long ago that was. Starting it from the beginning counts as a new view. History → “Continue watching” lists unfinished videos; after three months without continuing they count as “Given up”.',
+      ],
+      [
+        'What do the numbers on a channel page mean?',
+        'How many of the channel’s videos, Shorts, live streams and playlists you have watched, as watched / total (a playlist counts once all its videos are watched). They are counted once a day from the channel’s lists; ↻ counts again right away. Statistics → Channels shows them for all your channels.',
+      ],
+      [
         'Is my data synced between devices?',
-        'Not directly – there is deliberately no server. But what you watch on other devices is in your YouTube history, and the extension can sync it (Data → Sync).',
+        'Not directly – there is deliberately no server. But what you watch on other devices is in your YouTube history, and the extension can sync it (Data → Sync); channel, length and date are then filled in from YouTube. To bring everything to another computer, save a backup (Data → Backup) and load it there with “Merge backup”: it adds what is missing and deletes nothing.',
       ],
       [
         'Where do the dates of older videos come from?',

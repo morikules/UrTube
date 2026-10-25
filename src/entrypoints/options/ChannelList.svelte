@@ -9,7 +9,7 @@
   import { n, t } from '@/lib/i18n';
   import { send } from '@/lib/messages';
   import { channelPlaylistsId, type PlaylistInfo } from '@/lib/playlists';
-  import { CHANNEL_AVATARS_KEY, SUBSCRIPTIONS_KEY, type Subscriptions } from '@/lib/subscriptions';
+  import { CHANNEL_AVATARS_KEY, SUBSCRIPTIONS_KEY, isAvatarUrl, type Subscriptions } from '@/lib/subscriptions';
   import { formatWatchTime } from '@/lib/stats';
   import { channelUrl, formatDate, formatDateTime, videoChannelUrl } from '@/lib/youtube';
   import Dropdown from './Dropdown.svelte';
@@ -68,13 +68,20 @@
     });
   }
   loadSubs();
-  browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && (changes[SUBSCRIPTIONS_KEY] || changes[CHANNEL_AVATARS_KEY])) loadSubs();
+  $effect(() => {
+    const onChanged = (changes: Record<string, unknown>, area: string) => {
+      if (area === 'local' && (changes[SUBSCRIPTIONS_KEY] || changes[CHANNEL_AVATARS_KEY])) loadSubs();
+    };
+    browser.storage.onChanged.addListener(onChanged);
+    return () => browser.storage.onChanged.removeListener(onChanged);
   });
 
-  /** Channel picture: from the subscriptions or a visit to the channel page. */
-  const avatarOf = (row: Row) =>
-    row.channelId ? (avatars[row.channelId] ?? subs?.channels.find((c) => c.id === row.channelId)?.avatar) : undefined;
+  const subAvatars = $derived(new Map((subs?.channels ?? []).map((c) => [c.id, c.avatar])));
+  /** Channel picture: from the subscriptions or a visit to the channel page; only YouTube's image servers. */
+  const avatarOf = (row: Row) => {
+    const url = row.channelId ? (avatars[row.channelId] ?? subAvatars.get(row.channelId)) : undefined;
+    return isAvatarUrl(url) ? url : undefined;
+  };
 
   const watched = $derived(new Set(videos.filter((v) => v.status === 'watched').map((v) => v.id)));
 

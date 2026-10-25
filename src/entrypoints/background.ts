@@ -31,6 +31,27 @@ import { loadSettings, onSettingsChanged } from '@/lib/settings';
 import { musicKind } from '@/lib/youtube';
 
 const HISTORY_ALARM = 'browser-history-sync';
+/** Requests the content scripts on YouTube and YouTube Music send. */
+const FROM_CONTENT = new Set<string>([
+  'getWatched',
+  'getMusic',
+  'getDismissed',
+  'getPlaylists',
+  'savePlaylist',
+  'startView',
+  'updateView',
+  'resumableView',
+  'updateVideoMeta',
+  'missingMeta',
+  'metaNotFound',
+  'addMarks',
+  'deleteVideos',
+  'setDismissed',
+  'recordMusicPlay',
+  'addYoutubeHistory',
+  'takeRemovals',
+  'requeueRemovals',
+]);
 
 export default defineBackground(() => {
   const db = new TrackerDB();
@@ -314,7 +335,12 @@ export default defineBackground(() => {
     }
   }
 
-  browser.runtime.onMessage.addListener((req: Request, _sender, sendResponse) => {
+  browser.runtime.onMessage.addListener((req: Request, sender, sendResponse) => {
+    // YouTube tabs may only ask what they need; the rest is for the add-on page.
+    if (sender.tab && !sender.url?.startsWith(browser.runtime.getURL('/')) && !FROM_CONTENT.has(req?.type)) {
+      sendResponse({ error: 'not allowed' });
+      return false;
+    }
     handle(req).then(sendResponse, (err) => {
       console.error('[UrTube]', req.type, err);
       sendResponse({ error: String(err) });

@@ -2,6 +2,23 @@ import { describe, expect, it } from 'vitest';
 import { isHidingOn, normalizeSettings, toggleHiding } from './settings';
 
 describe('normalizeSettings', () => {
+  it('keeps only known settings of the right kind', () => {
+    const s = normalizeSettings({
+      fadeWatched: false,
+      syncIntervalMin: 0,
+      scanDelayMs: 'x',
+      openDelayMs: Infinity,
+      evil: 1,
+      hideAreas: { home: false, other: 'no', extra: true },
+    });
+    expect(s.fadeWatched).toBe(false);
+    expect(s.syncIntervalMin).toBe(60);
+    expect(s.scanDelayMs).toBe(100);
+    expect(s.openDelayMs).toBe(2000);
+    expect('evil' in s).toBe(false);
+    expect(s.hideAreas).toEqual({ subscriptions: true, home: false, channel: true, playlist: true, other: true });
+  });
+
   it('gives new installs the conservative defaults', () => {
     const s = normalizeSettings(undefined);
     expect(s).toMatchObject({ bigPlayer: false, filterShorts: false, removeFromYoutubeHistory: false, language: 'auto' });

@@ -670,12 +670,15 @@ export const de: Messages = {
     version: (v) => `Version ${v}`,
     featuresTitle: 'Was sie kann',
     features: [
-      ['Erfassen', 'Jedes geöffnete Video landet mit Datum, Fortschritt und Herkunft im Verlauf – auch Wiederholungen.'],
-      ['Markieren & Ausblenden', 'Gesehenes wird grau markiert und auf Wunsch ausgeblendet: in den Abos, auf der Startseite, in Playlists und mehr.'],
+      ['Erfassen', 'Jedes geöffnete Video landet mit Datum, Fortschritt und Herkunft im Verlauf – auch Wiederholungen, Weiterschauen zählt einmal.'],
+      ['Markieren & Ausblenden', 'Gesehenes wird grau markiert und auf Wunsch ausgeblendet: in den Abos, auf der Startseite, in Playlists, am Videoende und mehr.'],
       ['Gezielt aussortieren', 'Mit ⊘ verschwinden Videos, Playlists oder ganze Kanäle, die dich nicht interessieren – ohne als gesehen zu zählen.'],
-      ['Verlauf & Statistik', 'Durchsuchbarer Verlauf mit allen Ansichten, dazu Auswertungen nach Zeitraum und Kanal.'],
+      ['Kanäle', 'Jede Kanalseite zeigt, wie viele Videos, Shorts, Livestreams und Playlists du davon gesehen hast.'],
+      ['Playlists', '„12 / 23 gesehen“ auf jeder Playlist; fertige Playlists lassen sich ausblenden.'],
+      ['Verlauf', 'Durchsuchbar, mit Filtern wie „Weiterschauen“, Länge, Zeitraum und Herkunft – und CSV-Export.'],
+      ['Statistik', 'Geschaute Zeit, Serien, Kategorien, deine Kanäle mit ihrem Anteil und ein Jahresrückblick.'],
       ['Abgleich & Import', 'Übernimmt Videos aus dem YouTube- und Browser-Verlauf, aus Google Takeout und aus YouTube Watchmarker.'],
-      ['Wiedergabe', 'Großer Videoplayer, bevorzugte Qualität, Geschwindigkeit und Untertitel – einmal einstellen, immer so.'],
+      ['Wiedergabe', 'Großer Videoplayer, bevorzugte Qualität, Geschwindigkeit und Untertitel; Kanal-Trailer und Live-Chat bleiben auf Wunsch still.'],
     ],
     privacyTitle: 'Datenschutz',
     privacyClaim: 'Deine Daten gehören dir und bleiben auf deinem Rechner.',
@@ -700,8 +703,16 @@ export const de: Messages = {
         'Das Ausblenden hat pro Seite eine Zeitgrenze (Einstellungen → Ausblenden). Würden alle gesehenen Videos verschwinden, lädt YouTube immer weiter nach, bis wieder etwas Ungesehenes kommt – das kostet Zeit und Leistung.',
       ],
       [
+        'Ich schaue ein Video in mehreren Etappen – zählt es mehrfach?',
+        'Nein. Spielst du ein unfertiges Video dort weiter, wo du aufgehört hast (YouTube setzt dort fort), wird seine Ansicht fortgesetzt – egal, wie lange das her ist. Fängst du von vorne an, zählt das als neue Ansicht. Verlauf → „Weiterschauen“ zeigt unfertige Videos; nach drei Monaten ohne Weiterschauen gelten sie als „Abgebrochen“.',
+      ],
+      [
+        'Was bedeuten die Zahlen auf einer Kanalseite?',
+        'Wie viele Videos, Shorts, Livestreams und Playlists des Kanals du gesehen hast, als gesehen / gesamt (eine Playlist zählt, sobald alle ihre Videos gesehen sind). Gezählt wird einmal am Tag aus den Listen des Kanals; ↻ zählt sofort neu. Unter Statistik → Kanäle stehen sie für alle deine Kanäle.',
+      ],
+      [
         'Werden meine Daten zwischen Geräten abgeglichen?',
-        'Nicht direkt – es gibt bewusst keinen eigenen Server. Was du auf anderen Geräten schaust, steht aber in deinem YouTube-Verlauf, und den kann die Erweiterung abgleichen (Daten → Abgleich).',
+        'Nicht direkt – es gibt bewusst keinen eigenen Server. Was du auf anderen Geräten schaust, steht aber in deinem YouTube-Verlauf, und den kann die Erweiterung abgleichen (Daten → Abgleich); Kanal, Länge und Datum holt sie dann von YouTube. Um alles auf einen anderen Rechner zu bringen, eine Sicherung speichern (Daten → Sicherung) und dort mit „Sicherung zusammenführen“ einspielen: Das ergänzt, was fehlt, und löscht nichts.',
       ],
       [
         'Woher kommen die Daten älterer Videos?',

@@ -25,6 +25,12 @@ describe('parseExport', () => {
     expect(() => parseExport(btoa('{"a":1}'))).toThrow();
     expect(() => parseExport(btoa('[{"foo":1}]'))).toThrow(/position 0/);
   });
+
+  it('skips entries without a video ID or a real time', () => {
+    const good = entry('aaaaaaaaaaa', '2025-01-01T10:00:00Z');
+    const text = encodeExport([good, entry('<script>', '2025-01-01T10:00:00Z'), { ...good, intTimestamp: -1 }]);
+    expect(parseExport(text)).toEqual([good]);
+  });
 });
 
 describe('mergeExports', () => {
