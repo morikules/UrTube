@@ -85,6 +85,8 @@ export interface Settings {
   filterShorts: boolean;
   filterPremieres: boolean;
   filterLive: boolean;
+  /** With filterLive: also recordings of streams that have ended. */
+  filterStreamReplays: boolean;
   filterMembersOnly: boolean;
   /** The members-only filter also applies on channel pages. */
   filterMembersOnlyOnChannels: boolean;
@@ -107,8 +109,12 @@ export interface Settings {
   bigPlayerAutoTheater: boolean;
   /** Header hidden until the mouse goes to the top edge. */
   bigPlayerHideHeader: boolean;
-  /** The hidden header also appears together with the player's controls. */
-  bigPlayerHeaderWithControls: boolean;
+  /**
+   * When the hidden header comes back: only at the top edge, together with the
+   * player's controls over the video, or with the controls as normal theater
+   * mode (header above, title and channel below the video).
+   */
+  bigPlayerReveal: 'edge' | 'overlay' | 'theater';
   /** Comments and recommendations hidden while at the top, shown when scrolling. */
   bigPlayerFocus: boolean;
 
@@ -219,6 +225,7 @@ export const defaultSettings: Settings = {
   filterShorts: false,
   filterPremieres: false,
   filterLive: false,
+  filterStreamReplays: true,
   filterMembersOnly: false,
   filterMembersOnlyOnChannels: false,
   hideMembersInChannelStats: false,
@@ -230,7 +237,7 @@ export const defaultSettings: Settings = {
   bigPlayer: false,
   bigPlayerAutoTheater: true,
   bigPlayerHideHeader: true,
-  bigPlayerHeaderWithControls: true,
+  bigPlayerReveal: 'overlay',
   bigPlayerFocus: true,
   playerQuality: 'auto',
   playerSpeed: 0,

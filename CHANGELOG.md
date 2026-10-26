@@ -13,9 +13,12 @@ All notable changes. Versions before 1.0 were private test builds.
 - New: the content filters (Shorts, premieres, live streams, members only) can
   also work on the home page and next to a video (Settings → Hiding → Content
   filters).
-- New: with the big player and a hidden header, the header appears and
-  disappears together with the player's controls (Appearance → Player, on by
-  default).
+- New: with the big player and a hidden header, you choose when the header
+  comes back (Appearance → Player): only at the top edge, together with the
+  player's controls over the video (default), or with the controls as normal
+  theater mode – header above, title and channel below the video.
+- "Hide live streams" also hides recordings of streams that have ended
+  ("Streamed … ago"; can be switched off); "Most relevant" has an explanation.
 - Shorts are recognized when video details are filled in, e.g. for videos from
   a Google Takeout import; short videos filled in earlier are checked once more.
 

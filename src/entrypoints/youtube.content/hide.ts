@@ -81,6 +81,11 @@ function isLive(card: Element, texts: string[]): boolean {
   );
 }
 
+/** Recording of a stream that has ended: "vor 8 Std. gestreamt", "Streamed 8 hours ago". */
+function isStreamReplay(texts: string[]): boolean {
+  return texts.some((t) => /\bvor\b.*\bgestreamt$|(^|•\s*)streamed\b.*\bago$/.test(t));
+}
+
 /** Premieres and scheduled streams: "Geplant für …", "Premiere am …", reminder button. */
 function isUpcoming(card: Element, texts: string[]): boolean {
   return (
@@ -135,7 +140,9 @@ export function hideReason(
     if (settings.filterShorts && isShort(card)) return 'shorts';
     if (settings.filterLive || settings.filterPremieres || settings.filterMembersOnly) {
       const texts = shortTexts(card);
-      if (settings.filterLive && isLive(card, texts)) return 'live';
+      if (settings.filterLive && (isLive(card, texts) || (settings.filterStreamReplays && isStreamReplay(texts)))) {
+        return 'live';
+      }
       if (settings.filterPremieres && isUpcoming(card, texts)) return 'premiere';
       if (settings.filterMembersOnly && isMembersOnly(card, texts)) return 'members';
     }

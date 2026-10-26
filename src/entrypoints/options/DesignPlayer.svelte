@@ -1,9 +1,11 @@
 <script lang="ts">
   import { t } from '@/lib/i18n';
+  import type { Settings } from '@/lib/settings';
   import Toggle from './Toggle.svelte';
   import { prefs, setPref } from './prefs.svelte';
 
   const D = t.design;
+  const reveals: Settings['bigPlayerReveal'][] = ['edge', 'overlay', 'theater'];
 </script>
 
 {#if prefs.s}
@@ -26,13 +28,16 @@
         checked={s.bigPlayerHideHeader}
         onchange={(v) => setPref('bigPlayerHideHeader', v)}
       />
-      <Toggle
-        label={D.headerWithControls}
-        description={D.headerWithControlsDesc}
-        disabled={!s.bigPlayer || !s.bigPlayerHideHeader}
-        checked={s.bigPlayerHeaderWithControls}
-        onchange={(v) => setPref('bigPlayerHeaderWithControls', v)}
-      />
+      <div class="row" class:disabled={!s.bigPlayer || !s.bigPlayerHideHeader}>
+        <span class="label">{D.reveal}</span>
+        <select
+          value={s.bigPlayerReveal}
+          disabled={!s.bigPlayer || !s.bigPlayerHideHeader}
+          onchange={(e) => setPref('bigPlayerReveal', e.currentTarget.value as Settings['bigPlayerReveal'])}
+        >
+          {#each reveals as r}<option value={r}>{D.reveals[r]}</option>{/each}
+        </select>
+      </div>
       <Toggle
         label={D.focus}
         description={D.focusDesc}
@@ -43,3 +48,9 @@
     </div>
   </section>
 {/if}
+
+<style>
+  .row.disabled {
+    opacity: 0.5;
+  }
+</style>

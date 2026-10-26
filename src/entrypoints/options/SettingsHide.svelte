@@ -171,7 +171,19 @@
       <Toggle label={H.filterShorts} checked={s.filterShorts} onchange={(v) => setPref('filterShorts', v)} />
       <Toggle label={H.filterPremieres} checked={s.filterPremieres} onchange={(v) => setPref('filterPremieres', v)} />
       <Toggle label={H.filterLive} checked={s.filterLive} onchange={(v) => setPref('filterLive', v)} />
-      <Toggle label={H.filterRelevant} checked={s.filterMostRelevant} onchange={(v) => setPref('filterMostRelevant', v)} />
+      <Toggle
+        label={H.filterReplays}
+        description={H.filterReplaysDesc}
+        checked={s.filterStreamReplays}
+        disabled={!s.filterLive}
+        onchange={(v) => setPref('filterStreamReplays', v)}
+      />
+      <Toggle
+        label={H.filterRelevant}
+        description={H.filterRelevantDesc}
+        checked={s.filterMostRelevant}
+        onchange={(v) => setPref('filterMostRelevant', v)}
+      />
       <Toggle label={H.filtersOnHome} checked={s.filtersOnHome} onchange={(v) => setPref('filtersOnHome', v)} />
       <Toggle
         label={H.filtersOnSidebar}

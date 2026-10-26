@@ -18,6 +18,54 @@ export function createBigPlayer(getSettings: () => Settings) {
   const isWatchPage = () => location.pathname === '/watch';
   const root = document.documentElement.classList;
 
+  /**
+   * Reveal mode "theater": while the player's controls are shown, the page is
+   * normal theater mode (header, title and channel visible). It turns big again
+   * once the controls hide while the mouse rests on the video – not when the
+   * mouse left it, or the shrinking player would make it jump back and forth.
+   */
+  let revealed = false;
+  let overPlayer = false;
+  let watchedPlayer: Element | null = null;
+  const playerObserver = new MutationObserver(() => syncReveal());
+
+  function syncReveal(): void {
+    const s = getSettings();
+    const player = document.querySelector('#movie_player');
+    if (player !== watchedPlayer) {
+      playerObserver.disconnect();
+      if (player) playerObserver.observe(player, { attributes: true, attributeFilter: ['class'] });
+      watchedPlayer = player;
+    }
+    const flexy = document.querySelector('ytd-watch-flexy');
+    const theater = !!flexy?.hasAttribute('theater') && !flexy.hasAttribute('fullscreen');
+    const enabled = s.bigPlayer && s.bigPlayerHideHeader && s.bigPlayerReveal === 'theater' && isWatchPage() && theater;
+    const controls = !!player && !player.classList.contains('ytp-autohide');
+    if (!enabled) revealed = false;
+    else if (controls) revealed = true;
+    else if (overPlayer) revealed = false;
+    applyClasses();
+  }
+
+  function applyClasses(): void {
+    const s = getSettings();
+    const active = s.bigPlayer && isWatchPage() && !revealed;
+    root.toggle('ytt-big', active);
+    root.toggle('ytt-big-header', active && s.bigPlayerHideHeader);
+    root.toggle('ytt-big-sync', active && s.bigPlayerHideHeader && s.bigPlayerReveal === 'overlay');
+  }
+
+  document.addEventListener(
+    'pointermove',
+    (e) => {
+      const over = e.target instanceof Element && e.target.closest('#movie_player') !== null;
+      if (over === overPlayer) return;
+      overPlayer = over;
+      if (revealed) syncReveal();
+    },
+    { capture: true, passive: true },
+  );
+
   function scheduleFocus(): void {
     clearTimeout(focusTimer);
     root.remove('ytt-big-focus');
@@ -44,11 +92,8 @@ export function createBigPlayer(getSettings: () => Settings) {
   /** Applies the settings; call on start, on settings change and on navigation. */
   function update(navigated: boolean): void {
     const s = getSettings();
-    const active = s.bigPlayer && isWatchPage();
-    root.toggle('ytt-big', active);
-    root.toggle('ytt-big-header', active && s.bigPlayerHideHeader);
-    root.toggle('ytt-big-sync', active && s.bigPlayerHideHeader && s.bigPlayerHeaderWithControls);
-    if (!active) {
+    syncReveal();
+    if (!s.bigPlayer || !isWatchPage()) {
       clearTimeout(focusTimer);
       root.remove('ytt-big-focus');
       return;
