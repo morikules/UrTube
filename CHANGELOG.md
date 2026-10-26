@@ -16,7 +16,9 @@ All notable changes. Versions before 1.0 were private test builds.
 - New: with the big player and a hidden header, you choose when the header
   comes back (Appearance → Player): only at the top edge, together with the
   player's controls over the video (default), or with the controls as normal
-  theater mode – header above, title and channel below the video.
+  theater mode – header above, title and channel below the video; it turns
+  big again after 3 seconds without any activity (unless scrolled down). The
+  header over the video can have a solid background instead of see-through.
 - "Hide live streams" also hides recordings of streams that have ended
   ("Streamed … ago"; can be switched off); "Most relevant" has an explanation.
 - Shorts are recognized when video details are filled in, e.g. for videos from

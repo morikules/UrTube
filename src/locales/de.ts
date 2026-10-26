@@ -505,6 +505,8 @@ export const de: Messages = {
     autoTheater: 'Kinomodus automatisch einschalten',
     hideHeader: 'Kopfzeile ausblenden',
     hideHeaderDesc: 'Erscheint immer, wenn die Maus an den oberen Rand fährt; wann sonst, legst du darunter fest.',
+    headerSolid: 'Kopfzeile mit Hintergrund',
+    headerSolidDesc: 'Erscheint sie über dem Video, ist die Kopfzeile nicht durchsichtig.',
     reveal: 'Kopfzeile erscheint',
     reveals: {
       edge: 'nur am oberen Rand',

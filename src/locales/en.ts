@@ -491,6 +491,8 @@ export const en = {
     autoTheater: 'Switch on theater mode automatically',
     hideHeader: 'Hide the header',
     hideHeaderDesc: 'Always appears when the mouse moves to the top edge; when else, you choose below.',
+    headerSolid: 'Header with background',
+    headerSolidDesc: 'When it appears over the video, the header is not see-through.',
     reveal: 'Header comes back',
     reveals: {
       edge: 'only at the top edge',

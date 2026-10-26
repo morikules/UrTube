@@ -39,6 +39,13 @@
         </select>
       </div>
       <Toggle
+        label={D.headerSolid}
+        description={D.headerSolidDesc}
+        disabled={!s.bigPlayer || !s.bigPlayerHideHeader}
+        checked={s.bigPlayerHeaderSolid}
+        onchange={(v) => setPref('bigPlayerHeaderSolid', v)}
+      />
+      <Toggle
         label={D.focus}
         description={D.focusDesc}
         disabled={!s.bigPlayer}

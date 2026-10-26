@@ -431,6 +431,15 @@ html.ytt-big.ytt-big-header.ytt-big-sync:has(ytd-watch-flexy[theater] #movie_pla
   opacity: 1;
 }
 
+/* Solid instead of see-through: the header over the video gets YouTube's page background. */
+html.ytt-big.ytt-big-header.ytt-big-solid:has(ytd-watch-flexy[theater]) ytd-masthead {
+  background: var(--yt-spec-base-background, #fff) !important;
+}
+
+html[dark].ytt-big.ytt-big-header.ytt-big-solid:has(ytd-watch-flexy[theater]) ytd-masthead {
+  background: var(--yt-spec-base-background, #0f0f0f) !important;
+}
+
 /* Focus: at the top of the page only the player is shown; scrolling brings the rest back. */
 html.ytt-big.ytt-big-focus ytd-watch-flexy[theater] :is(#columns, #below) {
   visibility: hidden;

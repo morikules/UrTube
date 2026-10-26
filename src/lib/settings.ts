@@ -115,6 +115,8 @@ export interface Settings {
    * mode (header above, title and channel below the video).
    */
   bigPlayerReveal: 'edge' | 'overlay' | 'theater';
+  /** The header over the video gets YouTube's background instead of being see-through. */
+  bigPlayerHeaderSolid: boolean;
   /** Comments and recommendations hidden while at the top, shown when scrolling. */
   bigPlayerFocus: boolean;
 
@@ -238,6 +240,7 @@ export const defaultSettings: Settings = {
   bigPlayerAutoTheater: true,
   bigPlayerHideHeader: true,
   bigPlayerReveal: 'overlay',
+  bigPlayerHeaderSolid: false,
   bigPlayerFocus: true,
   playerQuality: 'auto',
   playerSpeed: 0,
