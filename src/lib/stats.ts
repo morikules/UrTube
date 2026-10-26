@@ -2,7 +2,7 @@
  * Statistics for the "Statistik" tab, computed from videos and views.
  * Pure functions, so they can be tested without a browser.
  */
-import type { EntryPoint, Video, View } from './db';
+import { watchedTime, type EntryPoint, type Video, type View } from './db';
 import { locale, n, t } from './i18n';
 import { videoChannelUrl } from './youtube';
 
@@ -138,9 +138,8 @@ export function computeStats(videos: Video[], views: View[], range: StatsRange, 
     if (v.kind === 'watch') {
       sessions++;
       if (v.finishedAt) finished++;
-      // A finished video counts with its full length, even if parts were skipped.
-      const length = v.durationSec ?? byId.get(v.videoId)?.durationSec ?? 0;
-      watchedSeconds += v.finishedAt ? Math.max(v.watchedSeconds ?? 0, length) : (v.watchedSeconds ?? 0);
+      // Up to where it got; a finished video with its full length, even if parts were skipped.
+      watchedSeconds += watchedTime(v, byId.get(v.videoId)?.durationSec);
       if (v.entry) entries.set(v.entry, (entries.get(v.entry) ?? 0) + 1);
     }
   }

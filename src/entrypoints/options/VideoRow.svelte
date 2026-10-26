@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-  import { TrackerDB, type Video, type View, type ViewSource } from '@/lib/db';
+  import { TrackerDB, watchedTime, type Video, type View, type ViewSource } from '@/lib/db';
   import { send } from '@/lib/messages';
   import { t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
@@ -191,7 +191,9 @@
                 </td>
                 <td class="muted">
                   {progress(v)}
-                  {#if v.watchedSeconds}· {V.watchedTime(formatDuration(v.watchedSeconds))}{/if}
+                  {#if v.kind === 'watch' && watchedTime(v, video.durationSec)}
+                    · {V.watchedTime(formatDuration(watchedTime(v, video.durationSec)))}
+                  {/if}
                 </td>
                 <td class="act">
                   <ConfirmButton

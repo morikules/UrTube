@@ -994,6 +994,8 @@ export default defineContentScript({
       s.viewId = prev.id!;
       s.watchedSeconds += prev.watchedSeconds ?? 0;
       s.maxPosition = Math.max(s.maxPosition, prev.maxPosition ?? 0);
+      // Watching the rest of a view that already counts as finished (from 90 %).
+      s.finishedAt ??= prev.finishedAt;
       s.dirty = true;
       flush(s);
       loadMeta(s);

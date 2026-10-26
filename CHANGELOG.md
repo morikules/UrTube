@@ -2,8 +2,14 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
-## 1.3.0 (in progress)
+## 1.3.0
 
+- Watching the rest of a long video no longer counts twice: a view counts as
+  finished from 90 %, but if it stopped more than 30 seconds before the end,
+  playing on from there (e.g. after the tab was reloaded) continues it.
+- Time watched is at least up to where a view got (skipped parts count); a
+  finished view counts with the full length – in the history, the statistics
+  and the CSV export.
 - Google Takeout import: for the time the Takeout covers, its exact times
   replace the Watchmarker views of the same videos (Watchmarker often noted a
   video later than it was watched, which showed up as a second view). Older

@@ -108,6 +108,15 @@ export interface View {
   account?: string;
 }
 
+/**
+ * Time watched in a view as shown and counted: at least up to where it got
+ * (skipped parts count), a finished view with the video's full length.
+ */
+export function watchedTime(v: View, videoDurationSec?: number): number {
+  const reached = v.finishedAt ? (v.durationSec ?? videoDurationSec ?? v.maxPosition ?? 0) : (v.maxPosition ?? 0);
+  return Math.max(v.watchedSeconds ?? 0, reached);
+}
+
 export type ViewProgress = Pick<
   View,
   'maxPosition' | 'lastPosition' | 'watchedSeconds' | 'durationSec' | 'finishedAt'
@@ -477,11 +486,16 @@ export async function updateView(db: TrackerDB, viewId: number, p: ViewProgress)
   await db.views.update(viewId, patch);
 }
 
+/** A finished view that stopped more than this before the end can still be continued. */
+const RESUME_REST_SEC = 30;
+
 /**
  * The view a new playback of the video may continue: the latest one recorded
- * here, if it was not watched to the end and the video was not reset since.
- * Whether it really continues depends on where playback starts (see the
- * content script); no time limit, videos often stay open for days.
+ * here, if it did not get to the end and the video was not reset since. A view
+ * counts as finished from 90 %, so one that stopped well before the end is
+ * still continued (watching the rest after the tab was reloaded). Whether it
+ * really continues depends on where playback starts (see the content script);
+ * no time limit, videos often stay open for days.
  */
 export async function resumableView(db: TrackerDB, videoId: string): Promise<View | null> {
   const views = await db.views.where('videoId').equals(videoId).toArray();
@@ -489,7 +503,11 @@ export async function resumableView(db: TrackerDB, videoId: string): Promise<Vie
   for (const v of views) {
     if (v.source === 'extension' && v.kind === 'watch' && (!latest || v.at > latest.at)) latest = v;
   }
-  if (!latest || latest.finishedAt || latest.isShort) return null;
+  if (!latest || latest.isShort) return null;
+  if (latest.finishedAt) {
+    const stoppedAt = latest.lastPosition ?? latest.maxPosition ?? 0;
+    if (!latest.durationSec || latest.durationSec - stoppedAt <= RESUME_REST_SEC) return null;
+  }
   const video = await db.videos.get(videoId);
   if (!video || video.status !== 'watched' || (video.resetAt ?? 0) > latest.at) return null;
   return latest;

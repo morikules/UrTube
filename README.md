@@ -45,14 +45,16 @@ account, no analytics. English and German.
 - **Playlists** – “12 / 23 watched” on playlist thumbnails; finished playlists
   can be hidden.
 - **History** – searchable, with every view and filters such as “Continue
-  watching” (opens where you stopped), given up, length, date range, origin,
-  premieres and members-only; export as CSV.
+  watching” (opens where you stopped), given up, without exact date, length,
+  date range, origin, premieres and members-only; mark videos as finished or
+  correct the music detection; export as CSV.
 - **Statistics** – time watched, streaks, busiest day, categories, most
   rewatched videos, all your channels and subscriptions with your share, and a
   year in review.
 - **Import** – Google Takeout (your full YouTube history with exact times) and
   YouTube Watchmarker exports. Imports never count anything twice; for every
-  view the most exact date wins.
+  view the most exact date wins, and within the Takeout's time span its exact
+  times replace Watchmarker's.
 - **Clean up** – remove watched videos from “Watch later”, remove deleted
   videos from your YouTube history.
 - **Playback** – a big player that fills the window in theater mode; the header

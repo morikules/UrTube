@@ -2,7 +2,7 @@
  * Filters for the history list and exports of it (CSV), kept free of UI code
  * so they can be tested.
  */
-import type { Video, View } from './db';
+import { watchedTime, type Video, type View } from './db';
 import { videoUrl } from './youtube';
 
 /** Below this, an unfinished view is not worth continuing (only opened or a quick look). */
@@ -196,7 +196,7 @@ export function viewsCsv(views: View[], videos: Video[]): string {
           w.source,
           w.kind,
           w.entry,
-          w.watchedSeconds,
+          w.kind === 'watch' ? Math.round(watchedTime(w, v?.durationSec)) : undefined,
           w.maxPosition,
           w.durationSec ?? v?.durationSec,
           w.finishedAt ? 1 : 0,

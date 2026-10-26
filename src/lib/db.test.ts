@@ -20,6 +20,7 @@ import {
   startView,
   updateVideoMeta,
   updateView,
+  watchedTime,
 } from './db';
 import { mergeExports, type WatchmarkerEntry } from './watchmarker';
 import { musicKind } from './youtube';
@@ -222,6 +223,24 @@ describe('missing video details', () => {
 
     await updateVideoMeta(db, 'aaaaaaaaaaa', { isShort: true });
     expect((await videosMissingMeta(db, { recentOnly: true, limit: 10 })).ids).toEqual([]);
+  });
+});
+
+describe('continuing finished views', () => {
+  it('a view finished at 90 % but stopped before the end can be continued', async () => {
+    const { viewId } = await startView(db, { videoId: A, title: 'A', at: 1000 });
+    await updateView(db, viewId, { maxPosition: 4080, lastPosition: 4080, durationSec: 4345, finishedAt: 2000 });
+    expect((await resumableView(db, A))?.id).toBe(viewId);
+    // Watched up to the end: playing again is a new view.
+    await updateView(db, viewId, { maxPosition: 4340, lastPosition: 4340 });
+    expect(await resumableView(db, A)).toBeNull();
+  });
+
+  it('time watched is at least where it got, a finished view the full length', () => {
+    const base = { videoId: A, at: 0, kind: 'watch' as const, source: 'extension' as const, dateUncertain: false };
+    expect(watchedTime({ ...base, watchedSeconds: 181, maxPosition: 4078 })).toBe(4078);
+    expect(watchedTime({ ...base, watchedSeconds: 181, maxPosition: 4078, finishedAt: 1, durationSec: 4345 })).toBe(4345);
+    expect(watchedTime({ ...base, watchedSeconds: 300, maxPosition: 100 })).toBe(300);
   });
 });
 
