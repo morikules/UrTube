@@ -387,9 +387,15 @@ export const de: Messages = {
     dismissPlaylistsDesc: 'Knopf ⊘ auf Vorschaubildern von Playlists.',
     dismissChannels: 'Kanäle',
     dismissChannelsDesc: 'Knopf „Kanal ausblenden“ auf der Kanalseite und unter dem Titel eines Videos.',
-    filterTitle: 'Inhaltsfilter in den Abos',
+    dismissAlways: 'Ausgeblendetes bleibt auch bei ausgeschaltetem Schalter weg',
+    dismissAlwaysDesc:
+      'Ist der Schalter in der YouTube-Kopfzeile aus, wird Gesehenes (markiert) angezeigt, aber was du mit ⊘ ausgeblendet hast, bleibt verschwunden.',
+    filterTitle: 'Inhaltsfilter',
     filterIntro:
-      'Blendet bestimmte Arten von Videos in den Abos aus – egal ob gesehen oder nicht. Gilt ebenfalls nur, solange der Schalter in der YouTube-Kopfzeile an ist.',
+      'Blendet bestimmte Arten von Videos in den Abos aus – egal ob gesehen oder nicht –, auf Wunsch auch auf der Startseite und neben einem Video. Gilt ebenfalls nur, solange der Schalter in der YouTube-Kopfzeile an ist.',
+    filtersOnHome: 'Auch auf der Startseite',
+    filtersOnSidebar: 'Auch neben einem Video',
+    filtersOnSidebarDesc: 'In den Empfehlungen neben und unter dem Video, das du gerade schaust.',
     filterShorts: 'Shorts ausblenden',
     filterPremieres: 'Premieren und geplante Videos ausblenden',
     filterLive: 'Livestreams ausblenden',
@@ -495,6 +501,8 @@ export const de: Messages = {
     autoTheater: 'Kinomodus automatisch einschalten',
     hideHeader: 'Kopfzeile ausblenden',
     hideHeaderDesc: 'Erscheint, wenn die Maus an den oberen Rand fährt.',
+    headerWithControls: 'Kopfzeile zusammen mit der Player-Steuerung zeigen',
+    headerWithControlsDesc: 'Kopfzeile und Steuerleiste unten im Video erscheinen und verschwinden gemeinsam.',
     focus: 'Kommentare und Empfehlungen erst beim Scrollen zeigen',
     focusDesc: 'Ganz oben ist nach 2 Sekunden nur noch das Video zu sehen.',
   },
@@ -804,6 +812,7 @@ export const de: Messages = {
 
   errors: {
     openYoutubeTab: 'Bitte zuerst youtube.com in einem Tab öffnen – das läuft über diesen Tab.',
+    reloadYoutubeTab: 'Kein YouTube-Tab ist bereit – bitte einen youtube.com-Tab neu laden (z. B. nach einem Update) und es noch einmal versuchen.',
     noHistoryPermission: 'Keine Berechtigung für den Browser-Verlauf',
     ytConfig: 'YouTube-Konfiguration nicht gefunden (Seite noch nicht fertig geladen?)',
     takeoutHtml: 'Das ist die HTML-Variante. Bitte den Export mit dem Format JSON erstellen.',

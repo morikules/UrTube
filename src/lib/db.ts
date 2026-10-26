@@ -584,11 +584,28 @@ const META_TYPES = {
 /** Videos seen within this time count as recent for filling in missing details. */
 export const RECENT_META_MS = 30 * 86_400_000;
 
+/** Details read before this time (1.2) did not tell Shorts apart. */
+export const SHORTS_FROM_META_SINCE = Date.parse('2026-10-26T00:00:00Z');
+/** Shorts are at most this long. */
+const SHORT_MAX_SEC = 180;
+
+/** Short enough to be a Short, but details were read before Shorts were recognized (e.g. Takeout imports). */
+function shortUnknown(v: Video): boolean {
+  return (
+    v.isShort === undefined &&
+    v.durationSec !== undefined &&
+    v.durationSec <= SHORT_MAX_SEC &&
+    (v.metaUpdatedAt ?? 0) < SHORTS_FROM_META_SINCE &&
+    (v.metaTriedAt ?? 0) < SHORTS_FROM_META_SINCE
+  );
+}
+
 /**
  * Videos without details from YouTube (channel, length, date), newest first:
- * those known only from the progress bar, a history sync or an import. With
- * `recentOnly`, only videos watched within RECENT_META_MS. Videos YouTube had
- * no details for (deleted, private) are skipped.
+ * those known only from the progress bar, a history sync or an import; also
+ * short videos not yet known as Short or not. With `recentOnly`, only videos
+ * watched within RECENT_META_MS. Videos YouTube had no details for (deleted,
+ * private) are skipped.
  */
 export async function videosMissingMeta(
   db: TrackerDB,
@@ -602,7 +619,7 @@ export async function videosMissingMeta(
     .aboveOrEqual(since)
     .reverse()
     .each((v) => {
-      if (v.metaUpdatedAt || v.metaTriedAt) return;
+      if ((v.metaUpdatedAt || v.metaTriedAt) && !shortUnknown(v)) return;
       total++;
       if (ids.length < limit) ids.push(v.id);
     });

@@ -27,6 +27,13 @@
         onchange={(v) => setPref('bigPlayerHideHeader', v)}
       />
       <Toggle
+        label={D.headerWithControls}
+        description={D.headerWithControlsDesc}
+        disabled={!s.bigPlayer || !s.bigPlayerHideHeader}
+        checked={s.bigPlayerHeaderWithControls}
+        onchange={(v) => setPref('bigPlayerHeaderWithControls', v)}
+      />
+      <Toggle
         label={D.focus}
         description={D.focusDesc}
         disabled={!s.bigPlayer}

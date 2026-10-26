@@ -28,7 +28,10 @@ export function metaFromPlayerResponse(resp: any, videoId: string): (VideoMeta &
   if (!d || d.videoId !== videoId) return null;
   const mf = resp.microformat?.playerMicroformatRenderer;
   const profile = str(mf?.ownerProfileUrl);
+  // For Shorts, YouTube names the /shorts/ address as the canonical one.
+  const canonical = str(mf?.canonicalUrl);
   return {
+    isShort: canonical ? canonical.includes('/shorts/') : undefined,
     title: str(d.title),
     channelId: str(d.channelId),
     channelName: str(d.author),

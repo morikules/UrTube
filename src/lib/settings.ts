@@ -48,6 +48,8 @@ export interface Settings {
   dismissVideos: boolean;
   dismissPlaylists: boolean;
   dismissChannels: boolean;
+  /** Items hidden with ⊘ stay hidden while the header switch is off (watched ones are then shown). */
+  dismissAlwaysHidden: boolean;
   /** "12 / 23 gesehen" on playlist thumbnails. */
   showPlaylistProgress: boolean;
   /** Watched / total videos, Shorts, live streams and playlists in a channel's header. */
@@ -89,6 +91,10 @@ export interface Settings {
   /** Leave members-only videos out of the channel statistics. */
   hideMembersInChannelStats: boolean;
   filterMostRelevant: boolean;
+  /** The content filters (Shorts, premieres, live streams, members only) also on the home page. */
+  filtersOnHome: boolean;
+  /** … and among the recommendations next to a video. */
+  filtersOnSidebar: boolean;
   /** Hide playlists whose videos were all watched. */
   hidePlaylistsDone: boolean;
   /** Delay before newly loaded videos are processed; higher saves resources. */
@@ -101,6 +107,8 @@ export interface Settings {
   bigPlayerAutoTheater: boolean;
   /** Header hidden until the mouse goes to the top edge. */
   bigPlayerHideHeader: boolean;
+  /** The hidden header also appears together with the player's controls. */
+  bigPlayerHeaderWithControls: boolean;
   /** Comments and recommendations hidden while at the top, shown when scrolling. */
   bigPlayerFocus: boolean;
 
@@ -190,6 +198,7 @@ export const defaultSettings: Settings = {
   dismissVideos: true,
   dismissPlaylists: true,
   dismissChannels: true,
+  dismissAlwaysHidden: false,
   showPlaylistProgress: true,
   showChannelStats: true,
   hideEnabled: true,
@@ -214,11 +223,14 @@ export const defaultSettings: Settings = {
   filterMembersOnlyOnChannels: false,
   hideMembersInChannelStats: false,
   filterMostRelevant: false,
+  filtersOnHome: false,
+  filtersOnSidebar: false,
   hidePlaylistsDone: true,
   scanDelayMs: 100,
   bigPlayer: false,
   bigPlayerAutoTheater: true,
   bigPlayerHideHeader: true,
+  bigPlayerHeaderWithControls: true,
   bigPlayerFocus: true,
   playerQuality: 'auto',
   playerSpeed: 0,

@@ -13,6 +13,7 @@ import {
   mergeBackup,
   mergeResumedViews,
   videosMissingMeta,
+  SHORTS_FROM_META_SINCE,
   resumableView,
   startView,
   updateVideoMeta,
@@ -205,6 +206,19 @@ describe('missing video details', () => {
     // YouTube had nothing (deleted video): not asked again.
     await markMetaTried(db, ['ccccccccccc']);
     expect((await videosMissingMeta(db, { recentOnly: false, limit: 10 })).ids).toEqual(['bbbbbbbbbbb', 'aaaaaaaaaaa']);
+  });
+
+  it('short videos filled in before Shorts were recognized are asked once more', async () => {
+    const DAY = 86_400_000;
+    const before = SHORTS_FROM_META_SINCE - DAY;
+    await startView(db, { videoId: 'aaaaaaaaaaa', title: 'short one', at: Date.now() - DAY });
+    await startView(db, { videoId: 'bbbbbbbbbbb', title: 'long one', at: Date.now() - DAY });
+    await db.videos.update('aaaaaaaaaaa', { durationSec: 40, metaUpdatedAt: before });
+    await db.videos.update('bbbbbbbbbbb', { durationSec: 600, metaUpdatedAt: before });
+    expect((await videosMissingMeta(db, { recentOnly: true, limit: 10 })).ids).toEqual(['aaaaaaaaaaa']);
+
+    await updateVideoMeta(db, 'aaaaaaaaaaa', { isShort: true });
+    expect((await videosMissingMeta(db, { recentOnly: true, limit: 10 })).ids).toEqual([]);
   });
 });
 

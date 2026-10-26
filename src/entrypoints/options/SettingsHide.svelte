@@ -155,6 +155,12 @@
         checked={s.dismissChannels}
         onchange={(v) => setPref('dismissChannels', v)}
       />
+      <Toggle
+        label={H.dismissAlways}
+        description={H.dismissAlwaysDesc}
+        checked={s.dismissAlwaysHidden}
+        onchange={(v) => setPref('dismissAlwaysHidden', v)}
+      />
     </div>
   </section>
 
@@ -166,6 +172,13 @@
       <Toggle label={H.filterPremieres} checked={s.filterPremieres} onchange={(v) => setPref('filterPremieres', v)} />
       <Toggle label={H.filterLive} checked={s.filterLive} onchange={(v) => setPref('filterLive', v)} />
       <Toggle label={H.filterRelevant} checked={s.filterMostRelevant} onchange={(v) => setPref('filterMostRelevant', v)} />
+      <Toggle label={H.filtersOnHome} checked={s.filtersOnHome} onchange={(v) => setPref('filtersOnHome', v)} />
+      <Toggle
+        label={H.filtersOnSidebar}
+        description={H.filtersOnSidebarDesc}
+        checked={s.filtersOnSidebar}
+        onchange={(v) => setPref('filtersOnSidebar', v)}
+      />
     </div>
   </section>
 

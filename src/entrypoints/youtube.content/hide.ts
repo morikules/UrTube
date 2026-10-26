@@ -111,6 +111,15 @@ export function cardAge(card: Element): number | null {
   return null;
 }
 
+/** Whether the content filters (Shorts, premieres, live streams, members only) work on this page. */
+export function filtersApply(page: PageKind, settings: Settings): boolean {
+  return (
+    page === 'subscriptions' ||
+    (page === 'home' && settings.filtersOnHome) ||
+    (page === 'watch' && settings.filtersOnSidebar)
+  );
+}
+
 /** Why a card should be hidden on this page, or null to show it. */
 export function hideReason(
   card: Element,
@@ -122,7 +131,7 @@ export function hideReason(
 ): HideReason | null {
   if (page === 'other') return null;
 
-  if (page === 'subscriptions') {
+  if (filtersApply(page, settings)) {
     if (settings.filterShorts && isShort(card)) return 'shorts';
     if (settings.filterLive || settings.filterPremieres || settings.filterMembersOnly) {
       const texts = shortTexts(card);

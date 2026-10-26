@@ -33,7 +33,7 @@ import {
 } from '@/lib/youtube';
 import { createBigPlayer } from './bigPlayer';
 import { applyPlayerPrefs } from './playerPrefs';
-import { HIDE_CARD_SELECTOR, hideReason, hideTarget, type HideReason } from './hide';
+import { HIDE_CARD_SELECTOR, filtersApply, hideReason, hideTarget, type HideReason } from './hide';
 import { incrementalSyncDue, processRemovals, runHistorySync } from './history';
 import { createPlaylists } from './playlists';
 import { createWatchLater } from './watchLater';
@@ -208,6 +208,8 @@ export default defineContentScript({
       for (const kind of ['subscriptions', 'home', 'channel'] as const) {
         c.toggle(`ytt-page-${kind}`, page === kind);
       }
+      c.toggle('ytt-dismiss-always', settings.dismissAlwaysHidden);
+      c.toggle('ytt-filters-here', filtersApply(page, settings));
       c.toggle('ytt-f-shorts', settings.filterShorts);
       c.toggle('ytt-f-relevant', settings.filterMostRelevant);
     }

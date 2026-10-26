@@ -298,8 +298,18 @@ html.ytt-hiding [data-ytt-hide] {
   display: none !important;
 }
 
-/* Shelves on the subscriptions page: Shorts and "Most relevant". */
-html.ytt-hiding.ytt-page-subscriptions.ytt-f-shorts :is(
+/* Hidden with ⊘ can stay hidden while the switch is off (watched videos are then shown). */
+html.ytt-dismiss-always [data-ytt-hide='dismissed'] {
+  display: none !important;
+}
+
+html.ytt-dismiss-always .ytt-endscreen.ytt-dismissed {
+  visibility: hidden !important;
+}
+
+/* Shorts shelves where the content filters apply (subscriptions, optionally home and
+   next to a video); "Most relevant" only exists on the subscriptions page. */
+html.ytt-hiding.ytt-filters-here.ytt-f-shorts :is(
     ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
     ytd-rich-shelf-renderer[is-shorts],
     ytd-reel-shelf-renderer
@@ -410,6 +420,15 @@ html.ytt-big.ytt-big-header:has(ytd-watch-flexy[theater])
   ytd-masthead {
   transform: translateY(-100%);
   opacity: 0;
+}
+
+/* Together with the player's controls: YouTube marks the player "ytp-autohide" while
+   they are hidden, so the header comes and goes with them (also while paused). */
+html.ytt-big.ytt-big-header.ytt-big-sync:has(ytd-watch-flexy[theater] #movie_player:not(.ytp-autohide))
+  #masthead-container
+  ytd-masthead {
+  transform: none;
+  opacity: 1;
 }
 
 /* Focus: at the top of the page only the player is shown; scrolling brings the rest back. */

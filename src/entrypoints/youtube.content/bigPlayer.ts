@@ -47,6 +47,7 @@ export function createBigPlayer(getSettings: () => Settings) {
     const active = s.bigPlayer && isWatchPage();
     root.toggle('ytt-big', active);
     root.toggle('ytt-big-header', active && s.bigPlayerHideHeader);
+    root.toggle('ytt-big-sync', active && s.bigPlayerHideHeader && s.bigPlayerHeaderWithControls);
     if (!active) {
       clearTimeout(focusTimer);
       root.remove('ytt-big-focus');

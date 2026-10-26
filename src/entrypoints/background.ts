@@ -131,22 +131,30 @@ export default defineBackground(() => {
     await broadcast({ type: 'watchedChanged', changes });
   }
 
-  /** Work that needs the user's YouTube login runs in an open YouTube tab. */
+  /**
+   * Work that needs the user's YouTube login runs in an open YouTube tab. Tabs
+   * are tried one after the other (the active one first): a tab Firefox has
+   * unloaded, or one opened before the add-on was updated, has no content script.
+   */
   async function sendToYoutubeTab(msg: Broadcast): Promise<void> {
     const tabs = await browser.tabs.query({ url: '*://www.youtube.com/*' });
-    const tab = tabs.find((t) => t.active) ?? tabs[0];
-    if (tab?.id === undefined) {
-      throw new Error(t.errors.openYoutubeTab);
+    const order = [...tabs.filter((t) => t.active), ...tabs.filter((t) => !t.active)].filter((t) => !t.discarded);
+    for (const tab of order) {
+      if (tab.id === undefined) continue;
+      try {
+        await browser.tabs.sendMessage(tab.id, msg);
+        return;
+      } catch {
+        // No content script in this tab; try the next one.
+      }
     }
-    await browser.tabs.sendMessage(tab.id, msg);
+    throw new Error(tabs.length ? t.errors.reloadYoutubeTab : t.errors.openYoutubeTab);
   }
 
   /** Asks one open YouTube tab to carry out queued removals from the YouTube history. */
   async function triggerRemovals(): Promise<void> {
-    const [tab] = await browser.tabs.query({ url: '*://www.youtube.com/*' });
-    if (tab?.id === undefined) return; // done when the next YouTube page loads
-    const msg: Broadcast = { type: 'processRemovals' };
-    browser.tabs.sendMessage(tab.id, msg).catch(() => {});
+    // Without a ready tab, this is done when the next YouTube page loads.
+    await sendToYoutubeTab({ type: 'processRemovals' }).catch(() => {});
   }
 
   /** Set by "Abbrechen"; checked while the browser history is read. */

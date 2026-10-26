@@ -374,9 +374,15 @@ export const en = {
     dismissPlaylistsDesc: '⊘ button on playlist thumbnails.',
     dismissChannels: 'Channels',
     dismissChannelsDesc: '“Hide channel” button on the channel page and below the title of a video.',
-    filterTitle: 'Content filters in subscriptions',
+    dismissAlways: 'Hidden items stay hidden when the switch is off',
+    dismissAlwaysDesc:
+      'With the switch in the YouTube header off, watched videos are shown (marked), but what you hid with ⊘ stays away.',
+    filterTitle: 'Content filters',
     filterIntro:
-      'Hides certain kinds of videos in your subscriptions – whether watched or not. Also only while the switch in the YouTube header is on.',
+      'Hides certain kinds of videos in your subscriptions – whether watched or not –, on request also on the home page and next to a video. Also only while the switch in the YouTube header is on.',
+    filtersOnHome: 'Also on the home page',
+    filtersOnSidebar: 'Also next to a video',
+    filtersOnSidebarDesc: 'In the recommendations beside and below the video you are watching.',
     filterShorts: 'Hide Shorts',
     filterPremieres: 'Hide premieres and scheduled videos',
     filterLive: 'Hide live streams',
@@ -481,6 +487,8 @@ export const en = {
     autoTheater: 'Switch on theater mode automatically',
     hideHeader: 'Hide the header',
     hideHeaderDesc: 'Appears when the mouse moves to the top edge.',
+    headerWithControls: 'Show the header together with the player controls',
+    headerWithControlsDesc: 'Header and controls at the bottom of the video appear and disappear together.',
     focus: 'Show comments and recommendations only when scrolling',
     focusDesc: 'At the very top, only the video is visible after 2 seconds.',
   },
@@ -791,6 +799,7 @@ export const en = {
 
   errors: {
     openYoutubeTab: 'Please open youtube.com in a tab first – this runs through that tab.',
+    reloadYoutubeTab: 'No YouTube tab is ready – please reload a youtube.com tab (e.g. after an update) and try again.',
     noHistoryPermission: 'No permission for the browser history',
     ytConfig: 'YouTube configuration not found (page not fully loaded yet?)',
     takeoutHtml: 'This is the HTML variant. Please create the export with the format JSON.',

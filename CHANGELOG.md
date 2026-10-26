@@ -2,6 +2,23 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.2.0 (in progress)
+
+- Fixed: counting a channel (↻ in the statistics) and other work that runs
+  through a YouTube tab failed with "Receiving end does not exist" when the
+  first YouTube tab was unloaded by Firefox or opened before an update; all
+  YouTube tabs are now tried, with a clearer message if none is ready.
+- New: things hidden with ⊘ can stay hidden while the header switch is off –
+  watched videos are then shown and marked (Settings → Hiding → Hiding with ⊘).
+- New: the content filters (Shorts, premieres, live streams, members only) can
+  also work on the home page and next to a video (Settings → Hiding → Content
+  filters).
+- New: with the big player and a hidden header, the header appears and
+  disappears together with the player's controls (Appearance → Player, on by
+  default).
+- Shorts are recognized when video details are filled in, e.g. for videos from
+  a Google Takeout import; short videos filled in earlier are checked once more.
+
 ## 1.1.0
 
 - New: channel pages show how much of the channel you watched, below the
