@@ -2,7 +2,7 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
-## 1.2.0 (in progress)
+## 1.2.0
 
 - Fixed: counting a channel (↻ in the statistics) and other work that runs
   through a YouTube tab failed with "Receiving end does not exist" when the

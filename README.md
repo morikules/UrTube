@@ -34,9 +34,12 @@ account, no analytics. English and German.
   subscriptions, on the home page, on channel pages (each with a time window),
   in playlists, search results and recommendations – before they appear. One
   switch for everything or one per area. Content filters for Shorts,
-  premieres, live streams, members-only videos and “Most relevant”.
+  premieres, live streams (also recordings of past streams), members-only
+  videos and “Most relevant” – in subscriptions, optionally also on the home
+  page and next to a video.
 - **⊘ Hide** – hide videos, playlists or whole channels you are not interested
-  in, without counting them as watched.
+  in, without counting them as watched; they can stay hidden even while the
+  switch is off and watched videos are shown.
 - **Channels** – every channel page shows how many of its videos, Shorts, live
   streams and playlists you have watched (watched / total).
 - **Playlists** – “12 / 23 watched” on playlist thumbnails; finished playlists
@@ -52,9 +55,10 @@ account, no analytics. English and German.
   view the most exact date wins.
 - **Clean up** – remove watched videos from “Watch later”, remove deleted
   videos from your YouTube history.
-- **Playback** – a big player that fills the window in theater mode, preferred
-  resolution, speed and subtitles; channel trailers and live chat can stay
-  quiet.
+- **Playback** – a big player that fills the window in theater mode; the header
+  hides and comes back at the top edge, with the player controls, or as normal
+  theater mode with title and channel. Preferred resolution, speed and
+  subtitles; channel trailers and live chat can stay quiet.
 - **Backup** as a JSON file, with settings: restore (replace everything) or
   merge (add what is missing, e.g. from another computer).
 
