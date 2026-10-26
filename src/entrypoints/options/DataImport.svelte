@@ -97,7 +97,11 @@
       await send({ type: 'reloadCache' });
       ondatachange();
       takeout = null;
-      return I.takeoutResult(n(s.added), n(s.newVideos), n(s.known), n(s.dated)) + (s.deleted ? I.takeoutDeleted(n(s.deleted)) : '');
+      return (
+        I.takeoutResult(n(s.added), n(s.newVideos), n(s.known), n(s.dated)) +
+        (s.replacedWatchmarker ? I.takeoutReplacedWm(n(s.replacedWatchmarker)) : '') +
+        (s.deleted ? I.takeoutDeleted(n(s.deleted)) : '')
+      );
     });
   }
 </script>

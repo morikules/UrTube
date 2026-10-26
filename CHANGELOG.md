@@ -2,6 +2,21 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.3.0 (in progress)
+
+- Google Takeout import: for the time the Takeout covers, its exact times
+  replace the Watchmarker views of the same videos (Watchmarker often noted a
+  video later than it was watched, which showed up as a second view). Older
+  Watchmarker views stay. The result is the same whichever is imported first;
+  importing the Takeout again cleans up existing data.
+- History: new filter "Without exact date" (views from a bulk import, day only
+  or the progress bar), with its number.
+- History: "Finished" for videos to continue or given up – the latest view
+  counts as watched to the end; also for selected videos.
+- History: "not music" corrects the music detection, e.g. for videos played in
+  the YouTube Music app; can be undone ("music after all"), also for selected
+  videos, kept in backups.
+
 ## 1.2.0
 
 - Fixed: counting a channel (↻ in the statistics) and other work that runs

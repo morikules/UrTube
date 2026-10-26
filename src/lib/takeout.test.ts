@@ -149,11 +149,11 @@ describe('importTakeout', () => {
 
     await importWatchmarker(db, merged);
     const s = await importTakeout(db, takeout);
-    expect(s).toMatchObject({ added: 1, known: 1, dated: 1 });
+    expect(s).toMatchObject({ added: 2, known: 0, dated: 1, replacedWatchmarker: 1 });
     const first = [await viewsOf(db, A), await viewsOf(db, B), await viewsOf(db, C)];
     expect(first).toEqual([
       [['takeout', '2015-04-01T18:00:00.000Z']],
-      [['watchmarker', '2023-03-01T10:00:00.000Z']],
+      [['takeout', '2023-03-01T10:10:00.000Z']], // the Takeout's exact time wins
       [['watchmarker', '2024-06-01T10:00:00.000Z']], // not in the Takeout: stays undated
     ]);
 
@@ -164,6 +164,30 @@ describe('importTakeout', () => {
     expect(await viewsOf(other, B)).toEqual([['takeout', '2023-03-01T10:10:00.000Z']]);
     expect(await viewsOf(other, C)).toEqual(first[2]);
     expect((await db.videos.get(A))!.firstViewAt).toBe(t('2015-04-01T18:00:00Z'));
+  });
+
+  it('replaces Watchmarker views within its time span, keeps older ones, in either order', async () => {
+    const merged = watchmarkerWithBulkDay(
+      [wm(A, '2018-05-01T10:00:00Z'), wm(B, '2022-07-01T20:00:00Z'), wm(C, '2022-08-01T20:00:00Z')],
+      '2024-06-01T10:00:00Z',
+      [],
+    );
+    // Watchmarker noted B hours after the real watch; C is not in the Takeout.
+    const takeout = [entry(A, '2021-01-01T10:00:00Z'), entry(B, '2022-07-01T12:00:00Z')];
+    const expected = [
+      [['watchmarker', '2018-05-01T10:00:00.000Z'], ['takeout', '2021-01-01T10:00:00.000Z']],
+      [['takeout', '2022-07-01T12:00:00.000Z']],
+      [['watchmarker', '2022-08-01T20:00:00.000Z']],
+    ];
+
+    await importWatchmarker(db, merged);
+    expect(await importTakeout(db, takeout)).toMatchObject({ replacedWatchmarker: 1 });
+    expect([await viewsOf(db, A), await viewsOf(db, B), await viewsOf(db, C)]).toEqual(expected);
+
+    const other = new TrackerDB(`takeout-${n++}`);
+    await importTakeout(other, takeout);
+    await importWatchmarker(other, merged);
+    expect([await viewsOf(other, A), await viewsOf(other, B), await viewsOf(other, C)]).toEqual(expected);
   });
 
   it('replaces day-only views from the history sync', async () => {

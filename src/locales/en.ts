@@ -62,6 +62,7 @@ export const en = {
       nomusic: 'Without music',
       nochannel: 'Without channel details',
       gone: 'No longer on YouTube',
+      undated: 'Without exact date',
       continue: 'Continue watching',
       abandoned: 'Given up',
       members: 'Members only',
@@ -124,6 +125,11 @@ export const en = {
     open: 'Open on YouTube',
     badgeGoneHint: 'YouTube has no video under this ID any more (deleted or private, or a broken ID from an import).',
     badgeMusic: 'Music',
+    markFinished: 'Finished',
+    finishedHint: 'You have watched it to the end: it leaves “Continue watching” and counts as finished.',
+    notMusic: 'not music',
+    notMusicHint: 'Was taken for music by mistake (e.g. played in the YouTube Music app): no longer counts as music.',
+    isMusicAgain: 'music after all',
     unwatched: 'Unwatched',
     unwatchedTitle: 'Mark as unwatched',
     watched: 'Watched',
@@ -556,7 +562,7 @@ export const en = {
       'Both sources can be imported in any order and as often as you like. Nothing is counted twice, and for every view the most exact date wins.',
     takeoutTitle: 'Import from Google Takeout',
     takeoutIntro:
-      'Your complete YouTube watch history with exact date and time – also from your phone and from before this extension. Views that are already known are not counted twice. Entries without an exact date (e.g. from a Watchmarker bulk import) get the real date. Ads are skipped; YouTube Music is added to the history (filter “Music only”).',
+      'Your complete YouTube watch history with exact date and time – also from your phone and from before this extension. Views that are already known are not counted twice. Entries without an exact date (e.g. from a Watchmarker bulk import) get the real date; for the time the Takeout covers, its exact times replace the Watchmarker views of the same videos. Ads are skipped; YouTube Music is added to the history (filter “Music only”).',
     takeoutStep1: 'open it, click **Deselect all** and tick only **YouTube and YouTube Music**.',
     takeoutStep2:
       'Under **All YouTube data included**, select only **history**; under **Multiple formats**, set the history to **JSON** instead of HTML.',
@@ -572,6 +578,7 @@ export const en = {
     takeoutResult: (added: string, fresh: string, known: string, dated: string) =>
       `Imported: ${added} new views, of which ${fresh} previously unknown videos. ${known} entries were already known, the date was corrected for ${dated} videos.`,
     takeoutDeleted: (n: string) => ` ${n} entries of deleted videos skipped.`,
+    takeoutReplacedWm: (n: string) => ` ${n} Watchmarker views replaced by the exact Takeout times.`,
     wmTitle: 'Import from YouTube Watchmarker',
     wmIntro:
       'In Watchmarker, save a backup under “Database” → “Export”. Several export files (`.database`) can be selected at once: Watchmarker only keeps the last view per video, so older exports add earlier views. Days with very many entries (bulk import from the YouTube history) are detected; their date counts as inexact and is replaced by Google Takeout. A new import replaces the previous one – views recorded by the extension and resets are kept, deleted videos stay deleted.',

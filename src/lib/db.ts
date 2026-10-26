@@ -65,6 +65,8 @@ export interface Video extends VideoMeta {
   watchmarkerCount?: number;
   /** Played in YouTube Music (known from the Takeout import). */
   isMusic?: boolean;
+  /** Marked "not music" by the user: overrides every sign of music (since 1.3). */
+  notMusic?: boolean;
   resetAt?: number;
   metaUpdatedAt?: number;
   /** YouTube had no details when asked (deleted or private video). */
@@ -214,7 +216,7 @@ export interface ImportSummary {
 export const SAME_VIEW_MS = 60 * 60 * 1000;
 
 /** The date is not the real watch time (bulk import day, day only, progress bar). */
-function isImprecise(v: View): boolean {
+export function isImprecise(v: View): boolean {
   return (v.dateUncertain || !!v.dayOnly) && v.source !== 'extension' && v.source !== 'manual';
 }
 
@@ -260,7 +262,9 @@ export async function importWatchmarker(
   merged: MergeResult,
 ): Promise<ImportSummary> {
   const deleted = new Map((await db.deleted.toArray()).map((t) => [t.id, t.deletedAt]));
-  const takeout = timesByVideo(await db.views.where('source').equals('takeout').toArray());
+  const takeoutViews = await db.views.where('source').equals('takeout').toArray();
+  const takeout = timesByVideo(takeoutViews);
+  const takeoutStart = takeoutViews.reduce((min, v) => Math.min(min, v.at), Infinity);
   const createdAt = Date.now();
   const views: View[] = [];
   for (const v of merged.videos) {
@@ -268,8 +272,9 @@ export async function importWatchmarker(
     const known = takeout.get(v.id);
     let times = v.timestamps;
     if (known) {
+      // Within the Takeout's time span it has the real watches (see supersededByTakeout).
       times = unmatchedTimes(
-        times.filter((at) => !merged.bulkDays.has(dayKey(at))),
+        times.filter((at) => !merged.bulkDays.has(dayKey(at)) && at < takeoutStart),
         known,
       );
     }
@@ -631,6 +636,37 @@ export async function markMetaTried(db: TrackerDB, ids: string[]): Promise<void>
   await db.videos.where('id').anyOf(ids).modify({ metaTriedAt: Date.now() });
 }
 
+/**
+ * "I have finished it": the latest view of each video, if unfinished, counts as
+ * watched to the end – it leaves "Continue watching" and "Given up".
+ */
+export async function markFinished(db: TrackerDB, ids: string[]): Promise<void> {
+  await db.transaction('rw', db.views, async () => {
+    for (const id of ids) {
+      const watches = (await db.views.where('videoId').equals(id).toArray()).filter((v) => v.kind === 'watch');
+      const latest = watches.reduce<View | undefined>((a, b) => (!a || b.at > a.at ? b : a), undefined);
+      if (!latest || latest.finishedAt) continue;
+      const end = latest.durationSec ?? latest.maxPosition ?? 0;
+      await db.views.update(latest.id!, {
+        finishedAt: Date.now(),
+        maxPosition: Math.max(latest.maxPosition ?? 0, end),
+        lastPosition: end,
+      });
+    }
+  });
+}
+
+/** Corrects the music detection: `notMusic` removes every sign of music, false undoes it. */
+export async function setNotMusic(db: TrackerDB, ids: string[], notMusic: boolean): Promise<void> {
+  await db.videos
+    .where('id')
+    .anyOf(ids)
+    .modify((v) => {
+      if (notMusic) v.notMusic = true;
+      else delete v.notMusic;
+    });
+}
+
 export async function markUnwatched(db: TrackerDB, ids: string[]): Promise<void> {
   const resetAt = Date.now();
   await db.videos.where('id').anyOf(ids).modify({ status: 'unwatched', resetAt });
@@ -895,6 +931,18 @@ export interface TakeoutSummary {
   dated: number;
   /** Entries skipped because the video was deleted afterwards. */
   deleted: number;
+  /** Watchmarker views removed because the Takeout has the real watches of that time. */
+  replacedWatchmarker: number;
+}
+
+/**
+ * Watchmarker views the Takeout supersedes: of a video in the Takeout and not
+ * older than its oldest entry. Watchmarker keeps one time per video, often when
+ * it noticed the video rather than when it was watched; within its time span
+ * the Takeout has every real watch. Older Watchmarker views are earlier watches.
+ */
+function supersededByTakeout(v: View, takeoutVideos: Set<string>, takeoutStart: number): boolean {
+  return v.source === 'watchmarker' && takeoutVideos.has(v.videoId) && v.at >= takeoutStart;
 }
 
 /**
@@ -923,9 +971,14 @@ export async function importTakeout(db: TrackerDB, entries: TakeoutEntry[]): Pro
     }
     const ids = [...byVideo.keys()];
     const idSet = new Set(ids);
-    const existingViews = (
+    const loaded = (
       ids.length <= 1000 ? await db.views.where('videoId').anyOf(ids).toArray() : await db.views.toArray()
     ).filter((v) => idSet.has(v.videoId));
+    const start = entries.reduce((min, e) => Math.min(min, e.at), Infinity);
+    // Undated ones are replaced anyway (below, counted as "dated").
+    const isSuperseded = (v: View) => !isImprecise(v) && supersededByTakeout(v, idSet, start);
+    const superseded = loaded.filter(isSuperseded);
+    const existingViews = loaded.filter((v) => !isSuperseded(v));
     const exact = timesByVideo(existingViews.filter((v) => !isImprecise(v)));
     const imprecise = existingViews.filter(isImprecise);
     const knownBefore = new Set(existingViews.map((v) => v.videoId));
@@ -934,7 +987,7 @@ export async function importTakeout(db: TrackerDB, entries: TakeoutEntry[]): Pro
     const createdAt = Date.now();
     const add: View[] = [];
     const covered = new Set<string>();
-    const summary: TakeoutSummary = { added: 0, known: 0, newVideos: 0, dated: 0, deleted: 0 };
+    const summary: TakeoutSummary = { added: 0, known: 0, newVideos: 0, dated: 0, deleted: 0, replacedWatchmarker: 0 };
     for (const [id, list] of byVideo) {
       const deletedAt = deleted.get(id);
       const times = list.map((e) => e.at).filter((at) => deletedAt === undefined || at > deletedAt);
@@ -956,6 +1009,9 @@ export async function importTakeout(db: TrackerDB, entries: TakeoutEntry[]): Pro
     await db.views.bulkDelete(replaced.map((v) => v.id!));
     for (const v of replaced) affected.add(v.videoId);
     summary.dated = new Set(replaced.map((v) => v.videoId)).size;
+    await db.views.bulkDelete(superseded.map((v) => v.id!));
+    for (const v of superseded) affected.add(v.videoId);
+    summary.replacedWatchmarker = superseded.length;
 
     // Title, channel and music flag from the newest entry of a video.
     const info = new Map<string, Partial<Video>>();
@@ -1119,6 +1175,7 @@ const MERGED_FIELDS = [
   'isLive',
   'isShort',
   'isMusic',
+  'notMusic',
   'metaUpdatedAt',
 ] as const;
 

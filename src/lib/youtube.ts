@@ -7,12 +7,18 @@ import { locale } from './i18n';
  * name, not translated), 'category' for YouTube's category "Music" (set by the
  * uploader, also language independent), otherwise null.
  */
-export function musicKind(v: Pick<Video, 'isMusic' | 'channelName' | 'category'>): 'sure' | 'category' | null {
+export function musicKind(
+  v: Pick<Video, 'isMusic' | 'channelName' | 'category' | 'notMusic'>,
+): 'sure' | 'category' | null {
+  if (v.notMusic) return null; // corrected by the user
   if (v.isMusic || v.channelName?.endsWith(' - Topic')) return 'sure';
   return v.category === 'Music' ? 'category' : null;
 }
 
-export function isMusicVideo(v: Pick<Video, 'isMusic' | 'channelName' | 'category'>, withCategory: boolean): boolean {
+export function isMusicVideo(
+  v: Pick<Video, 'isMusic' | 'channelName' | 'category' | 'notMusic'>,
+  withCategory: boolean,
+): boolean {
   const kind = musicKind(v);
   return kind === 'sure' || (withCategory && kind === 'category');
 }

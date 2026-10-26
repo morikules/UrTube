@@ -1,12 +1,12 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
-  import { TrackerDB, type Video } from '@/lib/db';
+  import { TrackerDB, isImprecise, type Video } from '@/lib/db';
   import { send } from '@/lib/messages';
   import ConfirmButton from './ConfirmButton.svelte';
   import Dropdown from './Dropdown.svelte';
   import SearchInput from './SearchInput.svelte';
-  import VideoRow from './VideoRow.svelte';
+  import VideoRow, { type VideoAction } from './VideoRow.svelte';
   import { n, t } from '@/lib/i18n';
   import { isGone, isMusicVideo } from '@/lib/youtube';
   import {
@@ -38,6 +38,7 @@
   const counted: Partial<Record<Filter, (v: Video) => boolean>> = {
     nochannel: noChannel,
     gone: isGone,
+    undated: (v) => undated.has(v.id),
     continue: (v) => resume.has(v.id),
     abandoned: (v) => abandoned.has(v.id),
     members: (v) => membersOnly.has(v.id),
@@ -58,6 +59,8 @@
   /** Videos given up early, members-only videos (from counted channels), where views came from. */
   let abandoned = $state.raw(new Set<string>());
   let membersOnly = $state.raw(new Set<string>());
+  /** Videos with a view whose date is not the real watch time (bulk import, day only). */
+  let undated = $state.raw(new Set<string>());
   let origins = $state.raw(new Map<string, Set<Origin>>());
   /** Hidden with ⊘: videos, and channels by handle or ID. */
   let hiddenVideos = $state.raw(new Set<string>());
@@ -92,6 +95,7 @@
     resume = resumePoints(views, prefs.s?.finishedThreshold ?? 0.9);
     abandoned = abandonedVideos(views);
     origins = originsByVideo(views);
+    undated = new Set(views.filter(isImprecise).map((v) => v.videoId));
     membersOnly = new Set(membersLists.flatMap((p) => p.videoIds));
     hiddenVideos = new Set(dismissed.filter((d) => d.kind === 'video').map((d) => d.id));
     hiddenChannels = new Set(dismissed.filter((d) => d.kind === 'channel').map((d) => d.id));
@@ -169,6 +173,7 @@
       if (filter === 'multi' && v.viewCount < 2) return false;
       if (filter === 'nochannel' && !noChannel(v)) return false;
       if (filter === 'gone' && !isGone(v)) return false;
+      if (filter === 'undated' && !undated.has(v.id)) return false;
       if (filter === 'continue' && !resume.has(v.id)) return false;
       if (filter === 'abandoned' && !abandoned.has(v.id)) return false;
       if (filter === 'members' && !membersOnly.has(v.id)) return false;
@@ -223,15 +228,20 @@
     load().catch((e) => (error = String(e)));
   });
 
-  async function act(action: 'markUnwatched' | 'markWatched' | 'deleteVideos', ids: string[]) {
+  async function act(action: VideoAction, ids: string[]) {
     if (!ids.length) return;
     error = '';
     try {
       if (action === 'deleteVideos') await send({ type: 'deleteVideos', ids });
       else if (action === 'markUnwatched') await send({ type: 'markUnwatched', ids });
-      else await send({ type: 'markWatched', ids });
+      else if (action === 'markFinished') await send({ type: 'markFinished', ids });
+      else if (action === 'notMusic' || action === 'isMusic') {
+        await send({ type: 'setNotMusic', ids, notMusic: action === 'notMusic' });
+      } else await send({ type: 'markWatched', ids });
       for (const id of ids) selected.delete(id);
-      await refreshVideos(ids);
+      // These change the views (continue watching) or the music flag: read everything again.
+      if (action === 'markFinished' || action === 'notMusic' || action === 'isMusic') await load();
+      else await refreshVideos(ids);
     } catch (e) {
       error = H.actionFailed(String(e));
     }
@@ -278,6 +288,8 @@
       <div class="actions">
         <button onclick={() => act('markUnwatched', [...selected])}>{H.markUnwatched}</button>
         <button onclick={() => act('markWatched', [...selected])}>{H.markWatched}</button>
+        <button onclick={() => act('markFinished', [...selected])} title={t.video.finishedHint}>{t.video.markFinished}</button>
+        <button onclick={() => act('notMusic', [...selected])} title={t.video.notMusicHint}>{t.video.notMusic}</button>
         <button onclick={exportSelected} title={H.exportHint}>{H.exportCsv}</button>
         <ConfirmButton
           label={t.common.delete}

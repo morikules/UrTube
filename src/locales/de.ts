@@ -60,6 +60,7 @@ export const de: Messages = {
       nomusic: 'ohne Musik',
       nochannel: 'ohne Kanal-Angaben',
       gone: 'nicht mehr auf YouTube',
+      undated: 'ohne genaues Datum',
       continue: 'Weiterschauen',
       abandoned: 'Abgebrochen',
       members: 'Nur für Mitglieder',
@@ -122,6 +123,11 @@ export const de: Messages = {
     open: 'Auf YouTube öffnen',
     badgeGoneHint: 'Unter dieser ID gibt es bei YouTube kein Video mehr (gelöscht oder privat, oder eine kaputte ID aus einem Import).',
     badgeMusic: 'Musik',
+    markFinished: 'Fertig geschaut',
+    finishedHint: 'Du hast es zu Ende geschaut: Es verschwindet aus „Weiterschauen“ und zählt als bis zum Ende gesehen.',
+    notMusic: 'keine Musik',
+    notMusicHint: 'Wurde fälschlich als Musik erkannt (z. B. in der YouTube-Music-App abgespielt): zählt nicht mehr als Musik.',
+    isMusicAgain: 'doch Musik',
     unwatched: 'Ungesehen',
     unwatchedTitle: 'Als ungesehen markieren',
     watched: 'Gesehen',
@@ -569,7 +575,7 @@ export const de: Messages = {
       'Beide Quellen lassen sich in beliebiger Reihenfolge und beliebig oft importieren. Nichts wird doppelt gezählt, und pro Ansicht gewinnt immer das genaueste Datum.',
     takeoutTitle: 'Import aus Google Takeout',
     takeoutIntro:
-      'Dein vollständiger YouTube-Wiedergabeverlauf mit genauem Datum und Uhrzeit – auch vom Handy und aus der Zeit vor dieser Erweiterung. Ansichten, die schon bekannt sind, werden nicht doppelt gezählt. Einträge ohne genaues Datum (z. B. aus einem Watchmarker-Massenimport) bekommen das echte Datum. Werbung wird übersprungen, YouTube Music kommt mit in den Verlauf (Filter „nur Musik“).',
+      'Dein vollständiger YouTube-Wiedergabeverlauf mit genauem Datum und Uhrzeit – auch vom Handy und aus der Zeit vor dieser Erweiterung. Ansichten, die schon bekannt sind, werden nicht doppelt gezählt. Einträge ohne genaues Datum (z. B. aus einem Watchmarker-Massenimport) bekommen das echte Datum; für den Zeitraum, den Takeout abdeckt, ersetzen seine genauen Zeiten die Watchmarker-Ansichten derselben Videos. Werbung wird übersprungen, YouTube Music kommt mit in den Verlauf (Filter „nur Musik“).',
     takeoutStep1: 'öffnen, **Auswahl aufheben** und nur **YouTube und YouTube Music** anhaken.',
     takeoutStep2:
       'Unter **Alle YouTube-Daten enthalten** nur **Verlauf** auswählen, unter **Mehrere Formate** beim Verlauf **JSON** statt HTML einstellen.',
@@ -585,6 +591,7 @@ export const de: Messages = {
     takeoutResult: (added, fresh, known, dated) =>
       `Importiert: ${added} neue Ansichten, davon ${fresh} bisher unbekannte Videos. ${known} Einträge waren schon bekannt, bei ${dated} Videos wurde das Datum korrigiert.`,
     takeoutDeleted: (n) => ` ${n} Einträge gelöschter Videos übersprungen.`,
+    takeoutReplacedWm: (n) => ` ${n} Watchmarker-Ansichten durch die genauen Takeout-Zeiten ersetzt.`,
     wmTitle: 'Import aus YouTube Watchmarker',
     wmIntro:
       'In Watchmarker unter „Database“ → „Export“ eine Sicherung speichern. Mehrere Exportdateien (`.database`) lassen sich auf einmal auswählen: Watchmarker merkt sich pro Video nur das letzte Ansehen, ältere Exporte liefern so frühere Ansichten dazu. Tage mit sehr vielen Einträgen (Massenimport aus dem YouTube-Verlauf) werden erkannt; deren Datum gilt als ungenau und wird von Google Takeout ersetzt. Ein erneuter Import ersetzt den vorherigen – selbst erfasste Ansichten und Zurücksetzungen bleiben erhalten, gelöschte Videos bleiben gelöscht.',

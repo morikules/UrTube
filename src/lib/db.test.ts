@@ -8,8 +8,10 @@ import {
   exportBackup,
   importWatchmarker,
   restoreBackup,
+  markFinished,
   markMetaTried,
   markUnwatched,
+  setNotMusic,
   mergeBackup,
   mergeResumedViews,
   videosMissingMeta,
@@ -20,6 +22,7 @@ import {
   updateView,
 } from './db';
 import { mergeExports, type WatchmarkerEntry } from './watchmarker';
+import { musicKind } from './youtube';
 
 const t = (iso: string) => Date.parse(iso);
 const entry = (id: string, iso: string): WatchmarkerEntry => ({
@@ -219,6 +222,26 @@ describe('missing video details', () => {
 
     await updateVideoMeta(db, 'aaaaaaaaaaa', { isShort: true });
     expect((await videosMissingMeta(db, { recentOnly: true, limit: 10 })).ids).toEqual([]);
+  });
+});
+
+describe('corrections', () => {
+  it('"finished" completes the latest unfinished view', async () => {
+    const { viewId } = await startView(db, { videoId: A, title: 'A', at: 1000 });
+    await updateView(db, viewId, { maxPosition: 120, lastPosition: 120, durationSec: 600 });
+    await markFinished(db, [A]);
+    expect(await db.views.get(viewId)).toMatchObject({ maxPosition: 600, lastPosition: 600 });
+    expect((await db.views.get(viewId))!.finishedAt).toBeGreaterThan(0);
+    expect(await resumableView(db, A)).toBeNull();
+  });
+
+  it('"not music" overrides every sign of music and can be undone', async () => {
+    await startView(db, { videoId: A, title: 'A', at: 1000 });
+    await db.videos.update(A, { isMusic: true, category: 'Music' });
+    await setNotMusic(db, [A], true);
+    expect(musicKind((await db.videos.get(A))!)).toBeNull();
+    await setNotMusic(db, [A], false);
+    expect(musicKind((await db.videos.get(A))!)).toBe('sure');
   });
 });
 

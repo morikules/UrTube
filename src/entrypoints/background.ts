@@ -8,8 +8,10 @@ import {
   deleteVideos,
   deleteView,
   getStats,
+  markFinished,
   markUnwatched,
   markMetaTried,
+  setNotMusic,
   markWatchedAgain,
   mergeResumedViews,
   queueAllDeletedForRemoval,
@@ -241,6 +243,17 @@ export default defineBackground(() => {
       case 'markUnwatched':
         await markUnwatched(db, req.ids);
         await refresh(req.ids);
+        return null;
+      case 'markFinished':
+        await markFinished(db, req.ids);
+        notifyPages();
+        return null;
+      case 'setNotMusic':
+        await setNotMusic(db, req.ids, req.notMusic);
+        // Music is cached with the watched list; YouTube tabs read both again.
+        watched = null;
+        await broadcast({ type: 'watchedReloaded' });
+        notifyPages();
         return null;
       case 'markWatched':
         await markWatchedAgain(db, req.ids);

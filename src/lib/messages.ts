@@ -33,6 +33,10 @@ export type Request =
   | { type: 'metaNotFound'; ids: string[] }
   | { type: 'addMarks'; marks: Mark[] }
   | { type: 'markUnwatched'; ids: string[] }
+  /** "Finished watching": the latest unfinished view counts as watched to the end. */
+  | { type: 'markFinished'; ids: string[] }
+  /** Correct the music detection (`notMusic` false undoes it). */
+  | { type: 'setNotMusic'; ids: string[]; notMusic: boolean }
   | { type: 'markWatched'; ids: string[] }
   | { type: 'deleteVideos'; ids: string[] }
   | { type: 'deleteView'; viewId: number }
@@ -117,6 +121,8 @@ export interface ResponseMap {
   metaNotFound: null;
   addMarks: null;
   markUnwatched: null;
+  markFinished: null;
+  setNotMusic: null;
   markWatched: null;
   deleteVideos: null;
   /** The updated video, or null if it was removed with its last view. */

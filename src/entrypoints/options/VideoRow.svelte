@@ -1,9 +1,22 @@
+<script lang="ts" module>
+  export type VideoAction = 'markUnwatched' | 'markWatched' | 'deleteVideos' | 'markFinished' | 'notMusic' | 'isMusic';
+</script>
+
 <script lang="ts">
   import { TrackerDB, type Video, type View, type ViewSource } from '@/lib/db';
   import { send } from '@/lib/messages';
   import { t } from '@/lib/i18n';
   import ConfirmButton from './ConfirmButton.svelte';
-  import { formatDate, formatDateTime, formatDuration, isGone, thumbnailUrl, videoChannelUrl, videoUrl } from '@/lib/youtube';
+  import {
+    formatDate,
+    formatDateTime,
+    formatDuration,
+    isGone,
+    musicKind,
+    thumbnailUrl,
+    videoChannelUrl,
+    videoUrl,
+  } from '@/lib/youtube';
 
   interface Props {
     video: Video;
@@ -11,7 +24,7 @@
     expanded: boolean;
     ontoggleselect: () => void;
     ontoggleexpand: () => void;
-    onaction: (action: 'markUnwatched' | 'markWatched' | 'deleteVideos') => void;
+    onaction: (action: VideoAction) => void;
     onviewdeleted: () => void;
     onerror: (message: string) => void;
     /** Unfinished: where to continue (seconds); the thumbnail opens the video there. */
@@ -121,7 +134,7 @@
         {#if video.status === 'unwatched'}<span class="badge reset">{V.badgeReset}</span>{/if}
         {#if video.isShort}<span class="badge">{V.badgeShort}</span>{/if}
         {#if video.isLive}<span class="badge" title={V.badgeLiveHint}>{V.badgeLive}</span>{/if}
-        {#if video.isMusic}<span class="badge">{V.badgeMusic}</span>{/if}
+        {#if video.isMusic && !video.notMusic}<span class="badge">{V.badgeMusic}</span>{/if}
         {#if isGone(video)}<span class="badge" title={V.badgeGoneHint}>{V.badgeGone}</span>{/if}
         {#if tags.abandoned}
           <span class="badge" title={V.badgeAbandonedHint}>{V.badgeAbandoned}</span>
@@ -135,6 +148,9 @@
     </button>
 
     <div class="actions">
+      {#if resumeAt || tags.abandoned}
+        <button onclick={() => onaction('markFinished')} title={V.finishedHint}>{V.markFinished}</button>
+      {/if}
       {#if video.status === 'watched'}
         <button onclick={() => onaction('markUnwatched')} title={V.unwatchedTitle}>{V.unwatched}</button>
       {:else}
@@ -195,6 +211,11 @@
           {V.videoId} {video.id}
           {#if video.channelHandle} · {video.channelHandle}{/if}
           {#if video.category} · {video.category}{/if}
+          {#if video.notMusic}
+            · <button class="link" onclick={() => onaction('isMusic')}>{V.isMusicAgain}</button>
+          {:else if musicKind(video)}
+            · <button class="link" onclick={() => onaction('notMusic')} title={V.notMusicHint}>{V.notMusic}</button>
+          {/if}
         </div>
       {/if}
     </div>
@@ -321,6 +342,18 @@
   .small {
     font-size: 0.85em;
     margin-top: 6px;
+  }
+  /* Small text action in the details line ("not music"). */
+  button.link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+  }
+  button.link:hover {
+    text-decoration: underline;
   }
   @media (max-width: 640px) {
     .row {
