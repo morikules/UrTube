@@ -5,7 +5,9 @@ All notable changes. Versions before 1.0 were private test builds.
 ## 1.4.0 (in progress)
 
 - History: several entries of "Show" can be chosen at once; a video has to
-  match all of them (e.g. "Music only" and "Watched more than once").
+  match all of them (e.g. "Music only" and "Watched more than once"). The
+  numbers in the menu count only the videos shown with the current search and
+  filters.
 - New content filter "Hide films": films from YouTube's film shop (to buy,
   rent or free with ads).
 - Big player with the header "with the player controls, over the video": the

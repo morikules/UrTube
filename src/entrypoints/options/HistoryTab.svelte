@@ -45,12 +45,6 @@
     premiere: (v) => !!v.isPremiere,
     dismissed: (v) => isHidden(v),
   };
-  const filters = $derived(
-    (Object.keys(H.filters) as Filter[]).map((id) => {
-      const test = counted[id];
-      return { id, label: test ? `${H.filters[id]} (${n(all.filter(test).length)})` : H.filters[id] };
-    }),
-  );
 
   // raw: ~50k videos, replaced as a whole on reload
   let all = $state.raw<Video[]>([]);
@@ -216,6 +210,14 @@
     });
   });
   const visible = $derived(filtered.slice(0, limit));
+
+  // The numbers refer to the videos shown now (search, filters, length, origin, dates).
+  const filters = $derived(
+    (Object.keys(H.filters) as Filter[]).map((id) => {
+      const test = counted[id];
+      return { id, label: test ? `${H.filters[id]} (${n(filtered.filter(test).length)})` : H.filters[id] };
+    }),
+  );
 
   /** All videos matching the filters are selected (not only the ones loaded so far). */
   const allSelected = $derived(filtered.length > 0 && filtered.every((v) => selected.has(v.id)));
