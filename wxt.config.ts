@@ -18,7 +18,8 @@ export default defineConfig({
       default_title: '__MSG_actionTitle__',
       default_icon: { 16: 'icon/16.png', 32: 'icon/32.png', 48: 'icon/48.png' },
     },
-    permissions: ['storage', 'unlimitedStorage', 'tabs', 'alarms'],
+    // No "tabs": YouTube tabs are found through the host permission below.
+    permissions: ['storage', 'unlimitedStorage', 'alarms'],
     // Requested only when the user enables "browser history" in the settings.
     optional_permissions: ['history'],
     host_permissions: ['*://*.youtube.com/*'],

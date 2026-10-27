@@ -52,8 +52,11 @@ export default defineContentScript({
       const at = settings.markOnYoutubeMusic && id ? watched.get(id) : undefined;
       const el = row as HTMLElement;
       if (at === undefined) {
-        if (el.dataset.yttHeard) delete el.dataset.yttHeard;
-        el.removeAttribute('title');
+        // Only the tooltip set here is removed, not one of YouTube Music's own.
+        if (el.dataset.yttHeard) {
+          delete el.dataset.yttHeard;
+          el.removeAttribute('title');
+        }
         return;
       }
       const date = formatDate(at);
@@ -73,7 +76,18 @@ export default defineContentScript({
       }, 300);
     }
 
-    new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+    // Only changes that can concern track rows: rows added, or a row's link swapped
+    // (YouTube Music reuses rows). The player bar updates its time every second.
+    const concernsRows = (n: Node) =>
+      n instanceof Element && !n.closest('ytmusic-player-bar') && (n.matches(ROW_SELECTOR) || !!n.querySelector(ROW_SELECTOR));
+    new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' ? (m.target as Element).closest(ROW_SELECTOR) : [...m.addedNodes].some(concernsRows)) {
+          scan();
+          return;
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
     scan();
 
     onSettingsChanged((s) => {

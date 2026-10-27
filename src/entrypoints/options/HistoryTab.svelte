@@ -71,7 +71,8 @@
     (!!v.channelId && hiddenChannels.has(v.channelId));
   let loading = $state(true);
   let query = $state('');
-  let filter = $state<Filter>('all');
+  /** Chosen entries of the "Show" menu (none = all). */
+  let active = $state<Filter[]>([]);
   let length = $state<LengthFilter>('all');
   let origin = $state<Origin>('all');
   const originOptions = ORIGINS.map((id) => ({ id, label: H.origins[id] }));
@@ -164,26 +165,48 @@
 
   const withCategory = $derived(prefs.s?.musicFromCategory ?? true);
 
+  /** Whether a video passes one entry of the "Show" menu. */
+  function passes(v: Video, f: Filter): boolean {
+    switch (f) {
+      case 'all':
+        return true;
+      case 'watched':
+        return v.status === 'watched';
+      case 'unwatched':
+        return v.status === 'unwatched';
+      case 'shorts':
+        return !!v.isShort;
+      case 'multi':
+        return v.viewCount >= 2;
+      case 'music':
+      case 'nomusic':
+        return isMusicVideo(v, withCategory) === (f === 'music');
+      case 'nochannel':
+        return noChannel(v);
+      case 'gone':
+        return isGone(v);
+      case 'undated':
+        return undated.has(v.id);
+      case 'continue':
+        return resume.has(v.id);
+      case 'abandoned':
+        return abandoned.has(v.id);
+      case 'members':
+        return membersOnly.has(v.id);
+      case 'premiere':
+        return !!v.isPremiere;
+      case 'dismissed':
+        return isHidden(v);
+    }
+  }
+
   const filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
     return all.filter((v) => {
-      if (filter === 'watched' && v.status !== 'watched') return false;
-      if (filter === 'unwatched' && v.status !== 'unwatched') return false;
-      if (filter === 'shorts' && !v.isShort) return false;
-      if (filter === 'multi' && v.viewCount < 2) return false;
-      if (filter === 'nochannel' && !noChannel(v)) return false;
-      if (filter === 'gone' && !isGone(v)) return false;
-      if (filter === 'undated' && !undated.has(v.id)) return false;
-      if (filter === 'continue' && !resume.has(v.id)) return false;
-      if (filter === 'abandoned' && !abandoned.has(v.id)) return false;
-      if (filter === 'members' && !membersOnly.has(v.id)) return false;
-      if (filter === 'premiere' && !v.isPremiere) return false;
-      if (filter === 'dismissed' && !isHidden(v)) return false;
+      // Several entries chosen: a video has to pass all of them.
+      if (!active.every((f) => passes(v, f))) return false;
       if (origin !== 'all' && !origins.get(v.id)?.has(origin)) return false;
       if (!lengthMatches(v, length) || !inDateRange(v, dateFrom, dateTo)) return false;
-      if (filter === 'music' || filter === 'nomusic') {
-        if (isMusicVideo(v, withCategory) !== (filter === 'music')) return false;
-      }
       if (!q) return true;
       return (
         v.id.toLowerCase() === q ||
@@ -205,7 +228,7 @@
   // Reset paging when the search or filter changes.
   $effect(() => {
     void query;
-    void filter;
+    void active;
     void length;
     void origin;
     void dateFrom;
@@ -268,7 +291,7 @@
 <section>
   <div class="toolbar">
     <SearchInput placeholder={H.search} bind:value={query} />
-    <Dropdown label={H.show} options={filters} value={filter} onchange={(f) => (filter = f)} resettable />
+    <Dropdown label={H.show} options={filters} multiple values={active} onchangemany={(f) => (active = f)} resettable />
     <Dropdown label={H.length} options={lengths} value={length} onchange={(l) => (length = l)} resettable />
     <Dropdown label={H.origin} options={originOptions} value={origin} onchange={(o) => (origin = o)} resettable />
   </div>

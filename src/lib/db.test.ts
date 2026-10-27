@@ -13,7 +13,6 @@ import {
   markUnwatched,
   setNotMusic,
   mergeBackup,
-  mergeResumedViews,
   videosMissingMeta,
   SHORTS_FROM_META_SINCE,
   resumableView,
@@ -114,42 +113,13 @@ describe('continued views', () => {
     expect(await resumableView(db, 'bbbbbbbbbbb')).toBeNull();
   });
 
-  it('merges a watch spread over several openings into one view', async () => {
-    // The real case: watched in parts with pauses, some openings without playback.
-    await view(0, { max: 1846, watched: 1770 });
-    await view(0.5 * HOUR, { max: 4144, watched: 2284 });
-    await view(1.3 * HOUR, { max: 5340, watched: 1185 });
-    await view(1.6 * HOUR, { max: 6501, watched: 1148 });
-    await view(2.3 * HOUR, { max: 6501, watched: 0 });
-    await view(2.6 * HOUR, {});
-    await view(3.2 * HOUR, {});
-    await view(15 * HOUR, { max: 7632, watched: 1628, finished: true });
-
-    expect(await mergeResumedViews(db)).toEqual([A]);
-    const views = await db.views.toArray();
-    expect(views).toHaveLength(1);
-    expect(views[0]).toMatchObject({ at: 0, maxPosition: 7632, watchedSeconds: 8015 });
-    expect(views[0]!.finishedAt).toBeTypeOf('number');
-    expect(await db.videos.get(A)).toMatchObject({ viewCount: 1, lastViewAt: 0 });
-  });
-
-  it('leaves views recorded since 1.0.2 alone (they have lastPosition)', async () => {
-    const first = await view(0, { max: 1800, watched: 1800 });
-    await updateView(db, first, { lastPosition: 1800 });
-    const second = await view(HOUR, { max: 3000, watched: 3000 }); // started over and got further
-    await updateView(db, second, { lastPosition: 3000 });
-    expect(await mergeResumedViews(db)).toEqual([]);
-    expect(await db.views.count()).toBe(2);
-  });
-
-  it('restoring a backup repairs old views and returns its settings', async () => {
+  it('restoring a backup brings back everything and returns its settings', async () => {
     await view(0, { max: 1800, watched: 1700 });
-    await view(HOUR, {});
     await view(2 * HOUR, { max: 3600, watched: 1800 });
     const backup = await exportBackup(db, { language: 'de' });
     const other = new TrackerDB(`test-restore-${n++}`);
     const r = await restoreBackup(other, JSON.parse(JSON.stringify(backup)));
-    expect(r).toMatchObject({ videos: 1, views: 1, settings: { language: 'de' } });
+    expect(r).toMatchObject({ videos: 1, views: 2, settings: { language: 'de' } });
   });
 
   it('restoring leaves out broken records and repairs missing titles', async () => {
@@ -181,14 +151,6 @@ describe('continued views', () => {
     expect(await other.videos.get(A)).toMatchObject({ channelName: 'Channel A', viewCount: 1 });
     expect(await other.videos.get('bbbbbbbbbbb')).toBeUndefined();
     expect(await other.videos.get('ccccccccccc')).toBeDefined();
-  });
-
-  it('keeps rewatches after a finished view and restarts that got less far', async () => {
-    await view(0, { max: 7700, watched: 7600, finished: true });
-    await view(1 * HOUR, { max: 3000, watched: 3000 });
-    await view(2 * HOUR, { max: 600, watched: 600 }); // started over, less far
-    expect(await mergeResumedViews(db)).toEqual([]);
-    expect(await db.views.count()).toBe(3);
   });
 });
 

@@ -415,8 +415,10 @@ html.ytt-big.ytt-big-header:has(ytd-watch-flexy[theater]) ytd-masthead {
     opacity 0.2s;
 }
 
+/* Kept open while typing in the search (keyboard focus), but not by a link that was
+   only clicked: after a right click on the logo it would stay focused for good. */
 html.ytt-big.ytt-big-header:has(ytd-watch-flexy[theater])
-  #masthead-container:not(:hover):not(:focus-within)
+  #masthead-container:not(:hover):not(:has(:focus-visible))
   ytd-masthead {
   transform: translateY(-100%);
   opacity: 0;
@@ -429,6 +431,14 @@ html.ytt-big.ytt-big-header.ytt-big-sync:has(ytd-watch-flexy[theater] #movie_pla
   ytd-masthead {
   transform: none;
   opacity: 1;
+}
+
+/* … and the other way round: the mouse on the header also brings up the player's controls. */
+html.ytt-big.ytt-big-header.ytt-big-sync:has(#masthead-container:hover)
+  ytd-watch-flexy[theater]
+  #movie_player.ytp-autohide
+  :is(.ytp-chrome-bottom, .ytp-gradient-bottom, .ytp-chrome-top, .ytp-gradient-top) {
+  opacity: 1 !important;
 }
 
 /* Solid instead of see-through: the header over the video gets YouTube's page background. */

@@ -179,6 +179,12 @@
         onchange={(v) => setPref('filterStreamReplays', v)}
       />
       <Toggle
+        label={H.filterMovies}
+        description={H.filterMoviesDesc}
+        checked={s.filterMovies}
+        onchange={(v) => setPref('filterMovies', v)}
+      />
+      <Toggle
         label={H.filterRelevant}
         description={H.filterRelevantDesc}
         checked={s.filterMostRelevant}

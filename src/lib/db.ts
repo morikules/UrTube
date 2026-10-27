@@ -513,68 +513,6 @@ export async function resumableView(db: TrackerDB, videoId: string): Promise<Vie
   return latest;
 }
 
-/**
- * Repair for views recorded before 1.0.2, when every opening counted as a new
- * view: a view without playback, or one that got further than the unfinished
- * view before it, is merged into that one. Runs once after the update and
- * after restoring a backup. Returns the IDs of the changed videos.
- */
-export async function mergeResumedViews(db: TrackerDB): Promise<string[]> {
-  return db.transaction('rw', db.videos, db.views, async () => {
-    const byVideo = new Map<string, View[]>();
-    await db.views
-      .where('source')
-      .equals('extension')
-      .each((v) => {
-        if (v.kind !== 'watch' || v.isShort) return;
-        const list = byVideo.get(v.videoId);
-        if (list) list.push(v);
-        else byVideo.set(v.videoId, [v]);
-      });
-
-    const changed = new Set<string>();
-    const updates: View[] = [];
-    const remove: number[] = [];
-    const videos = new Map(
-      (await db.videos.bulkGet([...byVideo.keys()])).filter((v) => v !== undefined).map((v) => [v!.id, v!]),
-    );
-    for (const [videoId, views] of byVideo) {
-      if (views.length < 2) continue;
-      const resetAt = videos.get(videoId)?.resetAt ?? 0;
-      views.sort((a, b) => a.at - b.at);
-      let open: View | null = null;
-      for (const v of views) {
-        // Views since 1.0.2 store `lastPosition` and were recorded with the
-        // continue rule already: they are left alone (e.g. after restoring a backup).
-        const continues =
-          open !== null &&
-          open.lastPosition === undefined &&
-          v.lastPosition === undefined &&
-          !(open.at < resetAt && resetAt <= v.at) &&
-          ((v.watchedSeconds ?? 0) < 1 || (v.maxPosition ?? 0) >= (open.maxPosition ?? 0));
-        if (open && continues) {
-          open.watchedSeconds = (open.watchedSeconds ?? 0) + (v.watchedSeconds ?? 0);
-          open.maxPosition = Math.max(open.maxPosition ?? 0, v.maxPosition ?? 0);
-          open.durationSec ??= v.durationSec;
-          if (v.finishedAt) open.finishedAt = v.finishedAt;
-          remove.push(v.id!);
-          if (!updates.includes(open)) updates.push(open);
-          changed.add(videoId);
-        } else {
-          open = v;
-        }
-        if (open?.finishedAt) open = null;
-      }
-    }
-    if (!remove.length) return [];
-    await db.views.bulkPut(updates);
-    await db.views.bulkDelete(remove);
-    const ids = new Set(changed);
-    await rebuildVideos(db, ids, new Map((await db.videos.bulkGet([...ids])).map((v) => [v!.id, v!])));
-    return [...ids];
-  });
-}
-
 export async function updateVideoMeta(
   db: TrackerDB,
   videoId: string,
@@ -1159,9 +1097,8 @@ function cleanBackup(data: unknown): Required<Pick<Backup, 'videos' | 'views' | 
 }
 
 /**
- * Replaces the whole database with a backup; views from before 1.0.2 are
- * repaired (see mergeResumedViews). The backup's settings are returned, not
- * applied: the page decides.
+ * Replaces the whole database with a backup. The backup's settings are
+ * returned, not applied: the page decides.
  */
 export async function restoreBackup(
   db: TrackerDB,
@@ -1178,7 +1115,6 @@ export async function restoreBackup(
     await db.deleted.bulkPut(b.deleted);
     await db.dismissed.bulkPut(b.dismissed);
   });
-  await mergeResumedViews(db);
   return { videos: await db.videos.count(), views: await db.views.count(), settings: b.settings };
 }
 
@@ -1252,7 +1188,6 @@ export async function mergeBackup(
     // A deletion from the backup only counts for videos this database does not have.
     await db.deleted.bulkPut((b.deleted ?? []).filter((d) => !existing.has(d.id) && !deleted.has(d.id)));
   });
-  await mergeResumedViews(db);
   return { videos: addedVideos, views: addedViews, settings: b.settings };
 }
 

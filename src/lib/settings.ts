@@ -87,6 +87,8 @@ export interface Settings {
   filterLive: boolean;
   /** With filterLive: also recordings of streams that have ended. */
   filterStreamReplays: boolean;
+  /** Films from YouTube's film shop (to buy, rent or free with ads). */
+  filterMovies: boolean;
   filterMembersOnly: boolean;
   /** The members-only filter also applies on channel pages. */
   filterMembersOnlyOnChannels: boolean;
@@ -228,6 +230,7 @@ export const defaultSettings: Settings = {
   filterPremieres: false,
   filterLive: false,
   filterStreamReplays: true,
+  filterMovies: false,
   filterMembersOnly: false,
   filterMembersOnlyOnChannels: false,
   hideMembersInChannelStats: false,

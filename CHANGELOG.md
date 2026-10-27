@@ -2,6 +2,24 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
+## 1.4.0 (in progress)
+
+- History: several entries of "Show" can be chosen at once; a video has to
+  match all of them (e.g. "Music only" and "Watched more than once").
+- New content filter "Hide films": films from YouTube's film shop (to buy,
+  rent or free with ads).
+- Big player with the header "with the player controls, over the video": the
+  mouse on the header now also brings up the player's controls, so both always
+  appear and disappear together.
+- Fixed: after a right click on the YouTube logo (e.g. "Open in new tab"), the
+  hidden header stayed visible for the rest of the video.
+- No longer asks for access to all browser tabs: YouTube tabs are found
+  through the YouTube permission.
+- YouTube Music: marking heard tracks reacts only to changes of the track
+  lists, not to every tick of the player; YouTube Music's own tooltips stay.
+- The one-time repair of views from before 1.0.2 is removed (done for all
+  installs since).
+
 ## 1.3.0
 
 - Watching the rest of a long video no longer counts twice: a view counts as

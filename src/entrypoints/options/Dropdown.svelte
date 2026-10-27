@@ -1,24 +1,66 @@
 <script lang="ts" generics="T extends string">
-  /** Button that opens a small menu to pick one of several options. */
+  /**
+   * Button that opens a small menu to pick one of several options – or, with
+   * `multiple`, several at once (the first option, e.g. "All", clears them).
+   */
   import { t } from '@/lib/i18n';
   interface Props {
     label: string;
     options: { id: T; label: string }[];
-    value: T;
-    onchange: (value: T) => void;
+    value?: T;
+    onchange?: (value: T) => void;
+    /** Several options at once: `values` (without the first option) and `onchangemany`. */
+    multiple?: boolean;
+    values?: T[];
+    onchangemany?: (values: T[]) => void;
     /** Show an ✕ that sets the first option again (e.g. "All") when another one is chosen. */
     resettable?: boolean;
   }
-  let { label, options, value, onchange, resettable = false }: Props = $props();
-  const changed = $derived(resettable && options.length > 0 && value !== options[0]!.id);
+  let {
+    label,
+    options,
+    value,
+    onchange,
+    multiple = false,
+    values = [],
+    onchangemany,
+    resettable = false,
+  }: Props = $props();
+  const first = $derived(options[0]?.id);
+  const changed = $derived(resettable && options.length > 0 && (multiple ? values.length > 0 : value !== first));
 
   let open = $state(false);
   let root: HTMLElement;
-  const current = $derived(options.find((o) => o.id === value)?.label ?? '');
+  const labelOf = (id: T | undefined) => options.find((o) => o.id === id)?.label ?? '';
+  const current = $derived(
+    !multiple
+      ? labelOf(value)
+      : values.length === 0
+        ? labelOf(first)
+        : values.length === 1
+          ? labelOf(values[0])
+          : `${labelOf(values[0])} +${values.length - 1}`,
+  );
+  const isSelected = (id: T) => (multiple ? (values.length ? values.includes(id) : id === first) : id === value);
 
   function pick(id: T) {
-    open = false;
-    onchange(id);
+    if (!multiple) {
+      open = false;
+      onchange?.(id);
+      return;
+    }
+    // The first option clears the choice; the others are switched on and off, the menu stays open.
+    if (id === first) {
+      open = false;
+      onchangemany?.([]);
+    } else {
+      onchangemany?.(values.includes(id) ? values.filter((v) => v !== id) : [...values, id]);
+    }
+  }
+
+  function reset() {
+    if (multiple) onchangemany?.([]);
+    else if (first !== undefined) onchange?.(first);
   }
 
   // Close when clicking anywhere else or pressing Escape.
@@ -34,19 +76,14 @@
     {label}: <b>{current}</b> <span class="caret">▾</span>
   </button>
   {#if changed}
-    <button
-      class="reset"
-      title={t.common.resetFilter}
-      aria-label={t.common.resetFilter}
-      onclick={() => pick(options[0]!.id)}>✕</button
-    >
+    <button class="reset" title={t.common.resetFilter} aria-label={t.common.resetFilter} onclick={reset}>✕</button>
   {/if}
   {#if open}
-    <ul class="menu" role="listbox">
+    <ul class="menu" role="listbox" aria-multiselectable={multiple}>
       {#each options as o}
         <li>
-          <button role="option" aria-selected={o.id === value} class:selected={o.id === value} onclick={() => pick(o.id)}>
-            {o.label}
+          <button role="option" aria-selected={isSelected(o.id)} class:selected={isSelected(o.id)} onclick={() => pick(o.id)}>
+            {#if multiple}<span class="check">{isSelected(o.id) ? '✓' : ''}</span>{/if}{o.label}
           </button>
         </li>
       {/each}
@@ -114,5 +151,10 @@
   .menu button.selected {
     font-weight: 600;
     color: var(--accent);
+  }
+  /* Room for the ✓ in front of chosen options, so the labels stay aligned. */
+  .check {
+    display: inline-block;
+    width: 1.2em;
   }
 </style>

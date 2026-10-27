@@ -401,6 +401,8 @@ export const en = {
     filterMembers: 'Hide members-only videos',
     filterMembersChannels: '… also on channel pages',
     filterMembersChannelsDesc: 'Members-only videos disappear from a channel’s video list too.',
+    filterMovies: 'Hide films',
+    filterMoviesDesc: 'Films from YouTube’s film shop – to buy, rent or free with ads.',
     filterRelevant: 'Hide the “Most relevant” section',
     filterRelevantDesc:
       'The row YouTube sometimes puts at the top of your subscriptions with a selection it picked; the feed below stays sorted by date.',

@@ -21,6 +21,10 @@ export const HIDE_CARD_SELECTOR = [
   'ytm-shorts-lockup-view-model',
   'ytm-shorts-lockup-view-model-v2',
   'ytd-reel-item-renderer',
+  // Films from YouTube's film shop (home page, next to a video, "Movies & TV").
+  'ytd-grid-movie-renderer',
+  'ytd-movie-renderer',
+  'ytd-compact-movie-renderer',
 ].join(', ');
 
 export type HideReason =
@@ -29,6 +33,7 @@ export type HideReason =
   | 'live'
   | 'premiere'
   | 'members'
+  | 'movie'
   /** Hidden by the user (⊘), everywhere. */
   | 'dismissed'
   /** Playlist with all videos watched. */
@@ -78,6 +83,20 @@ function isLive(card: Element, texts: string[]): boolean {
     card.querySelector('[overlay-style="LIVE"], .badge-style-type-live-now-alternate, [class*="thumbnail-live"]') !==
       null ||
     texts.some((t) => t === 'live' || t === 'live jetzt' || t === 'jetzt live' || /\d.*\b(zuschauer|watching)\b/.test(t))
+  );
+}
+
+/**
+ * A film from YouTube's film shop: its own card type, or the badge of paid
+ * content ("Kaufen oder ausleihen", "Kostenlos mit Werbung").
+ */
+function isMovie(card: Element, texts: string[]): boolean {
+  return (
+    card.matches('ytd-grid-movie-renderer, ytd-movie-renderer, ytd-compact-movie-renderer') ||
+    card.querySelector('.badge-style-type-ypc, [class*="badge-style-type-ypc"]') !== null ||
+    texts.some((t) =>
+      /^(kaufen oder ausleihen|kostenlos mit werbung|buy or rent|free with ads|ausleihen|leihen|rent|buy)$/.test(t),
+    )
   );
 }
 
@@ -138,8 +157,9 @@ export function hideReason(
 
   if (filtersApply(page, settings)) {
     if (settings.filterShorts && isShort(card)) return 'shorts';
-    if (settings.filterLive || settings.filterPremieres || settings.filterMembersOnly) {
+    if (settings.filterLive || settings.filterPremieres || settings.filterMembersOnly || settings.filterMovies) {
       const texts = shortTexts(card);
+      if (settings.filterMovies && isMovie(card, texts)) return 'movie';
       if (settings.filterLive && (isLive(card, texts) || (settings.filterStreamReplays && isStreamReplay(texts)))) {
         return 'live';
       }

@@ -13,7 +13,6 @@ import {
   markMetaTried,
   setNotMusic,
   markWatchedAgain,
-  mergeResumedViews,
   queueAllDeletedForRemoval,
   recordMusicPlay,
   requeueRemovals,
@@ -372,8 +371,12 @@ export default defineBackground(() => {
   // Toolbar button: open the add-on page, or switch to it if it is already open.
   const toolbar = browser.browserAction ?? browser.action;
   toolbar.onClicked.addListener(async () => {
-    const url = browser.runtime.getURL('/options.html');
-    const [tab] = await browser.tabs.query({ url: `${url}*` });
+    // The add-on's own open pages, without the "tabs" permission (no tab addresses needed).
+    type PageWindow = globalThis.Window & { browser?: typeof browser };
+    const page = (browser.extension.getViews({ type: 'tab' }) as unknown as PageWindow[]).find(
+      (w) => w.location.pathname === '/options.html',
+    );
+    const tab = await page?.browser?.tabs.getCurrent();
     if (tab?.id === undefined) {
       await browser.runtime.openOptionsPage();
       return;
@@ -387,16 +390,8 @@ export default defineBackground(() => {
     if (reason === 'install') browser.tabs.create({ url: browser.runtime.getURL('/options.html#welcome') });
   });
 
-  // Once after updating to 1.0.2: views that only continued an unfinished one are merged into it.
-  browser.storage.local.get('mergedResumedViews').then(async ({ mergedResumedViews }) => {
-    if (mergedResumedViews) return;
-    const ids = await mergeResumedViews(db);
-    await browser.storage.local.set({ mergedResumedViews: true });
-    if (ids.length) {
-      console.info('[UrTube] merged continued views of', ids.length, 'videos');
-      await refresh(ids);
-    }
-  }).catch((err) => console.error('[UrTube] merging views', err));
+  // The one-time repair of views from before 1.0.2 is done (removed in 1.4); its flag is not needed.
+  browser.storage.local.remove('mergedResumedViews').catch(() => {});
 
   // Periodic incremental sync of the browser history, if enabled; interval from the settings.
   loadSettings().then((s) => {

@@ -414,6 +414,8 @@ export const de: Messages = {
     filterMembers: 'Videos nur für Kanalmitglieder ausblenden',
     filterMembersChannels: '… auch auf Kanalseiten',
     filterMembersChannelsDesc: 'Videos nur für Mitglieder verschwinden auch aus der Videoliste eines Kanals.',
+    filterMovies: 'Filme ausblenden',
+    filterMoviesDesc: 'Filme aus YouTubes Filmangebot – zum Kaufen, Leihen oder kostenlos mit Werbung.',
     filterRelevant: 'Bereich „Relevanteste“ ausblenden',
     filterRelevantDesc:
       'Die Reihe, die YouTube manchmal oben in die Abos setzt, mit einer Auswahl, die YouTube für dich trifft; der Feed darunter bleibt nach Datum sortiert.',
