@@ -35,8 +35,8 @@ account, no analytics. English and German.
   in playlists, search results and recommendations – before they appear. One
   switch for everything or one per area. Content filters for Shorts,
   premieres, live streams (also recordings of past streams), members-only
-  videos and “Most relevant” – in subscriptions, optionally also on the home
-  page and next to a video.
+  videos, films and “Most relevant” – in subscriptions, optionally also on the
+  home page and next to a video.
 - **⊘ Hide** – hide videos, playlists or whole channels you are not interested
   in, without counting them as watched; they can stay hidden even while the
   switch is off and watched videos are shown.
@@ -44,7 +44,7 @@ account, no analytics. English and German.
   streams and playlists you have watched (watched / total).
 - **Playlists** – “12 / 23 watched” on playlist thumbnails; finished playlists
   can be hidden.
-- **History** – searchable, with every view and filters such as “Continue
+- **History** – searchable, with every view and filters (several at once) such as “Continue
   watching” (opens where you stopped), given up, without exact date, length,
   date range, origin, premieres and members-only; mark videos as finished or
   correct the music detection; export as CSV.

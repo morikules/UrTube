@@ -2,7 +2,7 @@
 
 All notable changes. Versions before 1.0 were private test builds.
 
-## 1.4.0 (in progress)
+## 1.4.0
 
 - History: several entries of "Show" can be chosen at once; a video has to
   match all of them (e.g. "Music only" and "Watched more than once"). The
